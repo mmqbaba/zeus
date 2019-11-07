@@ -73,8 +73,8 @@ func (n *ng) getEtcdClientConfig() etcd.Config {
 		Endpoints: n.entry.EndPoints,
 	}
 	if !utils.IsEmptyString(n.entry.UserName) && !utils.IsEmptyString(n.entry.Password) {
-		// c.Username = n.entry.UserName
-		// c.Password = n.entry.Password
+		c.Username = n.entry.UserName
+		c.Password = n.entry.Password
 	}
 	return c
 }
