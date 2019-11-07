@@ -13,6 +13,18 @@ type Options struct {
 	LogLevel string
 
 	ConfEntryPath string
+
+	ProcessChangeFn CustomerEventFn
+}
+
+type CustomerEventFn func(event interface{})
+
+type Option func(o *Options)
+
+func WithCustomerEventFnOption(fn CustomerEventFn) Option {
+	return func(o *Options) {
+		o.ProcessChangeFn = fn
+	}
 }
 
 // ParseCommandLine ...

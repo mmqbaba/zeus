@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -48,13 +49,13 @@ func newFileEngine(cnt *plugin.Container) (engine.Engine, error) {
 	return nil, nil
 }
 
-func Run(cnt *plugin.Container) (err error) {
+func Run(cnt *plugin.Container, opts ...Option) (err error) {
 	opt, err := ParseCommandLine()
 	if err != nil {
 		log.Printf("[zeus] [service.Run] err: %s\n", err)
 		return
 	}
-	s := NewService(opt, cnt)
+	s := NewService(opt, cnt, opts...)
 
 	s.initConfEntry()
 
@@ -85,7 +86,7 @@ func Run(cnt *plugin.Container) (err error) {
 }
 
 type Service struct {
-	options        Options
+	options        *Options
 	container      *plugin.Container
 	ng             engine.Engine
 	errorC         chan struct{}
@@ -94,9 +95,13 @@ type Service struct {
 	watcherWg      sync.WaitGroup
 }
 
-func NewService(options Options, container *plugin.Container) *Service {
+func NewService(options Options, container *plugin.Container, opts ...Option) *Service {
+	o := options
+	for _, opt := range opts {
+		opt(&o)
+	}
 	s := &Service{
-		options:        options,
+		options:        &o,
 		container:      container,
 		errorC:         make(chan struct{}),
 		watcherCancelC: make(chan struct{}),
@@ -105,6 +110,7 @@ func NewService(options Options, container *plugin.Container) *Service {
 	if !utils.IsEmptyString(options.ConfEntryPath) {
 		confEntryPath = options.ConfEntryPath
 	}
+
 	return s
 }
 
@@ -154,6 +160,11 @@ func (s *Service) processChange(ev interface{}) (err error) {
 		log.Printf("[zeus] config change\n")
 	default:
 		log.Printf("[zeus] unsupported event change\n")
+	}
+	if s.options.ProcessChangeFn != nil {
+		utils.AsyncFuncSafe(context.Background(), func(args ...interface{}) {
+			s.options.ProcessChangeFn(ev)
+		}, nil)
 	}
 	return
 }

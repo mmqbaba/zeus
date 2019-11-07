@@ -10,6 +10,9 @@ import (
 // Container contain comm obj
 type Container struct {
 	redis *redisclient.Client
+	// discovery/registry
+	// http
+	// grpc
 	// middlewareSpecs map[string]*MiddlewareSpec
 	// redisPool       *redis.Pool
 	// dbPool          *sql.DB
