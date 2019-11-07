@@ -1,0 +1,8 @@
+.vscode
+*.a
+*.exe
+*.exe~
+*.log
+*.logger.Log
+go.sum
+~$
