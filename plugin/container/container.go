@@ -5,7 +5,7 @@ import (
 )
 
 func GetContainer() *plugin.Container {
-	r := plugin.New()
+	cnt := plugin.NewContainer()
 	// specs := []*plugin.MiddlewareSpec{
 	// 	&plugin.MiddlewareSpec{Type: "oauth", MW: authtoken.New},
 	// }
@@ -14,5 +14,5 @@ func GetContainer() *plugin.Container {
 	// 		panic(err)
 	// 	}
 	// }
-	return r
+	return cnt
 }

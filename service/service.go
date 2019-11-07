@@ -13,7 +13,6 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine/etcd"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/container"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
 
@@ -41,11 +40,11 @@ func init() {
 	}
 }
 
-func newEtcdEngine() (engine.Engine, error) {
-	return etcd.New(confEntry, container.GetContainer())
+func newEtcdEngine(cnt *plugin.Container) (engine.Engine, error) {
+	return etcd.New(confEntry, cnt)
 }
 
-func newFileEngine() (engine.Engine, error) {
+func newFileEngine(cnt *plugin.Container) (engine.Engine, error) {
 	return nil, nil
 }
 
@@ -55,12 +54,12 @@ func Run(cnt *plugin.Container) (err error) {
 		log.Printf("[zeus] [service.Run] err: %s\n", err)
 		return
 	}
-	s := NewService(opt, container.GetContainer())
+	s := NewService(opt, cnt)
 
 	s.initConfEntry()
 
 	if fn, ok := engineProvidors[confEntry.EngineType]; ok && fn != nil {
-		if s.ng, err = fn(); err != nil {
+		if s.ng, err = fn(cnt); err != nil {
 			log.Printf("[zeus] [service.Run] err: %s\n", err)
 		}
 	} else {
@@ -161,6 +160,7 @@ func (s *Service) processChange(ev interface{}) (err error) {
 
 func (s *Service) startServer() (err error) {
 	// discovery/registry
+
 	// http/grpc
 	log.Println("[zeus] start server ...")
 	return

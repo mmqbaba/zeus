@@ -20,7 +20,7 @@ type Engine interface {
 	GetContainer() *plugin.Container
 }
 
-type NewEngineFn func() (Engine, error)
+type NewEngineFn func(cnt *plugin.Container) (Engine, error)
 
 // func InitConfig(c Config, v interface{}) error {
 // 	if err := c.init(v); err != nil {

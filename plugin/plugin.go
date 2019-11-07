@@ -19,7 +19,7 @@ type Container struct {
 	// mqProducer      *mq.MqProducer
 }
 
-func New() *Container {
+func NewContainer() *Container {
 	return &Container{}
 }
 
