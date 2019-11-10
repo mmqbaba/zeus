@@ -8,13 +8,12 @@ import (
 	"time"
 
 	etcd "github.com/coreos/etcd/clientv3"
+
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
-
-var afterIdx int64
 
 type ng struct {
 	entry      *config.Entry
@@ -104,7 +103,6 @@ func (n *ng) loadConfig() (err error) {
 		err = errors.New(msg)
 		return
 	}
-	afterIdx = response.Header.Revision + 1
 	content := response.Kvs[0].Value
 	err = n.refreshConfig(content)
 	if err != nil {
@@ -154,11 +152,11 @@ func (n *ng) refreshConfig(content []byte) (err error) {
 	return
 }
 
-func (n *ng) Init(changes chan interface{}, watcherCancelC chan struct{}, watcherErrorC chan struct{}) (err error) {
+func (n *ng) Init() (err error) {
 	// 初始化配置config
 	// 1. 读取配置
 	// 2. 初始化容器组件
-    // 3. 监听配置变化
+	// 3. 监听配置变化
 
 	// 读取配置
 	if err = n.loadConfig(); err != nil {
@@ -168,19 +166,9 @@ func (n *ng) Init(changes chan interface{}, watcherCancelC chan struct{}, watche
 	// 初始化容器组件
 	n.container.Init(n.configer.Get())
 
-	// 监听配置变化
-	go 	func(){
-		defer close(changes)
-		if err := n.subscribe(changes, afterIdx, watcherCancelC); err != nil {
-			log.Println("[zeus] [n.subscribe] err:", err)
-			watcherErrorC <- struct{}{}
-			return
-		}
-	}()
-
-	return nil
+	return
 }
-  
+
 func (n *ng) GetConfiger() (config.Configer, error) {
 	return n.configer, nil
 }
@@ -189,12 +177,13 @@ func (n *ng) GetContainer() *plugin.Container {
 	return n.container
 }
 
-// subscribe 监听
-func (n *ng) subscribe(changes chan interface{}, afterIdx int64, cancelC chan struct{}) error {
+// Subscribe 监听
+func (n *ng) Subscribe(changes chan interface{}, cancelC chan struct{}) error {
 	watcher := etcd.NewWatcher(n.client)
 	defer watcher.Close()
-	log.Printf("[zeus] [engine.Subscribe] Begin watching etcd configpath: %s，afterIdx: %d\n", n.entry.ConfigPath, afterIdx)
-	rch := watcher.Watch(n.context, n.entry.ConfigPath, etcd.WithRev(afterIdx))
+	defer close(cancelC)
+	log.Printf("[zeus] [engine.Subscribe] Begin watching etcd configpath: %s\n", n.entry.ConfigPath)
+	rch := watcher.Watch(n.context, n.entry.ConfigPath, etcd.WithPrefix())
 	for wresp := range rch {
 		if wresp.Canceled {
 			log.Println("[zeus] [engine.Subscribe] Stop watching: graceful shutdown")
@@ -247,17 +236,20 @@ func (n *ng) parseChange(e *etcd.Event) (interface{}, error) {
 }
 
 func (n *ng) parseConfigChange(e *etcd.Event) (interface{}, error) {
-	switch e.Type {
-	case etcd.EventTypePut:
-		err := n.refreshConfig(e.Kv.Value)
-		if err != nil {
-			return e, err
+	if string(e.Kv.Key) == n.entry.ConfigPath {
+		switch e.Type {
+		case etcd.EventTypePut:
+			err := n.refreshConfig(e.Kv.Value)
+			if err != nil {
+				return e, err
+			}
+			// reload all plugin
+			n.container.Reload(n.configer.Get())
+			return n.configer, nil
+		case etcd.EventTypeDelete:
+			return nil, nil
 		}
-		// reload all plugin
-		n.container.Reload(n.configer.Get())
-		return n.configer, nil
-	case etcd.EventTypeDelete:
-		return nil, nil
+		return nil, fmt.Errorf("unsupported action on the: %v %v", e.Kv.Key, e.Type)
 	}
-	return nil, fmt.Errorf("unsupported action on the: %v %v", e.Kv.Key, e.Type)
+	return nil, nil
 }

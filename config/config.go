@@ -8,13 +8,13 @@ type Configer interface {
 
 // Entry 配置入口
 type Entry struct {
-	ConfigPath   string `json:"config_path"`   // 配置路径
-	ConfigFormat string `json:"config_format"` // json/toml/yaml
-	EngineType   string `json:"engine_type"`   // etcd/file
-	EndPoints    []string `json:"endpoints"`
-	UserName     string `json:"username"`
-	Password     string `json:"password"`
-	Ext     map[string]string `json:"ext"`     // 扩展配置
+	ConfigPath   string            `json:"config_path"`   // 配置路径
+	ConfigFormat string            `json:"config_format"` // json/toml/yaml
+	EngineType   string            `json:"engine_type"`   // etcd/file
+	EndPoints    []string          `json:"endpoints"`
+	UserName     string            `json:"username"`
+	Password     string            `json:"password"`
+	Ext          map[string]string `json:"ext"` // 扩展配置
 }
 
 // AppConf 应用的具体配置
@@ -31,6 +31,7 @@ type AppConf struct {
 	Obs                 Obs                    `json:"obs"`
 	Broker              Broker                 `json:"broker"`
 	CurrentBusIdSpIdMap map[string]string      `json:"current_busid_spid_map,omitempty"`
+	GoMicro             GoMicro                `json:"go_micro"`
 }
 
 type DebugSwitch struct {
@@ -79,11 +80,11 @@ type EBus struct {
 }
 
 type LogConf struct {
-	Level        string `json:"level"`
-	Format       string `json:"format"`
-	RotationTime string `json:"rotation_time"`
-	LogDir       string `json:"log_dir"`
-	DisableReportCaller bool `json:"disable_report_caller"`
+	Level               string `json:"level"`
+	Format              string `json:"format"`
+	RotationTime        string `json:"rotation_time"`
+	LogDir              string `json:"log_dir"`
+	DisableReportCaller bool   `json:"disable_report_caller"`
 }
 
 type Obs struct {
@@ -111,6 +112,10 @@ type TopicInfo struct {
 }
 
 type GoMicro struct {
-	Registry string `json:"registry"` // etcd/consul address
-	RegistryPluginType string `json:"registry_plugin_type"` // etcd/consul
+	ServerName         string   `json:"server_name"`
+	ServerPort         uint32   `json:"server_port"`
+	RegistryPluginType string   `json:"registry_plugin_type"` // etcd/consul
+	RegistryAddrs      []string `json:"registry_addrs"`       // etcd/consul address
+	RegistryAuthUser   string   `json:"registry_authuser"`
+	RegistryAutPwd     string   `json:"registry_authpwd"`
 }

@@ -8,7 +8,11 @@ import (
 type ng struct {
 }
 
-func (n *ng) Init(changes chan interface{}, cancelC chan struct{}, errorC chan struct{}) (err error) {
+func (n *ng) Init() (err error) {
+	return nil
+}
+
+func (n *ng) Subscribe(changes chan interface{}, cancelC chan struct{}) error {
 	return nil
 }
 

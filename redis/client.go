@@ -1,11 +1,9 @@
 package redisclient
 
 import (
-	// "context"
-	// "fmt"
+	"log"
 	"strings"
 	"sync"
-	"log"
 
 	"github.com/go-redis/redis"
 

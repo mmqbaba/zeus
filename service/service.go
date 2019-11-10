@@ -6,14 +6,26 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
+	"path"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
+
+	assetfs "github.com/elazarl/go-bindata-assetfs"
+	"github.com/gorilla/mux"
+	gruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/micro/go-micro"
+
+	// "github.com/urfave/negroni"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine/etcd"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin"
+	swagger "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger/ui"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
 
@@ -25,9 +37,12 @@ const (
 var confEntry *config.Entry
 var confEntryPath string
 var engineProvidors map[string]engine.NewEngineFn
+var swaggerDir string
 
 func init() {
 	log.SetPrefix("[zeus] ")
+	log.SetFlags(3)
+
 	os := runtime.GOOS
 	if os == "linux" || os == "darwin" {
 		confEntryPath = "/etc/tif/zeus.json"
@@ -69,8 +84,8 @@ func Run(cnt *plugin.Container, opts ...Option) (err error) {
 		return
 	}
 
-	// 启动engine，监听状态变化，处理更新，各种组件
-	if err = s.load(); err != nil {
+	// 启动engine，监听状态变化，处理更新，各种组件状态变化
+	if err = s.loadNG(); err != nil {
 		log.Printf("[zeus] [service.Run] err: %s\n", err)
 		return
 	}
@@ -78,10 +93,9 @@ func Run(cnt *plugin.Container, opts ...Option) (err error) {
 	// TODO: 启动服务，服务发现注册，http/grpc
 	if err = s.startServer(); err != nil {
 		log.Printf("[zeus] [service.Run] err: %s\n", err)
+		s.watcherCancelC <- struct{}{} // 服务启动失败，通知停止engine的监听
 		return
 	}
-
-	s.watcherWg.Wait()
 	return
 }
 
@@ -89,7 +103,6 @@ type Service struct {
 	options        *Options
 	container      *plugin.Container
 	ng             engine.Engine
-	errorC         chan struct{}
 	watcherCancelC chan struct{}
 	watcherErrorC  chan struct{}
 	watcherWg      sync.WaitGroup
@@ -98,14 +111,15 @@ type Service struct {
 func NewService(options Options, container *plugin.Container, opts ...Option) *Service {
 	o := options
 	for _, opt := range opts {
-		opt(&o)
+		if opt != nil {
+			opt(&o)
+		}
 	}
 	s := &Service{
 		options:        &o,
 		container:      container,
-		errorC:         make(chan struct{}),
+		watcherErrorC:  make(chan struct{}),
 		watcherCancelC: make(chan struct{}),
-		watcherErrorC:  make(chan struct{}, 1),
 	}
 	if !utils.IsEmptyString(options.ConfEntryPath) {
 		confEntryPath = options.ConfEntryPath
@@ -127,30 +141,43 @@ func (s *Service) initConfEntry() {
 	return
 }
 
-// load
-func (s *Service) load() (err error) {
-	changesC := make(chan interface{}, changesBufferSize)
-	defer close(s.errorC)
-	defer close(s.watcherErrorC)
-
-	// 启动
-	if err = s.ng.Init(changesC, s.watcherCancelC, s.watcherErrorC); err != nil {
-		log.Println("[zeus] [service.load] s.ng.Init err: ", err)
+// loadNG 初始化engine，开启监听
+func (s *Service) loadNG() (err error) {
+	if err = s.ng.Init(); err != nil {
+		log.Println("[zeus] [service.loadNG] s.ng.Init err:", err)
 		return
 	}
 
-	// 处理事件数据
-	s.watcherWg.Add(1)
+	changesC := make(chan interface{}, changesBufferSize)
+	// 监听配置变化
 	go func() {
-		defer s.watcherWg.Done()
-		for change := range changesC {
-			if err := s.processChange(change); err != nil {
-				log.Printf("[zeus] failed to processChange, change=%#v, err=%s\n", change, err)
-			}
+		defer close(changesC)
+		defer close(s.watcherCancelC)
+		if err := s.ng.Subscribe(changesC, s.watcherCancelC); err != nil {
+			log.Println("[zeus] [s.n.subscribe] err:", err)
+			s.watcherErrorC <- struct{}{}
+			return
 		}
-		log.Println("[zeus] change processor shutdown")
 	}()
 
+	// 处理事件
+	go func() {
+		defer close(s.watcherErrorC)
+		for {
+			select {
+			case change := <-changesC:
+				if err := s.processChange(change); err != nil {
+					log.Printf("[zeus] failed to processChange, change=%#v, err=%s\n", change, err)
+				}
+			case <-s.watcherErrorC:
+				log.Println("[zeus] watcher error, change processor shutdown")
+			}
+		}
+	}()
+
+	if s.options.LoadEngineFn != nil {
+		s.options.LoadEngineFn(s.ng)
+	}
 	return
 }
 
@@ -169,10 +196,172 @@ func (s *Service) processChange(ev interface{}) (err error) {
 	return
 }
 
-func (s *Service) startServer() (err error) {
-	// discovery/registry
+type gwOption struct {
+	grpcEndpoint string
+}
 
-	// http/grpc
+func (s *Service) startServer() (err error) {
+	// gomicro-grpc and gw-http
 	log.Println("[zeus] start server ...")
+	configer, err := s.ng.GetConfiger()
+	if err != nil {
+		log.Println("[zeus] [s.startServer] err:", err)
+		return
+	}
+	microConf := configer.Get().GoMicro
+	serverPort := microConf.ServerPort
+	if s.options.Port > 0 {
+		serverPort = uint32(s.options.Port)
+	}
+	if serverPort == 0 {
+		serverPort = 9090
+	}
+	microConf.ServerPort = serverPort
+	gomicroservice, err := s.newGomicroSrv(microConf)
+	if err != nil {
+		return
+	}
+
+	gw, err := s.newHttpGateway(gwOption{grpcEndpoint: fmt.Sprintf("localhost:%d", serverPort)})
+	if err != nil {
+		return
+	}
+
+	go func() {
+		addr := fmt.Sprintf("%s:%d", s.options.ApiInterface, s.options.ApiPort)
+		log.Printf("http server listen on %s", addr)
+		// Start HTTP server (and proxy calls to gRPC server endpoint, serve http, serve swagger)
+		if err := http.ListenAndServe(addr, gw); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	// Run the service
+	if err = gomicroservice.Run(); err != nil {
+		log.Println("[zeus] err:", err)
+		return
+	}
 	return
+}
+
+func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err error) {
+	opts := []micro.Option{}
+	s.options.GoMicroServerWrapGenerateFn = append(s.options.GoMicroServerWrapGenerateFn, gomicro.GenerateServerLogWrap)
+	if len(s.options.GoMicroServerWrapGenerateFn) != 0 {
+		for _, fn := range s.options.GoMicroServerWrapGenerateFn {
+			sw := fn(s.ng)
+			if sw != nil {
+				opts = append(opts, micro.WrapHandler(sw))
+			}
+		}
+	}
+	// new micro service
+	gomicroservice := gomicro.NewService(context.Background(), conf, opts...)
+	if s.options.GoMicroHandlerRegisterFn != nil {
+		if err = s.options.GoMicroHandlerRegisterFn(gomicroservice.Server()); err != nil {
+			log.Println("[zeus] [s.newGomicroSrv] GoMicroHandlerRegister err:", err)
+			return
+		}
+		log.Println("[zeus] [s.newGomicroSrv] GoMicroHandlerRegister success.")
+	}
+	gms = gomicroservice
+	return
+}
+
+func (s *Service) newHttpGateway(opt gwOption) (h http.Handler, err error) {
+	// 必须注意r.PathPrefix的顺序问题
+	r := mux.NewRouter()
+
+	// swagger handler
+	r.PathPrefix("/swagger/").HandlerFunc(serveSwaggerFile)
+	serveSwaggerUI("/swagger-ui/", r)
+	log.Println("[zeus] [s.newHttpGateway] swaggerRegister success.")
+
+	// http handler
+	if s.options.HttpHandlerRegisterFn != nil {
+		var handler http.Handler
+		handlerPrefix := "/zeus/"
+		if handler, err = s.options.HttpHandlerRegisterFn(context.Background(), handlerPrefix); err != nil {
+			log.Println("[zeus] [s.newHttpGateway] HttpHandlerRegister err:", err)
+			return
+		}
+		if handler != nil {
+			r.PathPrefix(handlerPrefix).Handler(handler)
+			log.Println("[zeus] [s.newHttpGateway] HttpHandlerRegister success.")
+		}
+	}
+
+	// gateway handler
+	if s.options.HttpGWHandlerRegisterFn != nil {
+		var gwmux *gruntime.ServeMux
+		if gwmux, err = s.options.HttpGWHandlerRegisterFn(context.Background(), opt.grpcEndpoint, nil); err != nil {
+			log.Println("[zeus] [s.newHttpGateway] HttpGWHandlerRegister err:", err)
+			return
+		}
+		if gwmux != nil {
+			gwPrefix := "/"
+			r.PathPrefix(gwPrefix).HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+				rr := r.WithContext(r.Context())
+				rr.URL.Path = strings.Replace(r.URL.Path, gwPrefix, "/", 1)
+				gwmux.ServeHTTP(rw, rr)
+			})
+			log.Println("[zeus] [s.newHttpGateway] HttpGWHandlerRegister success.")
+		}
+	}
+
+	// r := http.NewServeMux()
+	// r.HandleFunc("/swagger/", serveSwaggerFile)
+	// serveGin(r)
+	// r.Handle("/", gwmux)
+
+	// mux + negroni 可实现完整的前后置处理和路由
+	// r.WithContext + r.Context() 实现上下文传递
+	// n := negroni.New()
+	// n.UseFunc(func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc){
+	// 	c := r.Context()
+	// 	rr := r.WithContext(context.WithValue(c, "a", "b")) // 上下文传递
+	// 	log.Println("========================1 begin")
+	// 	next(rw, rr)
+	// 	log.Println("========================1 end")
+	// })
+	// n.UseFunc(func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc){
+	// 	_ := r.Context().Value("a") // 读取
+	// 	log.Println("========================2 begin")
+	// 	next(rw, r)
+	// 	log.Println("========================2 end")
+	// })
+	// n.UseHandlerFunc(func(rw http.ResponseWriter, r *http.Request){
+	// 	log.Println("========================process begin")
+	// 	rw.Write([]byte("hello, abc user."))
+	// 	log.Println("========================process end")
+	// })
+	// r.Path("/abc/user").Methods("GET").HandlerFunc(n.ServeHTTP)
+
+	h = r
+	return
+}
+
+func serveSwaggerFile(w http.ResponseWriter, r *http.Request) {
+	if !strings.HasSuffix(r.URL.Path, "swagger.json") {
+		log.Printf("Not Found: %s", r.URL.Path)
+		http.NotFound(w, r)
+		return
+	}
+
+	swaggerDir = "proto"
+	p := strings.TrimPrefix(r.URL.Path, "/swagger/")
+	p = path.Join(swaggerDir, p)
+
+	log.Printf("Serving swagger-file: %s", p)
+
+	http.ServeFile(w, r, p)
+}
+
+func serveSwaggerUI(prefix string, mux *mux.Router) {
+	fileServer := http.FileServer(&assetfs.AssetFS{
+		Asset:    swagger.Asset,
+		AssetDir: swagger.AssetDir,
+		Prefix:   "third_party/swagger-ui",
+	})
+	mux.PathPrefix(prefix).Handler(http.StripPrefix(prefix, fileServer))
 }
