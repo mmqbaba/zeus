@@ -13,6 +13,8 @@ import (
 
 // Container contain comm obj
 type Container struct {
+	appcfg config.AppConf
+
 	redis *redisclient.Client
 	// gomicro
 	gomicroClient client.Client
@@ -37,13 +39,19 @@ func (c *Container) Init(appcfg *config.AppConf) {
 	c.initRedis(&appcfg.Redis)
 	c.initLogger(&appcfg.LogConf)
 	log.Println("[Container.Init] finish")
+	c.appcfg = *appcfg
 }
 
 func (c *Container) Reload(appcfg *config.AppConf) {
 	log.Println("[Container.Reload] start")
-	c.reloadRedis(&appcfg.Redis)
-	c.reloadLogger(&appcfg.LogConf)
+	if c.appcfg.Redis != appcfg.Redis {
+		c.reloadRedis(&appcfg.Redis)
+	}
+	if c.appcfg.LogConf != appcfg.LogConf {
+		c.reloadLogger(&appcfg.LogConf)
+	}
 	log.Println("[Container.Reload] finish")
+	c.appcfg = *appcfg
 }
 
 // Redis

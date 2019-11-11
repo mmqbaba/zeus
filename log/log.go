@@ -21,7 +21,7 @@ import (
 type LogBuilder struct {
 	Logger *logrus.Logger
 
-	conf      *config.LogConf
+	conf      config.LogConf
 	formatter logrus.Formatter
 	m         sync.Map
 }
@@ -29,7 +29,7 @@ type LogBuilder struct {
 // New logbuilder
 func New(cfg *config.LogConf) (l *LogBuilder, err error) {
 	logB := &LogBuilder{
-		conf: cfg,
+		conf: *cfg,
 	}
 	logger, err := newLogger(cfg)
 	if err != nil {
@@ -104,7 +104,7 @@ func (l *LogBuilder) setOutput() (err error) {
 		rotateFileOutput := make(map[logrus.Level]*rotatelogs.RotateLogs)
 		for _, ll := range logrus.AllLevels {
 			var o *rotatelogs.RotateLogs
-			if o, err = newRotateFileOutput(l.conf, ll); err != nil {
+			if o, err = newRotateFileOutput(&l.conf, ll); err != nil {
 				return
 			}
 			rotateFileOutput[ll] = o
