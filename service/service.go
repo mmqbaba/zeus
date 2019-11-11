@@ -17,6 +17,7 @@ import (
 	"github.com/gorilla/mux"
 	gruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/micro/go-micro"
+	"github.com/micro/go-micro/client"
 
 	// "github.com/urfave/negroni"
 
@@ -255,6 +256,25 @@ func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err err
 			}
 		}
 	}
+	// new micro client
+	s.options.GoMicroClientWrapGenerateFn = append(s.options.GoMicroClientWrapGenerateFn, gomicro.GenerateClientLogWrap)
+	cliOpts := []client.Option{}
+	if len(s.options.GoMicroClientWrapGenerateFn) != 0 {
+		for _, fn := range s.options.GoMicroClientWrapGenerateFn {
+			cw := fn(s.ng)
+			if cw != nil {
+				cliOpts = append(cliOpts, client.Wrap(cw))
+			}
+		}
+	}
+	cli, err := gomicro.NewClient(context.Background(), conf, cliOpts...)
+	if err != nil {
+		log.Println("[zeus] [s.newGomicroSrv] gomicro.NewClient err:", err)
+		return
+	}
+	// 把client设置到container
+	s.ng.GetContainer().SetGoMicroClient(cli)
+	opts = append(opts, micro.Client(cli))
 	// new micro service
 	gomicroservice := gomicro.NewService(context.Background(), conf, opts...)
 	if s.options.GoMicroHandlerRegisterFn != nil {
@@ -280,8 +300,22 @@ func (s *Service) newHttpGateway(opt gwOption) (h http.Handler, err error) {
 	// http handler
 	if s.options.HttpHandlerRegisterFn != nil {
 		var handler http.Handler
-		handlerPrefix := "/zeus/"
-		if handler, err = s.options.HttpHandlerRegisterFn(context.Background(), handlerPrefix); err != nil {
+		handlerPrefix := ""
+		configer, e := s.ng.GetConfiger()
+		if e != nil {
+			log.Println("[zeus] [s.newHttpGateway] s.ng.GetConfiger err:", e)
+			return nil, e
+		}
+		conf := configer.Get()
+		if conf != nil {
+			if v, ok := conf.Ext["httphandler_pathprefix"]; ok {
+				handlerPrefix = fmt.Sprint(v)
+			}
+		}
+		if utils.IsEmptyString(handlerPrefix) {
+			handlerPrefix = "/zeus/"
+		}
+		if handler, err = s.options.HttpHandlerRegisterFn(context.Background(), handlerPrefix, s.ng); err != nil {
 			log.Println("[zeus] [s.newHttpGateway] HttpHandlerRegister err:", err)
 			return
 		}

@@ -47,7 +47,7 @@ type GoMicroHandlerRegisterFn func(s server.Server, opts ...server.HandlerOption
 
 type HttpGWHandlerRegisterFn func(ctx context.Context, endpoint string, opts []grpc.DialOption) (*runtime.ServeMux, error)
 
-type HttpHandlerRegisterFn func(ctx context.Context, prefix string) (http.Handler, error)
+type HttpHandlerRegisterFn func(ctx context.Context, prefix string, ng engine.Engine) (http.Handler, error)
 
 type LoadEngineFn func(ng engine.Engine)
 

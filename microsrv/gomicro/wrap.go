@@ -2,8 +2,8 @@ package gomicro
 
 import (
 	"context"
-	"log"
 
+	"github.com/sirupsen/logrus"
 	"github.com/micro/go-micro/client"
 	"github.com/micro/go-micro/server"
 
@@ -11,14 +11,24 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
 )
 
+type validator interface {
+	Validate() error
+}
+
 func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.HandlerFunc {
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
-			log.Printf("server wrap log begin, Endpoint: %s, %T, %T\n", req.Endpoint(), req.Body(), rsp)
-			c := context.WithValue(ctx, "ZEUS_NG", ng)
+			if v, ok := req.Body().(validator); ok && v != nil {
+				if err = v.Validate(); err != nil {
+					return
+				}
+			}
+			logger := ng.GetContainer().GetLogger()
+			c := zeusctx.LoggerToContext(ctx, logger.WithFields(logrus.Fields{"tag": "gomicro-serverlogwrap"}))
+			c = zeusctx.EngineToContext(c, ng)
+			c = zeusctx.GMClientToContext(c, ng.GetContainer().GetGoMicroClient())
 			c = zeusctx.RedisToContext(c, ng.GetContainer().GetRedisCli().GetCli())
 			err = fn(c, req, rsp)
-			log.Println("server wrap log end")
 			return
 		}
 	}
@@ -44,10 +54,6 @@ type clientLogWrap struct {
 }
 
 func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {
-	log.Printf("客户端请求服务开始：%s，方法：%s\n", req.Service(), req.Endpoint())
-	ng := ctx.Value("ZEUS_NG")
-	log.Printf("%T\n", ng)
 	err := l.Client.Call(ctx, req, rsp, opts...)
-	log.Printf("客户端请求服务结束：%s，方法：%s", req.Service(), req.Endpoint())
 	return err
 }

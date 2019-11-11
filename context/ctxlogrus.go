@@ -39,11 +39,11 @@ func AddFields(ctx context.Context, fields logrus.Fields) {
 	}
 }
 
-// Extract takes the call-scoped logrus.Entry from ctx.
+// ExtractLogger takes the call-scoped logrus.Entry from ctx.
 //
 // If the ctx middleware wasn't used, a no-op `logrus.Entry` is returned. This makes it safe to
 // use regardless.
-func Extract(ctx context.Context) *logrus.Entry {
+func ExtractLogger(ctx context.Context) *logrus.Entry {
 	l, ok := ctx.Value(ctxLoggerKey).(*ctxLogger)
 	if !ok || l == nil {
 		return logrus.NewEntry(nullLogger)
@@ -65,9 +65,9 @@ func Extract(ctx context.Context) *logrus.Entry {
 	return l.logger.WithFields(fields)
 }
 
-// ToContext adds the logrus.Entry to the context for extraction later.
+// LoggerToContext adds the logrus.Entry to the context for extraction later.
 // Returning the new context that has been created.
-func ToContext(ctx context.Context, entry *logrus.Entry) context.Context {
+func LoggerToContext(ctx context.Context, entry *logrus.Entry) context.Context {
 	l := &ctxLogger{
 		logger: entry,
 		fields: logrus.Fields{},

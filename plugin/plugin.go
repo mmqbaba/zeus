@@ -3,14 +3,20 @@ package plugin
 import (
 	"log"
 
+	"github.com/micro/go-micro/client"
+	"github.com/sirupsen/logrus"
+
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
+	zeuslog "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/log"
+	redisclient "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
 )
 
 // Container contain comm obj
 type Container struct {
 	redis *redisclient.Client
-	// discovery/registry
+	// gomicro
+	gomicroClient client.Client
+	logger *logrus.Logger
 	// http
 	// grpc
 	// middlewareSpecs map[string]*MiddlewareSpec
@@ -29,15 +35,18 @@ func NewContainer() *Container {
 func (c *Container) Init(appcfg *config.AppConf) {
 	log.Println("[Container.Init] start")
 	c.initRedis(&appcfg.Redis)
+	c.initLogger(&appcfg.LogConf)
 	log.Println("[Container.Init] finish")
 }
 
 func (c *Container) Reload(appcfg *config.AppConf) {
 	log.Println("[Container.Reload] start")
 	c.reloadRedis(&appcfg.Redis)
+	c.reloadLogger(&appcfg.LogConf)
 	log.Println("[Container.Reload] finish")
 }
 
+// Redis
 func (c *Container) initRedis(cfg *config.Redis) {
 	c.redis = redisclient.InitClient(cfg)
 }
@@ -48,6 +57,33 @@ func (c *Container) reloadRedis(cfg *config.Redis) {
 
 func (c *Container) GetRedisCli() *redisclient.Client {
 	return c.redis
+}
+
+// GoMicroClient
+func (c *Container) SetGoMicroClient(cli client.Client) {
+	c.gomicroClient = cli
+}
+
+func (c *Container) GetGoMicroClient() client.Client {
+	return c.gomicroClient
+}
+
+// Logger
+func (c *Container) initLogger(cfg *config.LogConf) {
+	l, err := zeuslog.New(cfg)
+	if err != nil {
+		log.Println("initLogger err:", err)
+		return
+	}
+	c.logger = l.Logger
+}
+
+func (c *Container) reloadLogger(cfg *config.LogConf) {
+	c.initLogger(cfg)
+}
+
+func (c *Container) GetLogger() *logrus.Logger {
+	return c.logger
 }
 
 // func (r *Container) SetRedisPool(p *redis.Pool) {

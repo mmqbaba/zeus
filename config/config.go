@@ -80,6 +80,7 @@ type EBus struct {
 }
 
 type LogConf struct {
+	Log                 string `json:"log"` // 输出方式：console/file/kafka
 	Level               string `json:"level"`
 	Format              string `json:"format"`
 	RotationTime        string `json:"rotation_time"`
