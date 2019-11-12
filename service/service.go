@@ -278,8 +278,9 @@ func (s *Service) startServer() (err error) {
 }
 
 func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err error) {
-	opts := []micro.Option{}
-	s.options.GoMicroServerWrapGenerateFn = append(s.options.GoMicroServerWrapGenerateFn, gomicro.GenerateServerLogWrap)
+	opts := []micro.Option{
+		micro.WrapHandler(gomicro.GenerateServerLogWrap(s.ng)), // 保证serverlogwrap在最前
+	}
 	if len(s.options.GoMicroServerWrapGenerateFn) != 0 {
 		for _, fn := range s.options.GoMicroServerWrapGenerateFn {
 			sw := fn(s.ng)
@@ -289,8 +290,9 @@ func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err err
 		}
 	}
 	// new micro client
-	s.options.GoMicroClientWrapGenerateFn = append(s.options.GoMicroClientWrapGenerateFn, gomicro.GenerateClientLogWrap)
-	cliOpts := []client.Option{}
+	cliOpts := []client.Option{
+		client.Wrap(gomicro.GenerateClientLogWrap(s.ng)), // 保证在最前
+	}
 	if len(s.options.GoMicroClientWrapGenerateFn) != 0 {
 		for _, fn := range s.options.GoMicroClientWrapGenerateFn {
 			cw := fn(s.ng)
