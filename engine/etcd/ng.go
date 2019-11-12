@@ -163,7 +163,7 @@ func (n *ng) Init() (err error) {
 		return
 	}
 
-	// TODO: 考虑放在service进行
+	// TODO: 考虑放在service处理
 	// 初始化容器组件
 	// n.container.Init(n.configer.Get())
 
@@ -244,8 +244,8 @@ func (n *ng) parseConfigChange(e *etcd.Event) (interface{}, error) {
 			if err != nil {
 				return e, err
 			}
-			// TODO: 考虑放在service进行
-			// reload all plugin
+			// TODO: 考虑放在service处理
+			// 重新加载容器组件
 			// n.container.Reload(n.configer.Get())
 			return n.configer, nil
 		case etcd.EventTypeDelete:

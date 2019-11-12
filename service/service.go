@@ -152,12 +152,22 @@ func (s *Service) loadNG() (err error) {
 		return
 	}
 
-	conf, err := s.ng.GetConfiger()
+	configer, err := s.ng.GetConfiger()
 	if err != nil {
 		return
 	}
 	// 初始化容器组件
-	s.container.Init(conf.Get())
+	conf := *configer.Get()
+	if !utils.IsEmptyString(s.options.Log) {
+		conf.LogConf.Log = s.options.Log
+	}
+	if !utils.IsEmptyString(s.options.LogFormat) {
+		conf.LogConf.Format = s.options.LogFormat
+	}
+	if !utils.IsEmptyString(s.options.LogLevel) {
+		conf.LogConf.Level = s.options.LogLevel
+	}
+	s.container.Init(&conf)
 
 	changesC := make(chan interface{}, changesBufferSize)
 	// 监听配置变化
@@ -195,9 +205,19 @@ func (s *Service) loadNG() (err error) {
 func (s *Service) processChange(ev interface{}) (err error) {
 	switch c := ev.(type) {
 	case config.Configer:
-		// reload all plugin
-		s.container.Reload(c.Get())
 		log.Printf("[zeus] config change\n")
+		// 重新加载容器组件
+		conf := *c.Get()
+		if !utils.IsEmptyString(s.options.Log) {
+			conf.LogConf.Log = s.options.Log
+		}
+		if !utils.IsEmptyString(s.options.LogFormat) {
+			conf.LogConf.Format = s.options.LogFormat
+		}
+		if !utils.IsEmptyString(s.options.LogLevel) {
+			conf.LogConf.Level = s.options.LogLevel
+		}
+		s.container.Reload(&conf)
 	default:
 		log.Printf("[zeus] unsupported event change\n")
 	}
