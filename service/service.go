@@ -289,6 +289,13 @@ func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err err
 }
 
 func (s *Service) newHttpGateway(opt gwOption) (h http.Handler, err error) {
+	configer, err := s.ng.GetConfiger()
+	if err != nil {
+		log.Println("[zeus] [s.newHttpGateway] s.ng.GetConfiger err:", err)
+		return
+	}
+	conf := configer.Get()
+
 	// 必须注意r.PathPrefix的顺序问题
 	r := mux.NewRouter()
 
@@ -301,12 +308,6 @@ func (s *Service) newHttpGateway(opt gwOption) (h http.Handler, err error) {
 	if s.options.HttpHandlerRegisterFn != nil {
 		var handler http.Handler
 		handlerPrefix := ""
-		configer, e := s.ng.GetConfiger()
-		if e != nil {
-			log.Println("[zeus] [s.newHttpGateway] s.ng.GetConfiger err:", e)
-			return nil, e
-		}
-		conf := configer.Get()
 		if conf != nil {
 			if v, ok := conf.Ext["httphandler_pathprefix"]; ok {
 				handlerPrefix = fmt.Sprint(v)
@@ -333,7 +334,15 @@ func (s *Service) newHttpGateway(opt gwOption) (h http.Handler, err error) {
 			return
 		}
 		if gwmux != nil {
-			gwPrefix := "/"
+			gwPrefix := ""
+			if conf != nil {
+				if v, ok := conf.Ext["grpcgateway_pathprefix"]; ok {
+					gwPrefix = fmt.Sprint(v)
+				}
+			}
+			if utils.IsEmptyString(gwPrefix) {
+				gwPrefix = "/"
+			}
 			r.PathPrefix(gwPrefix).HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 				rr := r.WithContext(r.Context())
 				rr.URL.Path = strings.Replace(r.URL.Path, gwPrefix, "/", 1)
