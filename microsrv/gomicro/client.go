@@ -27,7 +27,6 @@ func NewClient(ctx context.Context, conf config.GoMicro, opts ...client.Option) 
 	}
 	// new client
 	cli = grpc.NewClient(o...)
-	// parse command line flags.
 	if err = cli.Init(); err != nil {
 		return nil, err
 	}

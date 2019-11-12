@@ -65,11 +65,14 @@ func newFileEngine(cnt *plugin.Container) (engine.Engine, error) {
 	return nil, nil
 }
 
-func Run(cnt *plugin.Container, opts ...Option) (err error) {
+func Run(cnt *plugin.Container, conf *Options, opts ...Option) (err error) {
 	opt, err := ParseCommandLine()
 	if err != nil {
 		log.Printf("[zeus] [service.Run] err: %s\n", err)
 		return
+	}
+	if conf != nil {
+		opt = *conf
 	}
 	s := NewService(opt, cnt, opts...)
 
@@ -149,6 +152,13 @@ func (s *Service) loadNG() (err error) {
 		return
 	}
 
+	conf, err := s.ng.GetConfiger()
+	if err != nil {
+		return
+	}
+	// 初始化容器组件
+	s.container.Init(conf.Get())
+
 	changesC := make(chan interface{}, changesBufferSize)
 	// 监听配置变化
 	go func() {
@@ -183,8 +193,10 @@ func (s *Service) loadNG() (err error) {
 }
 
 func (s *Service) processChange(ev interface{}) (err error) {
-	switch ev.(type) {
+	switch c := ev.(type) {
 	case config.Configer:
+		// reload all plugin
+		s.container.Reload(c.Get())
 		log.Printf("[zeus] config change\n")
 	default:
 		log.Printf("[zeus] unsupported event change\n")
@@ -211,10 +223,10 @@ func (s *Service) startServer() (err error) {
 	}
 	microConf := configer.Get().GoMicro
 	serverPort := microConf.ServerPort
-	if s.options.Port > 0 {
+	if s.options.Port > 0 { // 优先使用命令行传递的值
 		serverPort = uint32(s.options.Port)
 	}
-	if serverPort == 0 {
+	if serverPort == 0 { // 没配置则设置为默认值
 		serverPort = 9090
 	}
 	microConf.ServerPort = serverPort

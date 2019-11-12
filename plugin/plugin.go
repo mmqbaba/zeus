@@ -25,7 +25,6 @@ type Container struct {
 	// redisPool       *redis.Pool
 	// dbPool          *sql.DB
 	// transport       *http.Transport
-	// serviceOptions  interface{}
 	// svc             XUtil
 	// mqProducer      *mq.MqProducer
 }

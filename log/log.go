@@ -66,7 +66,7 @@ func newLogger(cfg *config.LogConf) (l *logrus.Logger, err error) {
 func (l *LogBuilder) setFormatter() (err error) {
 	format := l.conf.Format
 	if utils.IsEmptyString(format) {
-		format = "json"
+		format = "text"
 	}
 	switch format {
 	case "text":

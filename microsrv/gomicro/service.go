@@ -35,11 +35,22 @@ func NewService(ctx context.Context, conf config.GoMicro, opts ...micro.Option) 
 			log.Println("[gomicro] afterstop")
 			return nil
 		}),
+		// micro.Flags(
+		// 	cli.StringFlag{
+		// 		Name:  "string_flag",
+		// 		Usage: "This is a string flag",
+		// 		Value: "test_string_flag",
+		// 	},
+		// ),
+		// micro.Action(func(c *cli.Context) {
+		// 	log.Printf("[micro.Action] called when s.Init(), cli.Context flag\n")
+		// 	log.Printf("[micro.Action] The string flag is: %s\n", c.String("string_flag"))
+		// }),
 	}
 	o = append(o, opts...)
 	// new micro service
 	s := grpc.NewService(o...)
-	// parse command line flags.
-	s.Init()
+	// // parse command line flags.
+	// s.Init() // 禁用掉，不parse
 	return s
 }

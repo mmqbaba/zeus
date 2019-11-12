@@ -20,8 +20,9 @@ type Options struct {
 	Port      int
 	Interface string
 
-	Log      string
-	LogLevel string
+	// Log       string
+	// LogFormat string
+	// LogLevel  string
 
 	ConfEntryPath string
 
@@ -104,8 +105,9 @@ func ParseCommandLine() (options Options, err error) {
 	flag.StringVar(&options.Interface, "interface", "", "Interface to bind to")
 	flag.StringVar(&options.ApiInterface, "apiInterface", "127.0.0.1", "Interface to for API to bind to")
 
-	flag.StringVar(&options.Log, "log", "console", "Logging to use (console, json, redis, kafka, syslog or logstash)")
-	flag.StringVar(&options.LogLevel, "logLevel", "info", "log at or above(debug,info,warn,error,fatal,panic) this level to the logging output(default >=error)")
+	// flag.StringVar(&options.Log, "log", "console", "logging to use (console, file, redis, kafka, syslog or logstash)")
+	// flag.StringVar(&options.LogFormat, "logFormat", "text", "log fromat to use (text, json)")
+	// flag.StringVar(&options.LogLevel, "logLevel", "info", "log at or above(debug, info, warn, error, fatal, panic) this level to the logging output(default >=info)")
 
 	flag.StringVar(&options.ConfEntryPath, "confEntryPath", "", "config entry path")
 
