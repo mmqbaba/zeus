@@ -17,8 +17,8 @@ type Options struct {
 	ApiPort      int
 	ApiInterface string
 
-	Port      int
-	Interface string
+	Port int
+	// Interface string
 
 	Log       string
 	LogFormat string
@@ -102,7 +102,7 @@ func ParseCommandLine() (options Options, err error) {
 	flag.IntVar(&options.Port, "port", 9090, "Port to listen on")
 	flag.IntVar(&options.ApiPort, "apiPort", 8081, "Port to provide api on")
 
-	flag.StringVar(&options.Interface, "interface", "", "Interface to bind to")
+	// flag.StringVar(&options.Interface, "interface", "", "Interface to bind to")
 	flag.StringVar(&options.ApiInterface, "apiInterface", "127.0.0.1", "Interface to for API to bind to")
 
 	flag.StringVar(&options.Log, "log", "", "logging to use (console, file, redis, kafka, syslog or logstash)")
