@@ -9,6 +9,7 @@ func GenerateBuildProtoSh(PD *Generator, rootdir string) (err error) {
 
 service=%s # 服务名
 
+test -f proto/${service}.proto || exit 1
 # gen-zeus
 gen-zeus --proto proto/${service}.proto --dest ../
 
