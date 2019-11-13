@@ -55,11 +55,15 @@ func (c *Container) Reload(appcfg *config.AppConf) {
 
 // Redis
 func (c *Container) initRedis(cfg *config.Redis) {
-	c.redis = redisclient.InitClient(cfg)
+	if cfg.Enable {
+		c.redis = redisclient.InitClient(cfg)
+	}
 }
 
 func (c *Container) reloadRedis(cfg *config.Redis) {
-	c.redis.Reload(cfg)
+	if cfg.Enable {
+		c.redis.Reload(cfg)
+	}
 }
 
 func (c *Container) GetRedisCli() *redisclient.Client {

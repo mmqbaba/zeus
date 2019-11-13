@@ -45,6 +45,7 @@ type Trace struct {
 	Sampler    string  `json:"sampler"`
 	Mod        uint64  `json:"mod"`
 	OnlyLogErr bool    `json:"only_log_err"` // true 只记录出错日志
+	Enable     bool    `json:"enable"`
 }
 
 type MongoDB struct {
@@ -54,6 +55,7 @@ type MongoDB struct {
 	Pwd             string `json:"pwd"`
 	MaxPoolSize     uint16 `json:"max_pool_size"`
 	MaxConnIdleTime uint32 `json:"max_conn_idletime"` // 单位秒
+	Enable          bool   `json:"enable"`
 }
 
 type Redis struct {
@@ -62,12 +64,14 @@ type Redis struct {
 	SentinelMastername string `json:"sentinel_mastername"`
 	Pwd                string `json:"pwd"`
 	PoolSize           int    `json:"poolsize"`
+	Enable             bool   `json:"enable"`
 }
 
 type MysqlDB struct {
 	DataSourceName string `json:"datasourcename"`
 	MaxIdleConns   int    `json:"maxidleconns"`
 	MaxOpenConns   int    `json:"maxopenconns"`
+	Enable         bool   `json:"enable"`
 }
 
 type EBus struct {
@@ -104,6 +108,7 @@ type Broker struct {
 	Pwd             string       `json:"pwd"`
 	TopicPrefix     string       `json:"topic_prefix"`
 	SubscribeTopics []*TopicInfo `json:"subscribe_topics"` // 服务订阅的主题
+	EnablePub       bool         `json:"enable_pub"`
 }
 
 type TopicInfo struct {
