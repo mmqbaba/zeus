@@ -89,12 +89,12 @@ func Run(cnt *plugin.Container, conf *Options, opts ...Option) (err error) {
 	}
 
 	// 启动engine，监听状态变化，处理更新，各种组件状态变化
-	if err = s.loadNG(); err != nil {
+	if err = s.loadEngine(); err != nil {
 		log.Printf("[zeus] [service.Run] err: %s\n", err)
 		return
 	}
 
-	// TODO: 启动服务，服务发现注册，http/grpc
+	// 启动服务，服务发现注册，http/grpc
 	if err = s.startServer(); err != nil {
 		log.Printf("[zeus] [service.Run] err: %s\n", err)
 		s.watcherCancelC <- struct{}{} // 服务启动失败，通知停止engine的监听
@@ -145,10 +145,10 @@ func (s *Service) initConfEntry() {
 	return
 }
 
-// loadNG 初始化engine，开启监听
-func (s *Service) loadNG() (err error) {
+// loadEngine 初始化engine，开启监听
+func (s *Service) loadEngine() (err error) {
 	if err = s.ng.Init(); err != nil {
-		log.Println("[zeus] [service.loadNG] s.ng.Init err:", err)
+		log.Println("[zeus] [service.loadEngine] s.ng.Init err:", err)
 		return
 	}
 
