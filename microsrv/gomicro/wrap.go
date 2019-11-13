@@ -27,7 +27,9 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			c := zeusctx.LoggerToContext(ctx, logger.WithFields(logrus.Fields{"tag": "gomicro-serverlogwrap"}))
 			c = zeusctx.EngineToContext(c, ng)
 			c = zeusctx.GMClientToContext(c, ng.GetContainer().GetGoMicroClient())
-			c = zeusctx.RedisToContext(c, ng.GetContainer().GetRedisCli().GetCli())
+			if ng.GetContainer().GetRedisCli() != nil {
+				c = zeusctx.RedisToContext(c, ng.GetContainer().GetRedisCli().GetCli())
+			}
 			err = fn(c, req, rsp)
 			return
 		}

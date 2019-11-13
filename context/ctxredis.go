@@ -21,7 +21,7 @@ var (
 func ExtractRedis(ctx context.Context) (rdc *redis.Client, err error) {
 	r, ok := ctx.Value(ctxRedisKey).(*ctxRedis)
 	if !ok || r == nil {
-		return nil, errors.New("ctxRedis was not set")
+		return nil, errors.New("ctxRedis was not set or nil")
 	}
 
 	rdc = r.cli
