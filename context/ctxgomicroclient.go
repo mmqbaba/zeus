@@ -21,7 +21,7 @@ var (
 func ExtractGMClient(ctx context.Context) (cli client.Client, err error) {
 	c, ok := ctx.Value(ctxGMClientKey).(*ctxGMClient)
 	if !ok || c == nil {
-		return nil, errors.New("ctxGMClient was not set")
+		return nil, errors.New("ctxGMClient was not set or nil")
 	}
 
 	cli = c.cli

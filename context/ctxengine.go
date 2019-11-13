@@ -21,7 +21,7 @@ var (
 func ExtractEngine(ctx context.Context) (ng engine.Engine, err error) {
 	c, ok := ctx.Value(ctxEngineKey).(*ctxEngine)
 	if !ok || c == nil {
-		return nil, errors.New("ctxEngine was not set")
+		return nil, errors.New("ctxEngine was not set or nil")
 	}
 
 	ng = c.ng

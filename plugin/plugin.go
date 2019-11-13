@@ -18,7 +18,7 @@ type Container struct {
 	redis *redisclient.Client
 	// gomicro
 	gomicroClient client.Client
-	logger *logrus.Logger
+	logger        *logrus.Logger
 	// http
 	// grpc
 	// middlewareSpecs map[string]*MiddlewareSpec
@@ -55,11 +55,23 @@ func (c *Container) Reload(appcfg *config.AppConf) {
 
 // Redis
 func (c *Container) initRedis(cfg *config.Redis) {
-	c.redis = redisclient.InitClient(cfg)
+	if cfg.Enable {
+		c.redis = redisclient.InitClient(cfg)
+	}
 }
 
 func (c *Container) reloadRedis(cfg *config.Redis) {
-	c.redis.Reload(cfg)
+	if cfg.Enable {
+		if c.redis != nil {
+			c.redis.Reload(cfg)
+		} else {
+			c.redis = redisclient.InitClient(cfg)
+		}
+	} else if c.redis != nil {
+		// 释放
+		// c.redis.Release()
+		c.redis = nil
+	}
 }
 
 func (c *Container) GetRedisCli() *redisclient.Client {
