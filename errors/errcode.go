@@ -1,4 +1,4 @@
-package enum
+package errors
 
 import (
 	"net/http"
@@ -10,6 +10,10 @@ type ErrorCode int
 
 func (c ErrorCode) String() string {
 	return strconv.Itoa(int(c)) + ":" + ECodeMsg[c]
+}
+
+func (c ErrorCode) ParseErr(msg string) *Error {
+	return New(c, msg, "")
 }
 
 // 公共库错误码使用数字1打头，为五位数字

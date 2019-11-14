@@ -10,7 +10,6 @@ import (
 
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/enum"
 	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 )
 
@@ -52,7 +51,7 @@ func ExtractLogger(c *gin.Context) *logrus.Entry {
 func defaultSuccessResponse(c *gin.Context, rsp interface{}) {
 	logger := ExtractLogger(c)
 	logger.Debug("defaultSuccessResponse")
-	res := zeuserrors.New(enum.ECodeSuccessed, "", "")
+	res := zeuserrors.New(zeuserrors.ECodeSuccessed, "", "")
 	res.Data = rsp
 	res.Write(c.Writer)
 }
@@ -62,7 +61,7 @@ func defaultErrorResponse(c *gin.Context, err error) {
 	logger.Debug("defaultErrorResponse")
 	zeusErr := assertError(err)
 	if zeusErr == nil {
-		zeusErr = zeuserrors.New(enum.ECodeSystem, "err was a nil error or was a nil *zeuserrors.Error", "assertError")
+		zeusErr = zeuserrors.New(zeuserrors.ECodeSystem, "err was a nil error or was a nil *zeuserrors.Error", "assertError")
 	}
 	zeusErr.Write(c.Writer)
 }
@@ -76,6 +75,6 @@ func assertError(e error) (err *zeuserrors.Error) {
 		err = zeusErr
 		return
 	}
-	err = zeuserrors.New(enum.ECodeSystemAPI, e.Error(), "assertError")
+	err = zeuserrors.New(zeuserrors.ECodeSystemAPI, e.Error(), "assertError")
 	return
 }

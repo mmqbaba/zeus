@@ -4,13 +4,12 @@ import (
 	syserrors "errors"
 	"net/http"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/enum"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
 
 // Error .
 type Error struct {
-	ErrCode  enum.ErrorCode `json:"errcode"` //错误码  五位数字
+	ErrCode  ErrorCode `json:"errcode"` //错误码  五位数字
 	ErrMsg   string         `json:"errmsg"`  //错误信息
 	Cause    string         `json:"cause,omitempty"`
 	ServerID string         `json:"serverid,omitempty"` //服务ID
@@ -19,10 +18,10 @@ type Error struct {
 }
 
 // New new error
-func New(code enum.ErrorCode, msg, cause string) *Error {
+func New(code ErrorCode, msg, cause string) *Error {
 	errMsg := msg
 	if utils.IsEmptyString(errMsg) {
-		errMsg = enum.ECodeMsg[code]
+		errMsg = ECodeMsg[code]
 	}
 	return &Error{
 		ErrCode: code,
@@ -43,7 +42,7 @@ func (e Error) toJSONString() string {
 
 // StatusCode ...
 func (e Error) StatusCode() int {
-	status, ok := enum.ECodeStatus[e.ErrCode]
+	status, ok := ECodeStatus[e.ErrCode]
 	if !ok {
 		status = http.StatusBadRequest
 	}
@@ -66,6 +65,6 @@ func AssertError(e error) (err *Error) {
 		err = zeusErr
 		return
 	}
-	err = New(enum.ECodeSystem, e.Error(), "AssertError")
+	err = New(ECodeSystem, e.Error(), "AssertError")
 	return
 }

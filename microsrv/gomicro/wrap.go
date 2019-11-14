@@ -11,7 +11,6 @@ import (
 
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/enum"
 	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 )
 
@@ -30,7 +29,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			c = zeusctx.GMClientToContext(c, ng.GetContainer().GetGoMicroClient())
 			if v, ok := req.Body().(validator); ok && v != nil {
 				if err = v.Validate(); err != nil {
-					zeusErr := zeuserrors.New(enum.ECodeInvalidParams, err.Error(), "validator.Validate")
+					zeusErr := zeuserrors.New(zeuserrors.ECodeInvalidParams, err.Error(), "validator.Validate")
 					err = &gmerrors.Error{Id: zeusErr.ServerID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: zeusErr.Cause}
 					return
 				}
@@ -81,7 +80,7 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 		var gmErr *gmerrors.Error
 		if errors.As(err, &gmErr) {
 			if gmErr != nil {
-				err = zeuserrors.New(enum.ErrorCode(gmErr.Code), gmErr.Detail, gmErr.Status)
+				err = zeuserrors.New(zeuserrors.ErrorCode(gmErr.Code), gmErr.Detail, gmErr.Status)
 				return
 			}
 			err = nil
