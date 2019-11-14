@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,7 +10,15 @@ import (
 
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/enum"
+	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 )
+
+var SuccessResponse SuccessResponseHandler = defaultSuccessResponse
+var ErrorResponse ErrorResponseHandler = defaultErrorResponse
+
+type SuccessResponseHandler func(c *gin.Context, rsp interface{})
+type ErrorResponseHandler func(c *gin.Context, err error)
 
 func NotFound(ng engine.Engine) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -37,4 +46,35 @@ func ExtractLogger(c *gin.Context) *logrus.Entry {
 		ctx = cc
 	}
 	return zeusctx.ExtractLogger(ctx)
+}
+
+func defaultSuccessResponse(c *gin.Context, rsp interface{}) {
+	logger := ExtractLogger(c)
+	logger.Debug("defaultSuccessResponse")
+	res := zeuserrors.New(enum.ECodeSuccessed, "", "")
+	res.Data = rsp
+	res.Write(c.Writer)
+}
+
+func defaultErrorResponse(c *gin.Context, err error) {
+	logger := ExtractLogger(c)
+	logger.Debug("defaultErrorResponse")
+	zeusErr := assertError(err)
+	if zeusErr == nil {
+		zeusErr = zeuserrors.New(enum.ECodeSystem, "err was a nil error or was a nil *zeuserrors.Error", "assertError")
+	}
+	zeusErr.Write(c.Writer)
+}
+
+func assertError(e error) (err *zeuserrors.Error) {
+	if e == nil {
+		return
+	}
+	var zeusErr *zeuserrors.Error
+	if errors.As(e, &zeusErr) {
+		err = zeusErr
+		return
+	}
+	err = zeuserrors.New(enum.ECodeSystemAPI, e.Error(), "assertError")
+	return
 }

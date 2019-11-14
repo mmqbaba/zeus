@@ -8,6 +8,10 @@ import (
 // ErrorCode 错误码
 type ErrorCode int
 
+func (c ErrorCode) String() string {
+	return strconv.Itoa(int(c)) + ":" + ECodeMsg[c]
+}
+
 // 公共库错误码使用数字1打头，为五位数字
 const (
 	// ECodeSuccessed 成功
@@ -58,8 +62,4 @@ var ECodeStatus = map[ErrorCode]int{
 	ECodeNoPermission:  http.StatusForbidden,
 	ECodeInvalidParams: http.StatusOK,
 	ECodeProxyFailed:   http.StatusBadRequest,
-}
-
-func (c ErrorCode) String() string {
-	return strconv.Itoa(int(c)) + ":" + ECodeMsg[c]
 }

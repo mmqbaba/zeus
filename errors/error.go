@@ -58,6 +58,9 @@ func (e Error) Write(w http.ResponseWriter) error {
 }
 
 func AssertError(e error) (err *Error) {
+	if e == nil {
+		return
+	}
 	var zeusErr *Error
 	if syserrors.As(e, &zeusErr) {
 		err = zeusErr
