@@ -8,6 +8,7 @@ import (
 // ErrorCode 错误码
 type ErrorCode int
 
+// 公共库错误码使用数字1打头，为五位数字
 const (
 	// ECodeSuccessed 成功
 	ECodeSuccessed ErrorCode = iota
@@ -27,9 +28,9 @@ const (
 	ECodeProxyFailed
 )
 
-// ECodeMsg ...
+// ECodeMsg error message
 var ECodeMsg = map[ErrorCode]string{
-	ECodeSuccessed:      "success",
+	ECodeSuccessed:     "ok",
 	ECodeSystem:        "系统错误",
 	ECodeSystemAPI:     "系统api层错误",
 	ECodeSignature:     "签名错误",
@@ -45,7 +46,7 @@ var ECodeMsg = map[ErrorCode]string{
 
 // ECodeStatus http status code
 var ECodeStatus = map[ErrorCode]int{
-	ECodeSuccessed:      http.StatusOK,
+	ECodeSuccessed:     http.StatusOK,
 	ECodeSystem:        http.StatusInternalServerError,
 	ECodeSystemAPI:     http.StatusInternalServerError,
 	ECodeSignature:     http.StatusBadRequest,
@@ -55,7 +56,7 @@ var ECodeStatus = map[ErrorCode]int{
 	ECodeNotFound:      http.StatusNotFound,
 	ECodeUnauthorized:  http.StatusUnauthorized,
 	ECodeNoPermission:  http.StatusForbidden,
-	ECodeInvalidParams: http.StatusBadRequest,
+	ECodeInvalidParams: http.StatusOK,
 	ECodeProxyFailed:   http.StatusBadRequest,
 }
 

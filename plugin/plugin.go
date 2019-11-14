@@ -21,7 +21,6 @@ type Container struct {
 	logger        *logrus.Logger
 	// http
 	// grpc
-	// middlewareSpecs map[string]*MiddlewareSpec
 	// redisPool       *redis.Pool
 	// dbPool          *sql.DB
 	// transport       *http.Transport

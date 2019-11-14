@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"encoding/json"
 	syserrors "errors"
 	"net/http"
 
@@ -9,13 +8,13 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
 
-// Error ...
+// Error .
 type Error struct {
 	ErrCode  enum.ErrorCode `json:"errcode"` //错误码  五位数字
 	ErrMsg   string         `json:"errmsg"`  //错误信息
 	Cause    string         `json:"cause,omitempty"`
-	ServerID string         `json:"serverid"` //服务ID
-	TracerID string         `json:"tracerid"` //tracerID
+	ServerID string         `json:"serverid,omitempty"` //服务ID
+	TracerID string         `json:"tracerid,omitempty"` //tracerID
 	Data     interface{}    `json:"data,omitempty"`
 }
 
@@ -27,7 +26,7 @@ func New(code enum.ErrorCode, msg, cause string) *Error {
 	}
 	return &Error{
 		ErrCode: code,
-		ErrMsg:  enum.ECodeMsg[code],
+		ErrMsg:  errMsg,
 		Cause:   cause,
 	}
 }
@@ -38,7 +37,7 @@ func (e Error) Error() string {
 }
 
 func (e Error) toJSONString() string {
-	b, _ := json.Marshal(e)
+	b, _ := utils.Marshal(e)
 	return string(b)
 }
 
@@ -64,6 +63,6 @@ func AssertError(e error) (err *Error) {
 		err = zeusErr
 		return
 	}
-	err = New(enum.ECodeSystem, "", "")
+	err = New(enum.ECodeSystem, e.Error(), "AssertError")
 	return
 }

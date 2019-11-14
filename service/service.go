@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"path"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -18,12 +20,17 @@ import (
 	gruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/client"
+	gmerrors "github.com/micro/go-micro/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	// "github.com/urfave/negroni"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine/etcd"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/enum"
+	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin"
 	swagger "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger/ui"
@@ -255,7 +262,7 @@ func (s *Service) startServer() (err error) {
 		return
 	}
 
-	gw, err := s.newHttpGateway(gwOption{grpcEndpoint: fmt.Sprintf("localhost:%d", serverPort)})
+	gw, err := s.newHTTPGateway(gwOption{grpcEndpoint: fmt.Sprintf("localhost:%d", serverPort)})
 	if err != nil {
 		return
 	}
@@ -322,10 +329,99 @@ func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err err
 	return
 }
 
-func (s *Service) newHttpGateway(opt gwOption) (h http.Handler, err error) {
+type gwBodyWriter struct {
+	http.ResponseWriter
+	done bool
+	status int
+	zeusErr *zeuserrors.Error
+	body *bytes.Buffer
+}
+
+// 这里使用指针实现，传递指针，保证done status值的变更传递
+func (w *gwBodyWriter) WriteHeader (status int) {
+	w.done = true
+	w.status= status
+	w.ResponseWriter.WriteHeader(status)
+}
+
+func (w *gwBodyWriter) Write(b []byte) (l int, err error) {
+	// 处理错误
+	if w.zeusErr != nil && w.zeusErr.ErrCode != enum.ECodeSuccessed {
+		return w.ResponseWriter.Write(b)
+	}
+
+	if w.done {
+		// Something already wrote a response
+		// status already wrote
+		return w.ResponseWriter.Write(b)
+	}
+	// 正常返回
+	buf := bytes.NewBufferString(`{"errcode":` + strconv.Itoa(int(enum.ECodeSuccessed)) + `,"errmsg":"ok","data":`)
+	buf.Write(b)
+	buf.WriteString(`}`)
+	return w.ResponseWriter.Write(buf.Bytes())
+}
+
+func grpcGatewayHTTPError(ctx context.Context, mux *gruntime.ServeMux, marshaler gruntime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {
+	const fallback = `{"error": "failed to marshal error message"}`
+
+	s, ok := status.FromError(err)
+	if !ok {
+		s = status.New(codes.Unknown, err.Error())
+	}
+
+	w.Header().Del("Trailer")
+
+	contentType := marshaler.ContentType()
+	// Check marshaler on run time in order to keep backwards compatability
+	// An interface param needs to be added to the ContentType() function on
+	// the Marshal interface to be able to remove this check
+	if httpBodyMarshaler, ok := marshaler.(*gruntime.HTTPBodyMarshaler); ok {
+		pb := s.Proto()
+		contentType = httpBodyMarshaler.ContentTypeFromMessage(pb)
+	}
+	w.Header().Set("Content-Type", contentType)
+
+	msg := s.Message()
+	if !utils.IsEmptyString(msg) && s.Code() != 0 {
+		gmErr := gmerrors.Error{}
+		if e := utils.Unmarshal([]byte(msg), &gmErr); e != nil {
+			log.Println("utils.Unmarshal err:", e)
+		}
+		if gmErr.Code != 0 {
+			// w.Header().Set("x-zeus-errcode", strconv.Itoa(int(gmErr.Code)))
+			zeusErr := zeuserrors.New(enum.ErrorCode(gmErr.Code), gmErr.Detail, gmErr.Status)
+			ww, ok := w.(*gwBodyWriter)
+			if ok {
+				ww.zeusErr = zeusErr
+			}
+			err = zeusErr.Write(w)
+			return
+		}
+	}
+
+	// body := &struct {
+	// 	Error   string     `protobuf:"bytes,100,name=error" json:"error"`
+	// 	Code    int32      `protobuf:"varint,1,name=code" json:"code"`
+	// 	Message string     `protobuf:"bytes,2,name=message" json:"message"`
+	// 	Details []*any.Any `protobuf:"bytes,3,rep,name=details" json:"details,omitempty"`
+	// }{
+	// 	Error:   s.Message(),
+	// 	Message: s.Message(),
+	// 	Code:    int32(s.Code()),
+	// 	Details: s.Proto().GetDetails(),
+	// }
+
+	// _, ok = gruntime.ServerMetadataFromContext(ctx)
+	// if !ok {
+	// 	log.Println("Failed to extract ServerMetadata from context")
+	// }
+}
+
+func (s *Service) newHTTPGateway(opt gwOption) (h http.Handler, err error) {
 	configer, err := s.ng.GetConfiger()
 	if err != nil {
-		log.Println("[zeus] [s.newHttpGateway] s.ng.GetConfiger err:", err)
+		log.Println("[zeus] [s.newHTTPGateway] s.ng.GetConfiger err:", err)
 		return
 	}
 	conf := configer.Get()
@@ -336,7 +432,7 @@ func (s *Service) newHttpGateway(opt gwOption) (h http.Handler, err error) {
 	// swagger handler
 	r.PathPrefix("/swagger/").HandlerFunc(serveSwaggerFile)
 	serveSwaggerUI("/swagger-ui/", r)
-	log.Println("[zeus] [s.newHttpGateway] swaggerRegister success.")
+	log.Println("[zeus] [s.newHTTPGateway] swaggerRegister success.")
 
 	// http handler
 	if s.options.HttpHandlerRegisterFn != nil {
@@ -351,12 +447,12 @@ func (s *Service) newHttpGateway(opt gwOption) (h http.Handler, err error) {
 			handlerPrefix = "/zeus/"
 		}
 		if handler, err = s.options.HttpHandlerRegisterFn(context.Background(), handlerPrefix, s.ng); err != nil {
-			log.Println("[zeus] [s.newHttpGateway] HttpHandlerRegister err:", err)
+			log.Println("[zeus] [s.newHTTPGateway] HttpHandlerRegister err:", err)
 			return
 		}
 		if handler != nil {
 			r.PathPrefix(handlerPrefix).Handler(handler)
-			log.Println("[zeus] [s.newHttpGateway] HttpHandlerRegister success.")
+			log.Println("[zeus] [s.newHTTPGateway] HttpHandlerRegister success.")
 		}
 	}
 
@@ -364,9 +460,10 @@ func (s *Service) newHttpGateway(opt gwOption) (h http.Handler, err error) {
 	if s.options.HttpGWHandlerRegisterFn != nil {
 		var gwmux *gruntime.ServeMux
 		if gwmux, err = s.options.HttpGWHandlerRegisterFn(context.Background(), opt.grpcEndpoint, nil); err != nil {
-			log.Println("[zeus] [s.newHttpGateway] HttpGWHandlerRegister err:", err)
+			log.Println("[zeus] [s.newHTTPGateway] HttpGWHandlerRegister err:", err)
 			return
 		}
+		gruntime.HTTPError = grpcGatewayHTTPError // 覆盖默认的错误处理函数
 		if gwmux != nil {
 			gwPrefix := ""
 			if conf != nil {
@@ -380,9 +477,10 @@ func (s *Service) newHttpGateway(opt gwOption) (h http.Handler, err error) {
 			r.PathPrefix(gwPrefix).HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 				rr := r.WithContext(r.Context())
 				rr.URL.Path = strings.Replace(r.URL.Path, gwPrefix, "/", 1)
-				gwmux.ServeHTTP(rw, rr)
+				bwriter := &gwBodyWriter{body: bytes.NewBufferString(""), ResponseWriter: rw}
+				gwmux.ServeHTTP(bwriter, rr)
 			})
-			log.Println("[zeus] [s.newHttpGateway] HttpGWHandlerRegister success.")
+			log.Println("[zeus] [s.newHTTPGateway] HttpGWHandlerRegister success.")
 		}
 	}
 
