@@ -1,8 +1,10 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +13,7 @@ import (
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
 	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
 
 var SuccessResponse SuccessResponseHandler = defaultSuccessResponse
@@ -27,12 +30,73 @@ func NotFound(ng engine.Engine) gin.HandlerFunc {
 	}
 }
 
+type bodyLogWriter struct {
+	gin.ResponseWriter
+	body *bytes.Buffer
+}
+
+func (w bodyLogWriter) Write(b []byte) (int, error) {
+	w.body.Write(b)
+	return w.ResponseWriter.Write(b)
+}
+
 func Access(ng engine.Engine) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger := ng.GetContainer().GetLogger()
 		ctx := context.Background()
 		l := logger.WithFields(logrus.Fields{"tag": "gin"})
 		ctx = zeusctx.LoggerToContext(ctx, l)
+		////// zipkin begin
+		cfg, err := ng.GetConfiger()
+		if err != nil {
+			l.Error(err)
+			return
+		}
+		name := c.Request.URL.Path
+		tracer := ng.GetContainer().GetTracer()
+		if tracer == nil {
+			l.Error("tracer is nil")
+			return
+		}
+		spnctx, span, err := tracer.StartSpanFromContext(ctx, name)
+		if err != nil {
+			l.Error(err)
+			return
+		}
+
+		header, _ := utils.Marshal(c.Request.Header)
+		span.SetTag("http request.header", string(header))
+		span.SetTag("http request.method", c.Request.Method)
+		span.SetTag("http request.url", c.Request.URL.String())
+
+		if c.Request.Body != nil {
+			bodyBytes, err := ioutil.ReadAll(c.Request.Body)
+			if err == nil {
+				span.SetTag("http request.body", string(bodyBytes))
+				// Restore the io.ReadCloser to its original state
+				c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+			}
+		}
+		blw := &bodyLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
+		if cfg.Get().Trace.OnlyLogErr {
+			c.Writer = blw
+		}
+
+		// before request
+		defer func() {
+			if blw.body.Len() > 0 && blw.body.Bytes()[0] == '{' {
+				baseRsp := struct {
+					Errcode int32 `json:"errcode"`
+				}{}
+				if err1 := utils.Unmarshal(blw.body.Bytes(), &baseRsp); err1 == nil && baseRsp.Errcode == 0 {
+					return
+				}
+			}
+			span.Finish()
+		}()
+		ctx = spnctx
+		////// zipkin finish
+
 		c.Set("zeusctx", ctx)
 		l.Debug("access start", c.Request.URL.Path)
 		c.Next()

@@ -60,6 +60,10 @@ func GetTargetFileName(PD *Generator, objtype string, rootdir string, opts ...st
 		dirname := fmt.Sprintf("%s/%s/errdef", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
 		fn = dirname + "/errdef.go"
+	case "errdef.enum":
+		dirname := fmt.Sprintf("%s/%s/errdef", rootdir, PD.PackageName)
+		CheckPrepareDir(dirname)
+		fn = dirname + "/enum.go"
 	case "cmd.init":
 		dirname := fmt.Sprintf("%s/%s/cmd/app", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)

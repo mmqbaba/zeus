@@ -51,7 +51,7 @@ import (
 
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
 
-	gomicro "zeus-examples/sampleservice/proto/gomicro"
+	gomicro "zeus_app/{PKGNAME}/proto/gomicro"
 )
 
 var cli client.Client

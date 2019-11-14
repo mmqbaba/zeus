@@ -18,8 +18,7 @@ require (
 	github.com/go-redis/redis v6.15.6+incompatible
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
-	github.com/golang/protobuf v1.3.2
-	github.com/gorilla/mux v1.7.2
+	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0
 	github.com/grpc-ecosystem/grpc-gateway v1.12.0
@@ -32,6 +31,10 @@ require (
 	github.com/micro/go-plugins v1.1.1
 	github.com/onsi/ginkgo v1.10.3 // indirect
 	github.com/onsi/gomega v1.7.1 // indirect
+	github.com/opentracing-contrib/go-observer v0.0.0-20170622124052-a52f23424492 // indirect
+	github.com/opentracing/opentracing-go v1.1.0
+	github.com/openzipkin-contrib/zipkin-go-opentracing v0.3.5 // indirect
+	github.com/openzipkin/zipkin-go-opentracing v0.3.5
 	github.com/prometheus/client_golang v1.2.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/tebeka/strftime v0.1.3 // indirect
