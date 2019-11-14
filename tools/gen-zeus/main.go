@@ -96,6 +96,24 @@ func main() {
 		errcount++
 	}
 
+	err = generator.GenerateLogic(g, *sourceRoot)
+	if err != nil {
+		fmt.Printf("Generate logic dir failed, error is %v\n", err)
+		errcount++
+	}
+
+	err = generator.GenerateResource(g, *sourceRoot)
+	if err != nil {
+		fmt.Printf("Generate resource files failed, error is %v\n", err)
+		errcount++
+	}
+
+	err = generator.GenerateErrdef(g, *sourceRoot)
+	if err != nil {
+		fmt.Printf("Generate errdef file failed, error is %v\n", err)
+		errcount++
+	}
+
 	if errcount == 0 {
 		fmt.Println("Generate rpc engin success!")
 	} else {
