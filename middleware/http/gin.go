@@ -23,7 +23,8 @@ type ErrorResponseHandler func(c *gin.Context, err error)
 func NotFound(ng engine.Engine) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ExtractLogger(c).Debugf("url not found url: %s\n", c.Request.URL)
-		c.JSON(http.StatusNotFound, "not found")
+		// c.JSON(http.StatusNotFound, "not found")
+		c.String(http.StatusNotFound, "not found")
 	}
 }
 
