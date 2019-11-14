@@ -29,7 +29,6 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine/etcd"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/enum"
 	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin"
@@ -346,7 +345,7 @@ func (w *gwBodyWriter) WriteHeader (status int) {
 
 func (w *gwBodyWriter) Write(b []byte) (l int, err error) {
 	// 处理错误
-	if w.zeusErr != nil && w.zeusErr.ErrCode != enum.ECodeSuccessed {
+	if w.zeusErr != nil && w.zeusErr.ErrCode != zeuserrors.ECodeSuccessed {
 		return w.ResponseWriter.Write(b)
 	}
 
@@ -356,7 +355,7 @@ func (w *gwBodyWriter) Write(b []byte) (l int, err error) {
 		return w.ResponseWriter.Write(b)
 	}
 	// 正常返回
-	buf := bytes.NewBufferString(`{"errcode":` + strconv.Itoa(int(enum.ECodeSuccessed)) + `,"errmsg":"ok","data":`)
+	buf := bytes.NewBufferString(`{"errcode":` + strconv.Itoa(int(zeuserrors.ECodeSuccessed)) + `,"errmsg":"ok","data":`)
 	buf.Write(b)
 	buf.WriteString(`}`)
 	return w.ResponseWriter.Write(buf.Bytes())
@@ -390,7 +389,7 @@ func grpcGatewayHTTPError(ctx context.Context, mux *gruntime.ServeMux, marshaler
 		}
 		if gmErr.Code != 0 {
 			// w.Header().Set("x-zeus-errcode", strconv.Itoa(int(gmErr.Code)))
-			zeusErr := zeuserrors.New(enum.ErrorCode(gmErr.Code), gmErr.Detail, gmErr.Status)
+			zeusErr := zeuserrors.New(zeuserrors.ErrorCode(gmErr.Code), gmErr.Detail, gmErr.Status)
 			ww, ok := w.(*gwBodyWriter)
 			if ok {
 				ww.zeusErr = zeusErr
