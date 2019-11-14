@@ -63,6 +63,14 @@ func GenerateClientLogWrap(ng engine.Engine) func(c client.Client) client.Client
 	}
 }
 
+func GenerateClientWrapTest(ng engine.Engine) func(c client.Client) client.Client {
+	return func(c client.Client) client.Client {
+		return &clientWrapTest{
+			Client: c,
+		}
+	}
+}
+
 func newClientLogWrap(c client.Client) client.Client {
 	return &clientLogWrap{
 		Client: c,
@@ -74,6 +82,7 @@ type clientLogWrap struct {
 }
 
 func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) (err error) {
+	zeusctx.ExtractLogger(ctx).Debug("clientLogWrap")
 	err = l.Client.Call(ctx, req, rsp, opts...)
 	if err != nil {
 		// gomicro错误解包为zeus错误
@@ -86,5 +95,15 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 			err = nil
 		}
 	}
+	return
+}
+
+type clientWrapTest struct {
+	client.Client
+}
+
+func (l *clientWrapTest) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) (err error) {
+	zeusctx.ExtractLogger(ctx).Debug("clientWrapTest")
+	err = l.Client.Call(ctx, req, rsp, opts...)
 	return
 }
