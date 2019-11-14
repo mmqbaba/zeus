@@ -4,11 +4,14 @@ import (
 	"log"
 
 	"github.com/micro/go-micro/client"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	zeuslog "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/log"
-	redisclient "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace/zipkin"
 )
 
 // Container contain comm obj
@@ -19,6 +22,7 @@ type Container struct {
 	// gomicro
 	gomicroClient client.Client
 	logger        *logrus.Logger
+	tracer        *tracing.TracerWrap
 	// http
 	// grpc
 	// redisPool       *redis.Pool
@@ -161,3 +165,22 @@ func (c *Container) GetLogger() *logrus.Logger {
 // 	r.dbPool.Close()
 // }
 // }
+
+// Logger
+func (c *Container) initTracer(cfg *config.Trace) (err error) {
+	err = zipkin.InitTracer(cfg)
+	if err != nil {
+		log.Println("initTracer err:", err)
+		return
+	}
+	c.tracer = tracing.NewTracerWrap(opentracing.GlobalTracer())
+	return
+}
+
+func (c *Container) reloadTracer(cfg *config.Trace) (err error) {
+	return c.initTracer(cfg)
+}
+
+func (c *Container) GetTracer() *tracing.TracerWrap {
+	return c.tracer
+}

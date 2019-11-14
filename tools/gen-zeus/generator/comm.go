@@ -56,10 +56,14 @@ type ServerComposement struct {
 func GetTargetFileName(PD *Generator, objtype string, rootdir string, opts ...string) string {
 	var fn string
 	switch objtype {
-	case "def":
-		dirname := fmt.Sprintf("%s/%s/svrdef", rootdir, PD.PackageName)
+	case "errdef":
+		dirname := fmt.Sprintf("%s/%s/errdef", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
-		fn = dirname + "/svrdef.go"
+		fn = dirname + "/errdef.go"
+	case "errdef.enum":
+		dirname := fmt.Sprintf("%s/%s/errdef", rootdir, PD.PackageName)
+		CheckPrepareDir(dirname)
+		fn = dirname + "/enum.go"
 	case "cmd.init":
 		dirname := fmt.Sprintf("%s/%s/cmd/app", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
@@ -72,6 +76,10 @@ func GetTargetFileName(PD *Generator, objtype string, rootdir string, opts ...st
 		dirname := fmt.Sprintf("%s/%s/global", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
 		fn = fmt.Sprintf("%s/init.go", dirname)
+	case "global.enum":
+		dirname := fmt.Sprintf("%s/%s/global", rootdir, PD.PackageName)
+		CheckPrepareDir(dirname)
+		fn = fmt.Sprintf("%s/enum.go", dirname)
 	case "global":
 		dirname := fmt.Sprintf("%s/%s/global", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
@@ -132,6 +140,26 @@ func GetTargetFileName(PD *Generator, objtype string, rootdir string, opts ...st
 		dirname := fmt.Sprintf("%s/%s", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
 		fn = fmt.Sprintf("%s/Makefile", dirname)
+	case "logic":
+		dirname := fmt.Sprintf("%s/%s/logic", rootdir, PD.PackageName)
+		CheckPrepareDir(dirname)
+		fn = dirname
+	case "resource.dao":
+		dirname := fmt.Sprintf("%s/%s/resource/dao", rootdir, PD.PackageName)
+		CheckPrepareDir(dirname)
+		fn = dirname
+	case "resource.cache":
+		dirname := fmt.Sprintf("%s/%s/resource/dao", rootdir, PD.PackageName)
+		CheckPrepareDir(dirname)
+		fn = dirname
+	case "resource.rpcclient":
+		dirname := fmt.Sprintf("%s/%s/resource/rpcclient", rootdir, PD.PackageName)
+		CheckPrepareDir(dirname)
+		fn = dirname + "/rpcclient.go"
+	case "resource.httpclient":
+		dirname := fmt.Sprintf("%s/%s/resource/httpclient", rootdir, PD.PackageName)
+		CheckPrepareDir(dirname)
+		fn = dirname + "/httpclient.go"
 	default:
 		fmt.Print("Can not support object type")
 		return ""

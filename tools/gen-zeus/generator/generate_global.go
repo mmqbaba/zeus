@@ -6,6 +6,9 @@ func GenerateGlobal(PD *Generator, rootdir string) (err error) {
 		return
 	}
 	err = genGlobalInit(PD, rootdir)
+	if err != nil {
+		return
+	}
 
 	return
 }
