@@ -25,7 +25,6 @@ type validator interface {
 func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.HandlerFunc {
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
-			// TODO: ctx添加tracer
 			logger := ng.GetContainer().GetLogger()
 			l := logger.WithFields(logrus.Fields{"tag": "gomicro-serverlogwrap"})
 			c := zeusctx.EngineToContext(ctx, ng)
@@ -61,10 +60,10 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			ext.SpanKindRPCClient.Set(span)
 			body, _ := utils.Marshal(req.Body())
 			span.SetTag("grpc client call", string(body))
+			///////// tracer finish
 			l = l.WithFields(logrus.Fields{"tracerid": span.Context().(zipkintracer.SpanContext).TraceID.ToHex()})
 			c = zeusctx.LoggerToContext(spnctx, l)
-			///////// tracer finish
-
+			l.Debug("serverLogWrap")
 			if v, ok := req.Body().(validator); ok && v != nil {
 				if err = v.Validate(); err != nil {
 					zeusErr := zeuserrors.New(zeuserrors.ECodeInvalidParams, err.Error(), "validator.Validate")

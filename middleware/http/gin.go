@@ -94,9 +94,9 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			}
 			span.Finish()
 		}()
+		////// zipkin finish
 		l = l.WithFields(logrus.Fields{"tracerid": span.Context().(zipkintracer.SpanContext).TraceID.ToHex()})
 		ctx = zeusctx.LoggerToContext(spnctx, l)
-		////// zipkin finish
 
 		c.Set("zeusctx", ctx)
 		l.Debugln("access start", c.Request.URL.Path)
