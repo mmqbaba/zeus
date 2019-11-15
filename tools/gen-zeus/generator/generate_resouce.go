@@ -28,15 +28,21 @@ func GenerateResource(PD *Generator, rootdir string) (err error) {
 }
 
 func genResourceDao(PD *Generator, rootdir string) error {
+	header := ``
+	context := `package dao
 
-	GetTargetFileName(PD, "resource.dao", rootdir)
-	return nil
+`
+	fn := GetTargetFileName(PD, "resource.dao", rootdir)
+	return writeContext(fn, header, context, false)
 }
 
 func genResourceCache(PD *Generator, rootdir string) error {
+	header := ``
+	context := `package cache
 
-	GetTargetFileName(PD, "resource.cache", rootdir)
-	return nil
+`
+	fn := GetTargetFileName(PD, "resource.cache", rootdir)
+	return writeContext(fn, header, context, false)
 }
 
 func genResourceRpcClient(PD *Generator, rootdir string) error {

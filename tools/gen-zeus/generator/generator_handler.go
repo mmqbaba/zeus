@@ -65,6 +65,9 @@ func (h *%s) %s(ctx context.Context, stream gomicro.%s_%sStream) (err error) {
 		} else if v.IsPost {
 			funtext := fmt.Sprintf(postFunc, camelSrvName, v.Name, v.RequestType, v.ReturnsType)
 			context += funtext
+		} else {
+			funtext := fmt.Sprintf(postFunc, camelSrvName, v.Name, v.RequestType, v.ReturnsType)
+			context += funtext
 		}
 
 		fn := GetTargetFileName(PD, "handler", rootdir, strings.ToLower(v.Name))

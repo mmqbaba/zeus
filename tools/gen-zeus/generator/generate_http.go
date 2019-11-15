@@ -90,11 +90,7 @@ func serveHttpHandler(ctx context.Context, pathPrefix string, ng engine.Engine) 
 
 func getEcho(c *gin.Context) {
 	zeusmwhttp.ExtractLogger(c).Debug("echo")
-	c.JSON(http.StatusOK, gin.H{
-		"errcode": 0,
-		"errmsg":  "ok",
-		"data":    "hello, zeus engingo.",
-	})
+	zeusmwhttp.SuccessResponse(c, gin.H{"message": "hello, zeus enginego."})
 }
 
 `
