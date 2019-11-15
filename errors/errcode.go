@@ -20,21 +20,21 @@ func (c ErrorCode) ParseErr(msg string) *Error {
 // 公共库错误码使用数字1打头，为五位数字
 const (
 	// ECodeSuccessed 成功
-	ECodeSuccessed ErrorCode = iota
+	ECodeSuccessed ErrorCode = 0
 	// ECodeSystem 系统错误
-	ECodeSystem ErrorCode = iota + 10000
+	ECodeSystem ErrorCode = 10001
 	// ECodeSystemAPI 系统api层错误
-	ECodeSystemAPI
-	ECodeSignature
+	ECodeSystemAPI ErrorCode = 10002
+	ECodeSignature ErrorCode = 10003
 	// ECodeEBusAPI 请求网关ebus接口错误
-	ECodeEBusAPI
-	ECodeBadRequest
-	ECodeInternal
-	ECodeNotFound
-	ECodeUnauthorized
-	ECodeNoPermission
-	ECodeInvalidParams
-	ECodeProxyFailed
+	ECodeEBusAPI       ErrorCode = 10004
+	ECodeBadRequest    ErrorCode = 10005
+	ECodeInternal      ErrorCode = 10006
+	ECodeNotFound      ErrorCode = 10007
+	ECodeUnauthorized  ErrorCode = 10008
+	ECodeNoPermission  ErrorCode = 10009
+	ECodeInvalidParams ErrorCode = 10010
+	ECodeProxyFailed   ErrorCode = 10011
 )
 
 // ECodeMsg error message
@@ -56,10 +56,10 @@ var ECodeMsg = map[ErrorCode]string{
 // ECodeStatus http status code
 var ECodeStatus = map[ErrorCode]int{
 	ECodeSuccessed:     http.StatusOK,
-	ECodeSystem:        http.StatusInternalServerError,
-	ECodeSystemAPI:     http.StatusInternalServerError,
-	ECodeSignature:     http.StatusBadRequest,
-	ECodeEBusAPI:       http.StatusBadRequest,
+	ECodeSystem:        http.StatusOK,
+	ECodeSystemAPI:     http.StatusOK,
+	ECodeSignature:     http.StatusOK,
+	ECodeEBusAPI:       http.StatusOK,
 	ECodeBadRequest:    http.StatusBadRequest,
 	ECodeInternal:      http.StatusInternalServerError,
 	ECodeNotFound:      http.StatusNotFound,
