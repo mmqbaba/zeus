@@ -12,6 +12,7 @@ func (c ErrorCode) String() string {
 	return strconv.Itoa(int(c)) + ":" + ECodeMsg[c]
 }
 
+// ParseErr 错误转义
 func (c ErrorCode) ParseErr(msg string) *Error {
 	return New(c, msg, "")
 }
