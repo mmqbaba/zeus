@@ -16,7 +16,8 @@ import (
 
 // Container contain comm obj
 type Container struct {
-	appcfg config.AppConf
+	serverID string
+	appcfg   config.AppConf
 
 	redis *redisclient.Client
 	// gomicro
@@ -170,7 +171,7 @@ func (c *Container) GetLogger() *logrus.Logger {
 // }
 // }
 
-// Logger
+// Tracer
 func (c *Container) initTracer(cfg *config.Trace) (err error) {
 	err = zipkin.InitTracer(cfg)
 	if err != nil {
@@ -187,4 +188,12 @@ func (c *Container) reloadTracer(cfg *config.Trace) (err error) {
 
 func (c *Container) GetTracer() *tracing.TracerWrap {
 	return c.tracer
+}
+
+func (c *Container) SetServerID(id string) {
+	c.serverID = id
+}
+
+func (c *Container) GetServerID() string {
+	return c.serverID 
 }

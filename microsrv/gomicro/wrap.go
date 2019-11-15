@@ -8,6 +8,7 @@ import (
 	"github.com/micro/go-micro/client"
 	gmerrors "github.com/micro/go-micro/errors"
 	"github.com/micro/go-micro/server"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	zipkintracer "github.com/openzipkin/zipkin-go-opentracing"
 	"github.com/sirupsen/logrus"
@@ -34,7 +35,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			cfg, err := ng.GetConfiger()
 			if err != nil {
 				l.Error(err)
-				err = &gmerrors.Error{Id: name, Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
+				err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: "ng.GetConfiger"}
 				return
 			}
 
@@ -42,13 +43,13 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			if tracer == nil {
 				err = fmt.Errorf("tracer is nil")
 				l.Error(err)
-				err = &gmerrors.Error{Id: name, Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
+				err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
 				return
 			}
 			spnctx, span, err := tracer.StartSpanFromContext(c, name)
 			if err != nil {
 				l.Error(err)
-				err = &gmerrors.Error{Id: name, Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
+				err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
 				return
 			}
 			defer func() {
@@ -67,7 +68,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			if v, ok := req.Body().(validator); ok && v != nil {
 				if err = v.Validate(); err != nil {
 					zeusErr := zeuserrors.New(zeuserrors.ECodeInvalidParams, err.Error(), "validator.Validate")
-					err = &gmerrors.Error{Id: zeusErr.ServerID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: zeusErr.Cause}
+					err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: zeusErr.Cause}
 					return
 				}
 			}
@@ -81,7 +82,11 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 				var zeusErr *zeuserrors.Error
 				if errors.As(err, &zeusErr) {
 					if zeusErr != nil {
-						err = &gmerrors.Error{Id: zeusErr.ServerID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: zeusErr.Cause}
+						serverID := zeusErr.ServerID
+						if utils.IsEmptyString(serverID) {
+							serverID = ng.GetContainer().GetServerID()
+						}
+						err = &gmerrors.Error{Id: serverID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: zeusErr.Cause}
 						return
 					}
 					err = nil
@@ -98,7 +103,7 @@ func GenerateClientLogWrap(ng engine.Engine) func(c client.Client) client.Client
 	return func(c client.Client) client.Client {
 		return &clientLogWrap{
 			Client: c,
-			// ng: ng,
+			ng:     ng,
 		}
 	}
 }
@@ -119,6 +124,7 @@ func newClientLogWrap(c client.Client) client.Client {
 
 type clientLogWrap struct {
 	client.Client
+	ng engine.Engine
 }
 
 func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) (err error) {
@@ -129,7 +135,14 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 		var gmErr *gmerrors.Error
 		if errors.As(err, &gmErr) {
 			if gmErr != nil {
-				err = zeuserrors.New(zeuserrors.ErrorCode(gmErr.Code), gmErr.Detail, gmErr.Status)
+				zeusErr := zeuserrors.New(zeuserrors.ErrorCode(gmErr.Code), gmErr.Detail, gmErr.Status)
+				zeusErr.ServerID = gmErr.Id
+				if utils.IsEmptyString(zeusErr.ServerID) && l.ng != nil {
+					zeusErr.ServerID = l.ng.GetContainer().GetServerID()
+				}
+				span := opentracing.SpanFromContext(ctx)
+				zeusErr.TracerID = span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
+				err = zeusErr
 				return
 			}
 			err = nil

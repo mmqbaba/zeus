@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
 	zipkintracer "github.com/openzipkin/zipkin-go-opentracing"
 	"github.com/sirupsen/logrus"
 
@@ -16,6 +17,8 @@ import (
 	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
+
+const ZEUS_CTX = "zeusctx"
 
 var SuccessResponse SuccessResponseHandler = defaultSuccessResponse
 var ErrorResponse ErrorResponseHandler = defaultErrorResponse
@@ -97,8 +100,9 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		////// zipkin finish
 		l = l.WithFields(logrus.Fields{"tracerid": span.Context().(zipkintracer.SpanContext).TraceID.ToHex()})
 		ctx = zeusctx.LoggerToContext(spnctx, l)
+		ctx = zeusctx.EngineToContext(ctx, ng)
 
-		c.Set("zeusctx", ctx)
+		c.Set(ZEUS_CTX, ctx)
 		l.Debugln("access start", c.Request.URL.Path)
 		c.Next()
 		l.Debugln("access end", c.Request.URL.Path)
@@ -107,16 +111,37 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 
 func ExtractLogger(c *gin.Context) *logrus.Entry {
 	ctx := context.Background()
-	if cc, ok := c.Value("zeusctx").(context.Context); ok && cc != nil {
+	if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
 		ctx = cc
 	}
 	return zeusctx.ExtractLogger(ctx)
+}
+
+func ExtractTracerID(c *gin.Context) string {
+	ctx := context.Background()
+	if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
+		ctx = cc
+	}
+	span := opentracing.SpanFromContext(ctx)
+	return span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
+}
+
+func ExtractEngine(c *gin.Context) (engine.Engine, error) {
+	ctx := context.Background()
+	if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
+		ctx = cc
+	}
+	return zeusctx.ExtractEngine(ctx)
 }
 
 func defaultSuccessResponse(c *gin.Context, rsp interface{}) {
 	logger := ExtractLogger(c)
 	logger.Debug("defaultSuccessResponse")
 	res := zeuserrors.New(zeuserrors.ECodeSuccessed, "", "")
+	res.TracerID = ExtractTracerID(c)
+	if ng, _ := ExtractEngine(c); ng != nil {
+		res.ServerID = ng.GetContainer().GetServerID()
+	}
 	res.Data = rsp
 	res.Write(c.Writer)
 }
@@ -127,6 +152,12 @@ func defaultErrorResponse(c *gin.Context, err error) {
 	zeusErr := assertError(err)
 	if zeusErr == nil {
 		zeusErr = zeuserrors.New(zeuserrors.ECodeSystem, "err was a nil error or was a nil *zeuserrors.Error", "assertError")
+	}
+	zeusErr.TracerID = ExtractTracerID(c)
+	if utils.IsEmptyString(zeusErr.ServerID) {
+		if ng, _ := ExtractEngine(c); ng != nil {
+			zeusErr.ServerID = ng.GetContainer().GetServerID()
+		}
 	}
 	zeusErr.Write(c.Writer)
 }
