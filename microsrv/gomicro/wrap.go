@@ -9,6 +9,7 @@ import (
 	gmerrors "github.com/micro/go-micro/errors"
 	"github.com/micro/go-micro/server"
 	"github.com/opentracing/opentracing-go/ext"
+	zipkintracer "github.com/openzipkin/zipkin-go-opentracing"
 	"github.com/sirupsen/logrus"
 
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
@@ -25,11 +26,9 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
 			// TODO: ctx添加tracer
-
 			logger := ng.GetContainer().GetLogger()
 			l := logger.WithFields(logrus.Fields{"tag": "gomicro-serverlogwrap"})
-			c := zeusctx.LoggerToContext(ctx, l)
-			c = zeusctx.EngineToContext(c, ng)
+			c := zeusctx.EngineToContext(ctx, ng)
 			c = zeusctx.GMClientToContext(c, ng.GetContainer().GetGoMicroClient())
 			///////// tracer begin
 			name := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
@@ -62,7 +61,8 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			ext.SpanKindRPCClient.Set(span)
 			body, _ := utils.Marshal(req.Body())
 			span.SetTag("grpc client call", string(body))
-			c = spnctx
+			l = l.WithFields(logrus.Fields{"tracerid": span.Context().(zipkintracer.SpanContext).TraceID.ToHex()})
+			c = zeusctx.LoggerToContext(spnctx, l)
 			///////// tracer finish
 
 			if v, ok := req.Body().(validator); ok && v != nil {

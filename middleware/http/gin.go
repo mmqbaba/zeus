@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	zipkintracer "github.com/openzipkin/zipkin-go-opentracing"
 	"github.com/sirupsen/logrus"
 
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
@@ -45,7 +46,6 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		logger := ng.GetContainer().GetLogger()
 		ctx := context.Background()
 		l := logger.WithFields(logrus.Fields{"tag": "gin"})
-		ctx = zeusctx.LoggerToContext(ctx, l)
 		////// zipkin begin
 		cfg, err := ng.GetConfiger()
 		if err != nil {
@@ -94,13 +94,14 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			}
 			span.Finish()
 		}()
-		ctx = spnctx
+		l = l.WithFields(logrus.Fields{"tracerid": span.Context().(zipkintracer.SpanContext).TraceID.ToHex()})
+		ctx = zeusctx.LoggerToContext(spnctx, l)
 		////// zipkin finish
 
 		c.Set("zeusctx", ctx)
-		l.Debug("access start", c.Request.URL.Path)
+		l.Debugln("access start", c.Request.URL.Path)
 		c.Next()
-		l.Debug("access end", c.Request.URL.Path)
+		l.Debugln("access end", c.Request.URL.Path)
 	}
 }
 

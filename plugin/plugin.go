@@ -9,8 +9,8 @@ import (
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	zeuslog "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/log"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
+	redisclient "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
+	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace/zipkin"
 )
 
@@ -40,6 +40,7 @@ func (c *Container) Init(appcfg *config.AppConf) {
 	log.Println("[Container.Init] start")
 	c.initRedis(&appcfg.Redis)
 	c.initLogger(&appcfg.LogConf)
+	c.initTracer(&appcfg.Trace)
 	log.Println("[Container.Init] finish")
 	c.appcfg = *appcfg
 }
@@ -51,6 +52,9 @@ func (c *Container) Reload(appcfg *config.AppConf) {
 	}
 	if c.appcfg.LogConf != appcfg.LogConf {
 		c.reloadLogger(&appcfg.LogConf)
+	}
+	if c.appcfg.Trace != appcfg.Trace {
+		c.reloadTracer(&appcfg.Trace)
 	}
 	log.Println("[Container.Reload] finish")
 	c.appcfg = *appcfg
