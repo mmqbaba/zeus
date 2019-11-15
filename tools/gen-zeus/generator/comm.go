@@ -147,11 +147,11 @@ func GetTargetFileName(PD *Generator, objtype string, rootdir string, opts ...st
 	case "resource.dao":
 		dirname := fmt.Sprintf("%s/%s/resource/dao", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
-		fn = dirname
+		fn = dirname + "/dao.go"
 	case "resource.cache":
-		dirname := fmt.Sprintf("%s/%s/resource/dao", rootdir, PD.PackageName)
+		dirname := fmt.Sprintf("%s/%s/resource/cache", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
-		fn = dirname
+		fn = dirname + "/cache.go"
 	case "resource.rpcclient":
 		dirname := fmt.Sprintf("%s/%s/resource/rpcclient", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
@@ -160,6 +160,10 @@ func GetTargetFileName(PD *Generator, objtype string, rootdir string, opts ...st
 		dirname := fmt.Sprintf("%s/%s/resource/httpclient", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
 		fn = dirname + "/httpclient.go"
+	case "dockerfile":
+		dirname := fmt.Sprintf("%s/%s", rootdir, PD.PackageName)
+		CheckPrepareDir(dirname)
+		fn = fmt.Sprintf("%s/Dockerfile", dirname)
 	default:
 		fmt.Print("Can not support object type")
 		return ""

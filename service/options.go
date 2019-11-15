@@ -38,6 +38,8 @@ type Options struct {
 
 	GoMicroServerWrapGenerateFn []GoMicroServerWrapGenerateFn
 	GoMicroClientWrapGenerateFn []GoMicroClientWrapGenerateFn
+
+	Version bool
 }
 
 type Option func(o *Options)
@@ -110,6 +112,7 @@ func ParseCommandLine() (options Options, err error) {
 	flag.StringVar(&options.LogLevel, "logLevel", "", "log at or above(debug, info, warn, error, fatal, panic) this level to the logging output(default >=info)")
 
 	flag.StringVar(&options.ConfEntryPath, "confEntryPath", "", "config entry path")
+	flag.BoolVar(&options.Version, "version", false, "show version")
 
 	flag.Parse()
 

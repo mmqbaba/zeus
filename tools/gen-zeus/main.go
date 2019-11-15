@@ -96,11 +96,11 @@ func main() {
 		errcount++
 	}
 
-	err = generator.GenerateLogic(g, *sourceRoot)
-	if err != nil {
-		fmt.Printf("Generate logic dir failed, error is %v\n", err)
-		errcount++
-	}
+	//err = generator.GenerateLogic(g, *sourceRoot)
+	//if err != nil {
+	//	fmt.Printf("Generate logic dir failed, error is %v\n", err)
+	//	errcount++
+	//}
 
 	err = generator.GenerateResource(g, *sourceRoot)
 	if err != nil {
@@ -109,6 +109,18 @@ func main() {
 	}
 
 	err = generator.GenerateErrdef(g, *sourceRoot)
+	if err != nil {
+		fmt.Printf("Generate errdef file failed, error is %v\n", err)
+		errcount++
+	}
+
+	err = generator.GenerateDockerfile(g, *sourceRoot)
+	if err != nil {
+		fmt.Printf("Generate errdef file failed, error is %v\n", err)
+		errcount++
+	}
+
+	err = generator.GenerateReadme(g, *sourceRoot)
 	if err != nil {
 		fmt.Printf("Generate errdef file failed, error is %v\n", err)
 		errcount++

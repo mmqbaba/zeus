@@ -45,7 +45,23 @@ import (
 	"{PRJ}/global"
 )
 
+var (
+	BuildDate = ""
+	Version   = ""
+	GoVersion = ""
+)
+
 func main() {
+	
+	args := os.Args
+	if len(args) == 2 && (args[1] == "--version" || args[1] == "-version" || args[1] == "-v") {
+		log.Println("-------------------------")
+		log.Printf("Git Commit Hash: %s\n", Version)
+		log.Printf("UTC Build Date : %s\n", BuildDate)
+		log.Printf("Golang Version : %s\n", GoVersion)
+		return
+	}
+
 	num := runtime.NumCPU()
 	log.Printf("[NumCPU] %v\n", num)
 	gmp := os.Getenv("GOMAXPROCS")
