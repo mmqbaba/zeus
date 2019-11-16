@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
@@ -47,7 +48,7 @@ func (w bodyLogWriter) Write(b []byte) (int, error) {
 func Access(ng engine.Engine) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger := ng.GetContainer().GetLogger()
-		ctx := context.Background()
+		ctx := c.Request.Context()
 		l := logger.WithFields(logrus.Fields{"tag": "gin"})
 		////// zipkin begin
 		cfg, err := ng.GetConfiger()
@@ -101,6 +102,10 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		l = l.WithFields(logrus.Fields{"tracerid": span.Context().(zipkintracer.SpanContext).TraceID.ToHex()})
 		ctx = zeusctx.LoggerToContext(spnctx, l)
 		ctx = zeusctx.EngineToContext(ctx, ng)
+		ctx = zeusctx.GMClientToContext(ctx, ng.GetContainer().GetGoMicroClient())
+		if ng.GetContainer().GetRedisCli() != nil {
+			ctx = zeusctx.RedisToContext(ctx, ng.GetContainer().GetRedisCli().GetCli())
+		}
 
 		c.Set(ZEUS_CTX, ctx)
 		l.Debugln("access start", c.Request.URL.Path)
@@ -110,7 +115,7 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 }
 
 func ExtractLogger(c *gin.Context) *logrus.Entry {
-	ctx := context.Background()
+	ctx := c.Request.Context()
 	if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
 		ctx = cc
 	}
@@ -118,7 +123,7 @@ func ExtractLogger(c *gin.Context) *logrus.Entry {
 }
 
 func ExtractTracerID(c *gin.Context) string {
-	ctx := context.Background()
+	ctx := c.Request.Context()
 	if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
 		ctx = cc
 	}
@@ -127,7 +132,7 @@ func ExtractTracerID(c *gin.Context) string {
 }
 
 func ExtractEngine(c *gin.Context) (engine.Engine, error) {
-	ctx := context.Background()
+	ctx := c.Request.Context()
 	if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
 		ctx = cc
 	}
@@ -173,4 +178,38 @@ func assertError(e error) (err *zeuserrors.Error) {
 	}
 	err = zeuserrors.New(zeuserrors.ECodeSystemAPI, e.Error(), "assertError")
 	return
+}
+
+func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		h := reflect.ValueOf(handleFunc)
+		reqT := h.Type().In(1).Elem()
+		rspT := h.Type().In(2).Elem()
+
+		reqV := reflect.New(reqT)
+		rspV := reflect.New(rspT)
+
+		req := reqV.Interface()
+		if err := c.ShouldBind(req); err != nil {
+			ExtractLogger(c).Error(err)
+			ErrorResponse(c, zeuserrors.ECodeInvalidParams.ParseErr(err.Error()))
+			return
+		}
+		ctx := c.Request.Context()
+		if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
+			ctx = cc
+		}
+		ctxV := reflect.ValueOf(ctx)
+		ret := h.Call([]reflect.Value{ctxV, reqV, rspV})
+		if !ret[0].IsNil() {
+			err, ok := ret[0].Interface().(error)
+			if ok {
+				ErrorResponse(c, err)
+				return
+			}
+			ErrorResponse(c, zeuserrors.ECodeInternal.ParseErr("UNKNOW ERROR"))
+			return
+		}
+		SuccessResponse(c, rspV.Interface())
+	}
 }
