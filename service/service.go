@@ -451,7 +451,7 @@ func (s *Service) newHTTPGateway(opt gwOption) (h http.Handler, err error) {
 		}
 		if utils.IsEmptyString(handlerPrefix) {
 			// handlerPrefix = "/zeus/"
-			handlerPrefix = "/"
+			handlerPrefix = "/api/"
 		}
 		if handler, err = s.options.HttpHandlerRegisterFn(context.Background(), handlerPrefix, s.ng); err != nil {
 			log.Println("[zeus] [s.newHTTPGateway] HttpHandlerRegister err:", err)

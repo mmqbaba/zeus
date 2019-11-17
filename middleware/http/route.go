@@ -1,7 +1,7 @@
 package http
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -34,32 +34,33 @@ func (rl RouteLink) AddMW(routes map[RouteLink]*Route, h ...gin.HandlerFunc) {
 	}
 }
 
-func Method(rootRouter *gin.RouterGroup, subGroup map[string]*gin.RouterGroup, r *Route) {
-	if utils.IsEmptyString(r.Group) {
-		switch r.Method {
-		case http.MethodPost:
-			rootRouter.POST(r.Path, r.Mix()...)
-		case http.MethodPut:
-			rootRouter.PUT(r.Path, r.Mix()...)
-		case http.MethodGet:
-			rootRouter.GET(r.Path, r.Mix()...)
-		case http.MethodDelete:
-			rootRouter.DELETE(r.Path, r.Mix()...)
-		}
-	} else {
-		if g, ok := subGroup[r.Group]; !ok || g == nil {
-			log.Printf("subGroup was nil, groupname: %s\n", r.Group)
-		} else {
-			switch r.Method {
-			case http.MethodPost:
-				g.POST(r.Path, r.Mix()...)
-			case http.MethodPut:
-				g.PUT(r.Path, r.Mix()...)
-			case http.MethodGet:
-				g.GET(r.Path, r.Mix()...)
-			case http.MethodDelete:
-				g.DELETE(r.Path, r.Mix()...)
-			}
-		}
+func (rl RouteLink) SetGroup(routes map[RouteLink]*Route, group string) {
+	if r, ok := routes[rl]; ok && r != nil {
+		r.Group = group
 	}
 }
+
+func Method(groups map[string]*gin.RouterGroup, r *Route) {
+	group := r.Group
+	if utils.IsEmptyString(group) {
+		group = "default"
+	}
+	g, ok := groups[group]
+	if !ok || g == nil {
+		panic(fmt.Errorf("the grouprouter was nil or not in groups, groupname: %s", group))
+	} 
+	switch r.Method {
+	case http.MethodPost:
+		g.POST(r.Path, r.Mix()...)
+	case http.MethodPut:
+		g.PUT(r.Path, r.Mix()...)
+	case http.MethodGet:
+		g.GET(r.Path, r.Mix()...)
+	case http.MethodDelete:
+		g.DELETE(r.Path, r.Mix()...)
+	default:
+		panic(fmt.Errorf("unsupport the method, methodname: %s", r.Method))
+	}
+}
+
+type CustomRouteFn func(routes map[RouteLink]*Route)
