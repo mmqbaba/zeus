@@ -2,6 +2,7 @@ package gomicro
 
 import (
 	"context"
+	"reflect"
 	"errors"
 	"fmt"
 
@@ -76,37 +77,28 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 				c = zeusctx.RedisToContext(c, ng.GetContainer().GetRedisCli().GetCli())
 			}
 			err = fn(c, req, rsp)
-			if err != nil {
+			if err != nil && !reflect.ValueOf(err).IsNil() {
 				span.SetTag("grpc client receive error", err)
 				// zeus错误包装为gomicro错误
 				var zeusErr *zeuserrors.Error
 				var gmErr *gmerrors.Error
 				if errors.As(err, &zeusErr) {
-					if zeusErr != nil {
-						serverID := zeusErr.ServerID
-						if utils.IsEmptyString(serverID) {
-							serverID = ng.GetContainer().GetServerID()
-						}
-						err = &gmerrors.Error{Id: serverID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: zeusErr.Cause}
-						return
+					serverID := zeusErr.ServerID
+					if utils.IsEmptyString(serverID) {
+						serverID = ng.GetContainer().GetServerID()
 					}
-					err = nil
-					goto ret
+					err = &gmerrors.Error{Id: serverID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: zeusErr.Cause}
+					return
 				}
 				if errors.As(err, &gmErr) {
-					if gmErr != nil {
-						err = gmErr
-						return
-					}
-					err = nil
-					goto ret
+					err = gmErr
+					return
 				}
 
-				if zeusErr == nil && gmErr == nil {
-					err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: err.Error()}
-				}
+				err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: err.Error()}
+				return
 			}
-		ret:
+			err = nil
 			rspRaw, _ := utils.Marshal(rsp)
 			span.SetTag("grpc client receive", string(rspRaw))
 			return

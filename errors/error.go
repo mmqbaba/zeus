@@ -2,7 +2,6 @@ package errors
 
 import (
 	syserrors "errors"
-	"log"
 	"net/http"
 	"reflect"
 
