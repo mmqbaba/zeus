@@ -31,7 +31,7 @@ func InitTracer(cfg *config.Trace) error {
 	if utils.IsEmptyString(sampler) {
 		sampler = "boundary"
 	}
-	log.Printf("final sampler: %s, rate: %d, mod: %d", sampler, rate, mod)
+	log.Printf("final sampler: %s, rate: %f, mod: %d", sampler, rate, mod)
 	samplerOpt := zipkin.WithSampler(zipkin.NewBoundarySampler(rate, 0))
 	switch sampler {
 	case "boundary":

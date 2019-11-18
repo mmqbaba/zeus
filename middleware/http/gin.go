@@ -6,8 +6,10 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
 	zipkintracer "github.com/openzipkin/zipkin-go-opentracing"
 	"github.com/sirupsen/logrus"
 
@@ -16,6 +18,8 @@ import (
 	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
+
+const ZEUS_CTX = "zeusctx"
 
 var SuccessResponse SuccessResponseHandler = defaultSuccessResponse
 var ErrorResponse ErrorResponseHandler = defaultErrorResponse
@@ -44,7 +48,7 @@ func (w bodyLogWriter) Write(b []byte) (int, error) {
 func Access(ng engine.Engine) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger := ng.GetContainer().GetLogger()
-		ctx := context.Background()
+		ctx := c.Request.Context()
 		l := logger.WithFields(logrus.Fields{"tag": "gin"})
 		////// zipkin begin
 		cfg, err := ng.GetConfiger()
@@ -97,8 +101,13 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		////// zipkin finish
 		l = l.WithFields(logrus.Fields{"tracerid": span.Context().(zipkintracer.SpanContext).TraceID.ToHex()})
 		ctx = zeusctx.LoggerToContext(spnctx, l)
+		ctx = zeusctx.EngineToContext(ctx, ng)
+		ctx = zeusctx.GMClientToContext(ctx, ng.GetContainer().GetGoMicroClient())
+		if ng.GetContainer().GetRedisCli() != nil {
+			ctx = zeusctx.RedisToContext(ctx, ng.GetContainer().GetRedisCli().GetCli())
+		}
 
-		c.Set("zeusctx", ctx)
+		c.Set(ZEUS_CTX, ctx)
 		l.Debugln("access start", c.Request.URL.Path)
 		c.Next()
 		l.Debugln("access end", c.Request.URL.Path)
@@ -106,17 +115,38 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 }
 
 func ExtractLogger(c *gin.Context) *logrus.Entry {
-	ctx := context.Background()
-	if cc, ok := c.Value("zeusctx").(context.Context); ok && cc != nil {
+	ctx := c.Request.Context()
+	if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
 		ctx = cc
 	}
 	return zeusctx.ExtractLogger(ctx)
+}
+
+func ExtractTracerID(c *gin.Context) string {
+	ctx := c.Request.Context()
+	if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
+		ctx = cc
+	}
+	span := opentracing.SpanFromContext(ctx)
+	return span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
+}
+
+func ExtractEngine(c *gin.Context) (engine.Engine, error) {
+	ctx := c.Request.Context()
+	if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
+		ctx = cc
+	}
+	return zeusctx.ExtractEngine(ctx)
 }
 
 func defaultSuccessResponse(c *gin.Context, rsp interface{}) {
 	logger := ExtractLogger(c)
 	logger.Debug("defaultSuccessResponse")
 	res := zeuserrors.New(zeuserrors.ECodeSuccessed, "", "")
+	res.TracerID = ExtractTracerID(c)
+	if ng, _ := ExtractEngine(c); ng != nil {
+		res.ServerID = ng.GetContainer().GetServerID()
+	}
 	res.Data = rsp
 	res.Write(c.Writer)
 }
@@ -127,6 +157,12 @@ func defaultErrorResponse(c *gin.Context, err error) {
 	zeusErr := assertError(err)
 	if zeusErr == nil {
 		zeusErr = zeuserrors.New(zeuserrors.ECodeSystem, "err was a nil error or was a nil *zeuserrors.Error", "assertError")
+	}
+	zeusErr.TracerID = ExtractTracerID(c)
+	if utils.IsEmptyString(zeusErr.ServerID) {
+		if ng, _ := ExtractEngine(c); ng != nil {
+			zeusErr.ServerID = ng.GetContainer().GetServerID()
+		}
 	}
 	zeusErr.Write(c.Writer)
 }
@@ -142,4 +178,38 @@ func assertError(e error) (err *zeuserrors.Error) {
 	}
 	err = zeuserrors.New(zeuserrors.ECodeSystemAPI, e.Error(), "assertError")
 	return
+}
+
+func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		h := reflect.ValueOf(handleFunc)
+		reqT := h.Type().In(1).Elem()
+		rspT := h.Type().In(2).Elem()
+
+		reqV := reflect.New(reqT)
+		rspV := reflect.New(rspT)
+
+		req := reqV.Interface()
+		if err := c.ShouldBind(req); err != nil {
+			ExtractLogger(c).Error(err)
+			ErrorResponse(c, zeuserrors.ECodeInvalidParams.ParseErr(err.Error()))
+			return
+		}
+		ctx := c.Request.Context()
+		if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
+			ctx = cc
+		}
+		ctxV := reflect.ValueOf(ctx)
+		ret := h.Call([]reflect.Value{ctxV, reqV, rspV})
+		if !ret[0].IsNil() {
+			err, ok := ret[0].Interface().(error)
+			if ok {
+				ErrorResponse(c, err)
+				return
+			}
+			ErrorResponse(c, zeuserrors.ECodeInternal.ParseErr("UNKNOW ERROR"))
+			return
+		}
+		SuccessResponse(c, rspV.Interface())
+	}
 }

@@ -284,6 +284,7 @@ func (s *Service) startServer() (err error) {
 }
 
 func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err error) {
+	var gomicroservice micro.Service
 	opts := []micro.Option{
 		micro.WrapHandler(gomicro.GenerateServerLogWrap(s.ng)), // 保证serverlogwrap在最前
 	}
@@ -315,8 +316,14 @@ func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err err
 	// 把client设置到container
 	s.ng.GetContainer().SetGoMicroClient(cli)
 	opts = append(opts, micro.Client(cli))
+	opts = append(opts, micro.AfterStart(func() error {
+		serverID := gomicroservice.Server().Options().Name + "-" + gomicroservice.Server().Options().Id
+		log.Println("[gomicro] afterstart", serverID)
+		s.container.SetServerID(serverID)
+		return nil
+	}))
 	// new micro service
-	gomicroservice := gomicro.NewService(context.Background(), conf, opts...)
+	gomicroservice = gomicro.NewService(context.Background(), conf, opts...)
 	if s.options.GoMicroHandlerRegisterFn != nil {
 		if err = s.options.GoMicroHandlerRegisterFn(gomicroservice.Server()); err != nil {
 			log.Println("[zeus] [s.newGomicroSrv] GoMicroHandlerRegister err:", err)
@@ -330,16 +337,16 @@ func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err err
 
 type gwBodyWriter struct {
 	http.ResponseWriter
-	done bool
-	status int
+	done    bool
+	status  int
 	zeusErr *zeuserrors.Error
-	body *bytes.Buffer
+	body    *bytes.Buffer
 }
 
 // 这里使用指针实现，传递指针，保证done status值的变更传递
-func (w *gwBodyWriter) WriteHeader (status int) {
+func (w *gwBodyWriter) WriteHeader(status int) {
 	w.done = true
-	w.status= status
+	w.status = status
 	w.ResponseWriter.WriteHeader(status)
 }
 
@@ -443,7 +450,8 @@ func (s *Service) newHTTPGateway(opt gwOption) (h http.Handler, err error) {
 			}
 		}
 		if utils.IsEmptyString(handlerPrefix) {
-			handlerPrefix = "/zeus/"
+			// handlerPrefix = "/zeus/"
+			handlerPrefix = "/api/"
 		}
 		if handler, err = s.options.HttpHandlerRegisterFn(context.Background(), handlerPrefix, s.ng); err != nil {
 			log.Println("[zeus] [s.newHTTPGateway] HttpHandlerRegister err:", err)

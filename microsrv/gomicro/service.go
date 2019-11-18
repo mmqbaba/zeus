@@ -27,10 +27,6 @@ func NewService(ctx context.Context, conf config.GoMicro, opts ...micro.Option) 
 		micro.RegisterTTL(30 * time.Second),
 		micro.RegisterInterval(20 * time.Second),
 		micro.Registry(reg),
-		micro.AfterStart(func() error {
-			log.Println("[gomicro] afterstart")
-			return nil
-		}),
 		micro.AfterStop(func() error {
 			log.Println("[gomicro] afterstop")
 			return nil
