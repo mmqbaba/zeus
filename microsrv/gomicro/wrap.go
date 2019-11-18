@@ -80,6 +80,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 				span.SetTag("grpc client receive error", err)
 				// zeus错误包装为gomicro错误
 				var zeusErr *zeuserrors.Error
+				var gmErr *gmerrors.Error
 				if errors.As(err, &zeusErr) {
 					if zeusErr != nil {
 						serverID := zeusErr.ServerID
@@ -90,8 +91,22 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 						return
 					}
 					err = nil
+					goto ret
+				}
+				if errors.As(err, &gmErr) {
+					if gmErr != nil {
+						err = gmErr
+						return
+					}
+					err = nil
+					goto ret
+				}
+
+				if zeusErr == nil && gmErr == nil {
+					err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: err.Error()}
 				}
 			}
+		ret:
 			rspRaw, _ := utils.Marshal(rsp)
 			span.SetTag("grpc client receive", string(rspRaw))
 			return
