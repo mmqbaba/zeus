@@ -28,6 +28,7 @@ type RpcItem struct {
 	RequestType      string
 	ReturnsType      string
 	IsPost           bool
+	Method           string
 	IsStreamsRequest bool
 	ApiPath          string
 }
@@ -113,11 +114,11 @@ func GetTargetFileName(PD *Generator, objtype string, rootdir string, opts ...st
 		CheckPrepareDir(dirname)
 		fn = fmt.Sprintf("%s/init.go", dirname)
 	case "proto.gw":
-		dirname := fmt.Sprintf("%s/%s/proto/gw", rootdir, PD.PackageName)
+		dirname := fmt.Sprintf("%s/%s/proto/%spb", rootdir, PD.PackageName, PD.PackageName)
 		CheckPrepareDir(dirname)
 		fn = dirname
 	case "proto.gomicro":
-		dirname := fmt.Sprintf("%s/%s/proto/gomicro", rootdir, PD.PackageName)
+		dirname := fmt.Sprintf("%s/%s/proto/%spb", rootdir, PD.PackageName, PD.PackageName)
 		CheckPrepareDir(dirname)
 		fn = dirname
 	case "proto":

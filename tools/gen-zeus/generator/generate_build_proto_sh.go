@@ -7,48 +7,51 @@ func GenerateBuildProtoSh(PD *Generator, rootdir string) (err error) {
 	tmpContext := `#!/bin/bash
 
 
+projectpath=. # 具体的项目路径
 service=%s # 服务名
+pbout=${service}pb
 
 test -f proto/${service}.proto || exit 1
 # gen-zeus
 gen-zeus --proto proto/${service}.proto --dest ../
 
-# gen-gomicro gen-validator
-cd proto
-mkdir -p gomicro
+cd $projectpath/proto
+
+# gen-gomicro gen-grpc-gateway gen-validator swagger
+mkdir -p ${service}pb
 protoc -I. \
    -I$GOPATH/src \
    -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-   -I${GOPATH}/src/github.com/google/protobuf/src \
-   --go_out=./gomicro/ \
-   --micro_out=./gomicro/ \
-   --govalidators_out=./gomicro \
+   -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway \
+   --proto_path=${GOPATH}/src/github.com/google/protobuf/src \
+   --go_out=plugins=grpc:./${service}pb \
+   --grpc-gateway_out=logtostderr=true:./${service}pb \
+   --micro_out=./${service}pb \
+   --govalidators_out=./${service}pb \
+   --swagger_out=logtostderr=true:. \
    ./$service.proto
-protoc-go-inject-tag -input=./gomicro/$service.pb.go # inject tag
+protoc-go-inject-tag -input=./${service}pb/$service.pb.go # inject tag
 
-# gen-grpc gen-grpc-gateway gen-validator
-mkdir -p gw
-protoc -I. \
-   -I$GOPATH/src \
-   -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-   -I${GOPATH}/src/github.com/google/protobuf/src \
-   --go_out=plugins=grpc:./gw \
-   --grpc-gateway_out=logtostderr=true:./gw \
-   --govalidators_out=./gw \
-   ./$service.proto
-protoc-go-inject-tag -input=./gw/$service.pb.go # inject tag
+sed -i 's/Register%sHandler(/Register%sHandlerGW(/g' ./${service}pb/$service.pb.gw.go
+sed -i 's/ Register%sHandler / Register%sHandlerGW /g' ./${service}pb/$service.pb.gw.go
 
-# gen-swagger
-protoc -I. \
-  -I$GOPATH/src \
-  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-  -I${GOPATH}/src/github.com/google/protobuf/src \
-  --swagger_out=logtostderr=true:. \
-   ./$service.proto
+# gen-gomicro gen-grpc-gateway gen-validator swagger
+# protoc -I. \
+#    -I$GOPATH/src \
+#    -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+#    -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway \
+#    --proto_path=${GOPATH}/src/github.com/google/protobuf/src \
+#    --go_out=plugins=grpc:./$service \
+#    --grpc-gateway_out=logtostderr=true:./$service \
+#    --micro_out=./$service \
+#    --govalidators_out=./$service \
+#    --swagger_out=logtostderr=true:. \
+#    ./$service.proto
+# protoc-go-inject-tag -input=./$service/$service.pb.go # inject tag
 
 cd -
 `
-	context := fmt.Sprintf(tmpContext, PD.PackageName)
+	context := fmt.Sprintf(tmpContext, PD.PackageName, PD.SvrName, PD.SvrName, PD.SvrName, PD.SvrName)
 	fn := GetTargetFileName(PD, "build.proto", rootdir)
 	return writeContext(fn, header, context, false)
 }

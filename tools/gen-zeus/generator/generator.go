@@ -54,19 +54,32 @@ func (t *Generator) handleRpc(m *proto.RPC) {
 		RequestType:      m.RequestType,
 		ReturnsType:      m.ReturnsType,
 		IsStreamsRequest: m.StreamsRequest,
-		IsPost:           true,
+		IsPost:           false,
 	}
 	for _, v := range m.Options {
 		//fmt.Println(v.Name)
-		//fmt.Println(v.Constant)
 		if v.Name == "(google.api.http)" {
-			for k2, _ := range v.Constant.Map {
-				if k2 == "get" {
-					p.IsPost = false
+			for k2, v2 := range v.Constant.Map {
+				switch k2 {
+				case "get":
+					p.Method = "http.MethodGet"
+				case "post":
+					p.Method = "http.MethodPost"
+					p.IsPost = true
+				case "put":
+					p.Method = "http.MethodPut"
+				case "delete":
+					p.Method = "http.MethodDelete"
+				case "options":
+					p.Method = "http.MethodOptions"
+				default:
+				}
+				if p.Method != "" {
+					p.ApiPath = v2.Source
 					break
 				}
 			}
-			if !p.IsPost {
+			if p.Method != "" {
 				break
 			}
 		}

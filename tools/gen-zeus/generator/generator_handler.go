@@ -39,7 +39,7 @@ func genHandleFun(PD *Generator, rootdir string) (err error) {
 import (
 	"context"
 
-	gomicro "%s/proto/gomicro"
+	gomicro "%s/proto/%spb"
 )
 
 `
@@ -58,7 +58,7 @@ func (h *%s) %s(ctx context.Context, stream gomicro.%s_%sStream) (err error) {
 `
 	camelSrvName := CamelCase(PD.SvrName)
 	for _, v := range PD.Rpcapi {
-		context := fmt.Sprintf(tmpContext, _defaultPkgPrefix+PD.PackageName)
+		context := fmt.Sprintf(tmpContext, _defaultPkgPrefix+PD.PackageName, PD.PackageName)
 		if v.IsStreamsRequest {
 			funtext := fmt.Sprintf(streamFunc, camelSrvName, v.Name, camelSrvName, v.Name)
 			context += funtext
