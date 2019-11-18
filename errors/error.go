@@ -3,6 +3,7 @@ package errors
 import (
 	syserrors "errors"
 	"net/http"
+	"reflect"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
@@ -58,6 +59,9 @@ func (e Error) Write(w http.ResponseWriter) error {
 
 func AssertError(e error) (err *Error) {
 	if e == nil {
+		return
+	}
+	if reflect.ValueOf(e).IsNil() {
 		return
 	}
 	var zeusErr *Error
