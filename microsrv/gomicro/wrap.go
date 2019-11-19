@@ -81,11 +81,11 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 				var zeusErr *zeuserrors.Error
 				var gmErr *gmerrors.Error
 				if errors.As(err, &zeusErr) {
-					serverID := zeusErr.ServiceID
-					if utils.IsEmptyString(serverID) {
-						serverID = ng.GetContainer().GetServiceID()
+					serviceID := zeusErr.ServiceID
+					if utils.IsEmptyString(serviceID) {
+						serviceID = ng.GetContainer().GetServiceID()
 					}
-					err = &gmerrors.Error{Id: serverID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: zeusErr.Cause}
+					err = &gmerrors.Error{Id: serviceID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: zeusErr.Cause}
 					return
 				}
 				if errors.As(err, &gmErr) {

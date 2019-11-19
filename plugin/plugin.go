@@ -16,8 +16,8 @@ import (
 
 // Container contain comm obj
 type Container struct {
-	serverID string
-	appcfg   config.AppConf
+	serviceID string
+	appcfg    config.AppConf
 
 	redis *redisclient.Client
 	// gomicro
@@ -191,9 +191,9 @@ func (c *Container) GetTracer() *tracing.TracerWrap {
 }
 
 func (c *Container) SetServiceID(id string) {
-	c.serverID = id
+	c.serviceID = id
 }
 
 func (c *Container) GetServiceID() string {
-	return c.serverID
+	return c.serviceID
 }

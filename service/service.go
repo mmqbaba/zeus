@@ -327,9 +327,9 @@ func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err err
 	s.ng.GetContainer().SetGoMicroClient(cli)
 	opts = append(opts, micro.Client(cli))
 	opts = append(opts, micro.AfterStart(func() error {
-		serverID := gomicroservice.Server().Options().Name + "-" + gomicroservice.Server().Options().Id
-		log.Println("[gomicro] afterstart", serverID)
-		s.container.SetServiceID(serverID)
+		serviceID := gomicroservice.Server().Options().Name + "-" + gomicroservice.Server().Options().Id
+		log.Println("[gomicro] afterstart", serviceID)
+		s.container.SetServiceID(serviceID)
 		return nil
 	}))
 	// new micro service
@@ -550,7 +550,7 @@ func serveSwaggerFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveSwaggerUI(prefix string, mux *mux.Router, swaggerJSONFile string) {
-	swagger.SetServer(swaggerJSONFile)
+	swagger.SetService(swaggerJSONFile)
 	fileServer := http.FileServer(&assetfs.AssetFS{
 		Asset:    swagger.Asset,
 		AssetDir: swagger.AssetDir,
