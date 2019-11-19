@@ -190,10 +190,10 @@ func (c *Container) GetTracer() *tracing.TracerWrap {
 	return c.tracer
 }
 
-func (c *Container) SetServerID(id string) {
+func (c *Container) SetServiceID(id string) {
 	c.serverID = id
 }
 
-func (c *Container) GetServerID() string {
-	return c.serverID 
+func (c *Container) GetServiceID() string {
+	return c.serverID
 }

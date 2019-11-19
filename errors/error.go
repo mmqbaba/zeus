@@ -10,12 +10,12 @@ import (
 
 // Error .
 type Error struct {
-	ErrCode  ErrorCode   `json:"errcode"` // 错误码  五位数字
-	ErrMsg   string      `json:"errmsg"`  // 错误信息
-	Cause    string      `json:"cause,omitempty"`
-	ServerID string      `json:"serverid,omitempty"` // 服务ID
-	TracerID string      `json:"tracerid,omitempty"` // tracerID
-	Data     interface{} `json:"data,omitempty"`
+	ErrCode   ErrorCode   `json:"errcode"` // 错误码  五位数字
+	ErrMsg    string      `json:"errmsg"`  // 错误信息
+	Cause     string      `json:"cause,omitempty"`
+	ServiceID string      `json:"serviceid,omitempty"` // 服务ID
+	TracerID  string      `json:"tracerid,omitempty"` // tracerID
+	Data      interface{} `json:"data,omitempty"`
 }
 
 // New new error

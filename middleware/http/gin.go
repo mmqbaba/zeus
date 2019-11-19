@@ -145,7 +145,7 @@ func defaultSuccessResponse(c *gin.Context, rsp interface{}) {
 	res := zeuserrors.New(zeuserrors.ECodeSuccessed, "", "")
 	res.TracerID = ExtractTracerID(c)
 	if ng, _ := ExtractEngine(c); ng != nil {
-		res.ServerID = ng.GetContainer().GetServerID()
+		res.ServiceID = ng.GetContainer().GetServiceID()
 	}
 	res.Data = rsp
 	res.Write(c.Writer)
@@ -159,9 +159,9 @@ func defaultErrorResponse(c *gin.Context, err error) {
 		zeusErr = zeuserrors.New(zeuserrors.ECodeSystem, "err was a nil error or was a nil *zeuserrors.Error", "assertError")
 	}
 	zeusErr.TracerID = ExtractTracerID(c)
-	if utils.IsEmptyString(zeusErr.ServerID) {
+	if utils.IsEmptyString(zeusErr.ServiceID) {
 		if ng, _ := ExtractEngine(c); ng != nil {
-			zeusErr.ServerID = ng.GetContainer().GetServerID()
+			zeusErr.ServiceID = ng.GetContainer().GetServiceID()
 		}
 	}
 	zeusErr.Write(c.Writer)

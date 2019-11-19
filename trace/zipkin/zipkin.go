@@ -13,7 +13,7 @@ import (
 func InitTracer(cfg *config.Trace) error {
 	zipkinURL := cfg.TraceUrl
 	hostPort, _ := os.Hostname()
-	serviceName := cfg.ServerName
+	serviceName := cfg.ServiceName
 	rate := cfg.Rate
 	sampler := cfg.Sampler
 	mod := cfg.Mod

@@ -34,7 +34,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			cfg, err := ng.GetConfiger()
 			if err != nil {
 				l.Error(err)
-				err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: "ng.GetConfiger"}
+				err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: "ng.GetConfiger"}
 				return
 			}
 
@@ -42,13 +42,13 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			if tracer == nil {
 				err = fmt.Errorf("tracer is nil")
 				l.Error(err)
-				err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
+				err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
 				return
 			}
 			spnctx, span, err := tracer.StartSpanFromContext(c, name)
 			if err != nil {
 				l.Error(err)
-				err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
+				err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
 				return
 			}
 			defer func() {
@@ -67,7 +67,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			if v, ok := req.Body().(validator); ok && v != nil {
 				if err = v.Validate(); err != nil {
 					zeusErr := zeuserrors.New(zeuserrors.ECodeInvalidParams, err.Error(), "validator.Validate")
-					err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: zeusErr.Cause}
+					err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: zeusErr.Cause}
 					return
 				}
 			}
@@ -81,9 +81,9 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 				var zeusErr *zeuserrors.Error
 				var gmErr *gmerrors.Error
 				if errors.As(err, &zeusErr) {
-					serverID := zeusErr.ServerID
+					serverID := zeusErr.ServiceID
 					if utils.IsEmptyString(serverID) {
-						serverID = ng.GetContainer().GetServerID()
+						serverID = ng.GetContainer().GetServiceID()
 					}
 					err = &gmerrors.Error{Id: serverID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: zeusErr.Cause}
 					return
@@ -93,7 +93,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 					return
 				}
 
-				err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: err.Error()}
+				err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: err.Error()}
 				return
 			}
 			err = nil
@@ -148,7 +148,7 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 	cfg, err := ng.GetConfiger()
 	if err != nil {
 		logger.Error(err)
-		err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: "ng.GetConfiger"}
+		err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: "ng.GetConfiger"}
 		return
 	}
 
@@ -156,13 +156,13 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 	if tracer == nil {
 		err = fmt.Errorf("tracer is nil")
 		logger.Error(err)
-		err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
+		err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
 		return
 	}
 	spnctx, span, err := tracer.StartSpanFromContext(ctx, name)
 	if err != nil {
 		logger.Error(err)
-		err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
+		err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
 		return
 	}
 	defer func() {
@@ -185,9 +185,9 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 				span.SetTag("grpc client receive error", gmErr)
 
 				zeusErr := zeuserrors.New(zeuserrors.ErrorCode(gmErr.Code), gmErr.Detail, gmErr.Status)
-				zeusErr.ServerID = gmErr.Id
-				if utils.IsEmptyString(zeusErr.ServerID) && l.ng != nil {
-					zeusErr.ServerID = l.ng.GetContainer().GetServerID()
+				zeusErr.ServiceID = gmErr.Id
+				if utils.IsEmptyString(zeusErr.ServiceID) && l.ng != nil {
+					zeusErr.ServiceID = l.ng.GetContainer().GetServiceID()
 				}
 
 				zeusErr.TracerID = tracer.GetTraceID(spnctx)

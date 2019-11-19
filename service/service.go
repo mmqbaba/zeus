@@ -236,7 +236,7 @@ func (s *Service) processChange(ev interface{}) (err error) {
 }
 
 type gwOption struct {
-	grpcEndpoint string
+	grpcEndpoint    string
 	swaggerJSONFile string
 }
 
@@ -269,7 +269,7 @@ func (s *Service) startServer() (err error) {
 	}
 
 	gw, err := s.newHTTPGateway(gwOption{
-		grpcEndpoint: fmt.Sprintf("localhost:%d", serverPort),
+		grpcEndpoint:    fmt.Sprintf("localhost:%d", serverPort),
 		swaggerJSONFile: s.options.SwaggerJSONFileName,
 	})
 	if err != nil {
@@ -329,7 +329,7 @@ func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err err
 	opts = append(opts, micro.AfterStart(func() error {
 		serverID := gomicroservice.Server().Options().Name + "-" + gomicroservice.Server().Options().Id
 		log.Println("[gomicro] afterstart", serverID)
-		s.container.SetServerID(serverID)
+		s.container.SetServiceID(serverID)
 		return nil
 	}))
 	// new micro service
