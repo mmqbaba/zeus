@@ -48,6 +48,7 @@ func init() {
 	global.ServiceOpts = append(global.ServiceOpts, service.WithHttpGWhandlerRegisterFnOption(gwHandlerRegister))
 	// http handler
 	global.ServiceOpts = append(global.ServiceOpts, service.WithHttpHandlerRegisterFnOption(getHandlerRegisterFn()))
+	global.ServiceOpts = append(global.ServiceOpts, service.WithSwaggerJSONFileName("{PKG}"))
 }
 
 func gwHandlerRegister(ctx context.Context, endpoint string, opts []grpc.DialOption) (m *gruntime.ServeMux, err error) {

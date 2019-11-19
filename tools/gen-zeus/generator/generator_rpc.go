@@ -26,6 +26,7 @@ import (
 func init() {
 	// gomicro
 	global.ServiceOpts = append(global.ServiceOpts, service.WithGoMicrohandlerRegisterFnOption(gm%sHandlerRegister))
+	global.ServiceOpts = append(global.ServiceOpts, service.WithServerNameOption("%s"))
 }
 
 func gm%sHandlerRegister(s server.Server, opts ...server.HandlerOption) (err error) {
@@ -39,7 +40,7 @@ func gm%sHandlerRegister(s server.Server, opts ...server.HandlerOption) (err err
 `
 	camelSrvName := CamelCase(PD.SvrName)
 	context := fmt.Sprintf(tmpContext, projectBasePrefix+PD.PackageName, projectBasePrefix+PD.PackageName,
-		projectBasePrefix+PD.PackageName, PD.PackageName, camelSrvName, camelSrvName, camelSrvName, camelSrvName, camelSrvName)
+		projectBasePrefix+PD.PackageName, PD.PackageName, camelSrvName, PD.PackageName, camelSrvName, camelSrvName, camelSrvName, camelSrvName)
 	fn := GetTargetFileName(PD, "rpc.init", rootdir)
 	return writeContext(fn, header, context, false)
 }

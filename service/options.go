@@ -14,6 +14,7 @@ import (
 )
 
 type Options struct {
+	ServerName   string
 	ApiPort      int
 	ApiInterface string
 
@@ -23,6 +24,8 @@ type Options struct {
 	Log       string
 	LogFormat string
 	LogLevel  string
+
+	SwaggerJSONFileName string
 
 	ConfEntryPath string
 
@@ -96,6 +99,18 @@ func WithGoMicroServerWrapGenerateFnOption(fn ...GoMicroServerWrapGenerateFn) Op
 func WithGoMicroClientWrapGenerateFnOption(fn ...GoMicroClientWrapGenerateFn) Option {
 	return func(o *Options) {
 		o.GoMicroClientWrapGenerateFn = append(o.GoMicroClientWrapGenerateFn, fn...)
+	}
+}
+
+func WithServerNameOption(s string) Option {
+	return func(o *Options) {
+		o.ServerName = s
+	}
+}
+
+func WithSwaggerJSONFileName(s string) Option {
+	return func(o *Options) {
+		o.SwaggerJSONFileName = s
 	}
 }
 

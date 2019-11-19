@@ -35,6 +35,7 @@ func genCmdMain(PD *Generator, rootdir string) error {
 
 import (
 	"log"
+	"fmt"
 	"os"
 	"runtime"
 	"strconv"
@@ -61,6 +62,13 @@ func main() {
 		log.Printf("Golang Version : %s\n", GoVersion)
 		return
 	}
+
+	log.Println("----------version info----------")
+	log.Printf("Git Commit Hash: %s\n", Version)
+	log.Printf("UTC Build Date : %s\n", BuildDate)
+	log.Printf("Golang Version : %s\n", GoVersion)
+	log.Println("--------------------------------")
+	fmt.Print("\n")
 
 	num := runtime.NumCPU()
 	log.Printf("[NumCPU] %v\n", num)

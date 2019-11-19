@@ -237,7 +237,7 @@ func (s *Service) processChange(ev interface{}) (err error) {
 
 type gwOption struct {
 	grpcEndpoint string
-	serverName string
+	swaggerJSONFile string
 }
 
 func (s *Service) startServer() (err error) {
@@ -257,6 +257,12 @@ func (s *Service) startServer() (err error) {
 		serverPort = 9090
 	}
 	microConf.ServerPort = serverPort
+
+	serverName := microConf.ServerName
+	if utils.IsEmptyString(serverName) {
+		serverName = s.options.ServerName
+	}
+	microConf.ServerName = serverName
 	gomicroservice, err := s.newGomicroSrv(microConf)
 	if err != nil {
 		return
@@ -264,7 +270,7 @@ func (s *Service) startServer() (err error) {
 
 	gw, err := s.newHTTPGateway(gwOption{
 		grpcEndpoint: fmt.Sprintf("localhost:%d", serverPort),
-		serverName: microConf.ServerName,
+		swaggerJSONFile: s.options.SwaggerJSONFileName,
 	})
 	if err != nil {
 		return
@@ -441,7 +447,7 @@ func (s *Service) newHTTPGateway(opt gwOption) (h http.Handler, err error) {
 
 	// swagger handler
 	r.PathPrefix("/swagger/").HandlerFunc(serveSwaggerFile)
-	serveSwaggerUI("/swagger-ui/", r, opt.serverName)
+	serveSwaggerUI("/swagger-ui/", r, opt.swaggerJSONFile)
 	log.Println("[zeus] [s.newHTTPGateway] swaggerRegister success.")
 
 	// http handler
@@ -543,8 +549,8 @@ func serveSwaggerFile(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, p)
 }
 
-func serveSwaggerUI(prefix string, mux *mux.Router, serverName string) {
-	swagger.SetServer(serverName)
+func serveSwaggerUI(prefix string, mux *mux.Router, swaggerJSONFile string) {
+	swagger.SetServer(swaggerJSONFile)
 	fileServer := http.FileServer(&assetfs.AssetFS{
 		Asset:    swagger.Asset,
 		AssetDir: swagger.AssetDir,
