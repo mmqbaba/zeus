@@ -85,7 +85,7 @@ func New{SRV}Service(ctx context.Context) (gomicro.{SRV}Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	{PKG}Srv.name = "{SRV}"
+	{PKG}Srv.name = "{PKG}"
 	{PKG}Srv.client = gomicro.New{SRV}Service({PKG}Srv.name, cli)
 	return {PKG}Srv.client, nil
 }

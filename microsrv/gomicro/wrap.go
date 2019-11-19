@@ -2,16 +2,14 @@ package gomicro
 
 import (
 	"context"
-	"reflect"
 	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/micro/go-micro/client"
 	gmerrors "github.com/micro/go-micro/errors"
 	"github.com/micro/go-micro/server"
-	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	zipkintracer "github.com/openzipkin/zipkin-go-opentracing"
 	"github.com/sirupsen/logrus"
 
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
@@ -61,9 +59,9 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			}()
 			ext.SpanKindRPCClient.Set(span)
 			body, _ := utils.Marshal(req.Body())
-			span.SetTag("grpc client call", string(body))
+			span.SetTag("grpc server receive", string(body))
 			///////// tracer finish
-			l = l.WithFields(logrus.Fields{"tracerid": span.Context().(zipkintracer.SpanContext).TraceID.ToHex()})
+			l = l.WithFields(logrus.Fields{"tracerid": tracer.GetTraceID(spnctx)})
 			c = zeusctx.LoggerToContext(spnctx, l)
 			l.Debug("serverLogWrap")
 			if v, ok := req.Body().(validator); ok && v != nil {
@@ -78,7 +76,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			}
 			err = fn(c, req, rsp)
 			if err != nil && !reflect.ValueOf(err).IsNil() {
-				span.SetTag("grpc client receive error", err)
+				span.SetTag("grpc server answer error", err)
 				// zeus错误包装为gomicro错误
 				var zeusErr *zeuserrors.Error
 				var gmErr *gmerrors.Error
@@ -100,7 +98,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			}
 			err = nil
 			rspRaw, _ := utils.Marshal(rsp)
-			span.SetTag("grpc client receive", string(rspRaw))
+			span.SetTag("grpc server answer", string(rspRaw))
 			return
 		}
 	}
@@ -135,26 +133,72 @@ type clientLogWrap struct {
 }
 
 func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) (err error) {
-	zeusctx.ExtractLogger(ctx).Debug("clientLogWrap")
+	logger := zeusctx.ExtractLogger(ctx)
+	logger.Debug("clientLogWrap")
+
+	ng, err := zeusctx.ExtractEngine(ctx)
+	if err != nil {
+		logger.Error(err)
+		err = &gmerrors.Error{Id: "", Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: "zeusctx.ExtractEngine"}
+		return
+	}
+
+	///////// tracer begin
+	name := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
+	cfg, err := ng.GetConfiger()
+	if err != nil {
+		logger.Error(err)
+		err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: "ng.GetConfiger"}
+		return
+	}
+
+	tracer := ng.GetContainer().GetTracer()
+	if tracer == nil {
+		err = fmt.Errorf("tracer is nil")
+		logger.Error(err)
+		err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
+		return
+	}
+	spnctx, span, err := tracer.StartSpanFromContext(ctx, name)
+	if err != nil {
+		logger.Error(err)
+		err = &gmerrors.Error{Id: ng.GetContainer().GetServerID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
+		return
+	}
+	defer func() {
+		if cfg.Get().Trace.OnlyLogErr && err == nil {
+			return
+		}
+		span.Finish()
+	}()
+	ext.SpanKindRPCClient.Set(span)
+	body, _ := utils.Marshal(req.Body())
+	span.SetTag("grpc client call", string(body))
+	///////// tracer finish
+
 	err = l.Client.Call(ctx, req, rsp, opts...)
 	if err != nil {
 		// gomicro错误解包为zeus错误
 		var gmErr *gmerrors.Error
 		if errors.As(err, &gmErr) {
 			if gmErr != nil {
+				span.SetTag("grpc client receive error", gmErr)
+
 				zeusErr := zeuserrors.New(zeuserrors.ErrorCode(gmErr.Code), gmErr.Detail, gmErr.Status)
 				zeusErr.ServerID = gmErr.Id
 				if utils.IsEmptyString(zeusErr.ServerID) && l.ng != nil {
 					zeusErr.ServerID = l.ng.GetContainer().GetServerID()
 				}
-				span := opentracing.SpanFromContext(ctx)
-				zeusErr.TracerID = span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
+
+				zeusErr.TracerID = tracer.GetTraceID(spnctx)
 				err = zeusErr
 				return
 			}
 			err = nil
 		}
 	}
+	rspRaw, _ := utils.Marshal(rsp)
+	span.SetTag("grpc client receive", string(rspRaw))
 	return
 }
 
