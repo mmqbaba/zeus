@@ -26,7 +26,7 @@ import (
 func init() {
 	// gomicro
 	global.ServiceOpts = append(global.ServiceOpts, service.WithGoMicrohandlerRegisterFnOption(gm%sHandlerRegister))
-	global.ServiceOpts = append(global.ServiceOpts, service.WithServerNameOption("%s"))
+	global.ServiceOpts = append(global.ServiceOpts, service.WithServiceNameOption("%s"))
 }
 
 func gm%sHandlerRegister(s server.Server, opts ...server.HandlerOption) (err error) {

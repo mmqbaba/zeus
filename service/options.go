@@ -14,7 +14,7 @@ import (
 )
 
 type Options struct {
-	ServerName   string
+	ServiceName   string
 	ApiPort      int
 	ApiInterface string
 
@@ -102,9 +102,9 @@ func WithGoMicroClientWrapGenerateFnOption(fn ...GoMicroClientWrapGenerateFn) Op
 	}
 }
 
-func WithServerNameOption(s string) Option {
+func WithServiceNameOption(s string) Option {
 	return func(o *Options) {
-		o.ServerName = s
+		o.ServiceName = s
 	}
 }
 

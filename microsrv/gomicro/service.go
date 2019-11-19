@@ -22,7 +22,7 @@ func NewService(ctx context.Context, conf config.GoMicro, opts ...micro.Option) 
 	)
 
 	o := []micro.Option{
-		micro.Name(conf.ServerName),
+		micro.Name(conf.ServiceName),
 		micro.Address(fmt.Sprintf(":%d", conf.ServerPort)),
 		micro.RegisterTTL(30 * time.Second),
 		micro.RegisterInterval(20 * time.Second),

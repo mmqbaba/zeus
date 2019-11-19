@@ -258,11 +258,11 @@ func (s *Service) startServer() (err error) {
 	}
 	microConf.ServerPort = serverPort
 
-	serverName := microConf.ServerName
-	if utils.IsEmptyString(serverName) {
-		serverName = s.options.ServerName
+	serviceName := microConf.ServiceName
+	if utils.IsEmptyString(serviceName) {
+		serviceName = s.options.ServiceName
 	}
-	microConf.ServerName = serverName
+	microConf.ServiceName = serviceName
 	gomicroservice, err := s.newGomicroSrv(microConf)
 	if err != nil {
 		return
