@@ -52,9 +52,9 @@ func init() {
 
 	os := runtime.GOOS
 	if os == "linux" || os == "darwin" {
-		confEntryPath = "/etc/tif/zeus.json"
+		confEntryPath = "/etc/zeus/zeus.json"
 	} else {
-		confEntryPath = "C:\\tif\\zeus.json"
+		confEntryPath = "C:\\zeus\\zeus.json"
 	}
 
 	engineProvidors = map[string]engine.NewEngineFn{
