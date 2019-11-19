@@ -11,15 +11,16 @@ projectpath=. # 具体的项目路径
 service=%s # 服务名
 pbout=${service}pb
 
-test -f proto/${service}.proto || exit 1
+test -f ../proto/${service}.proto || exit 1
 # gen-zeus
-gen-zeus --proto proto/${service}.proto --dest ../
+gen-zeus --proto ../proto/${service}.proto --dest ../
 
+mkdir -p $projectpath/proto/${service}pb
 cd $projectpath/proto
 
 # gen-gomicro gen-grpc-gateway gen-validator swagger
-mkdir -p ${service}pb
-protoc -I. \
+
+protoc -I../../proto \
    -I$GOPATH/src \
    -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
    -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway \
@@ -29,7 +30,7 @@ protoc -I. \
    --micro_out=./${service}pb \
    --govalidators_out=./${service}pb \
    --swagger_out=logtostderr=true:. \
-   ./$service.proto
+   $service.proto
 protoc-go-inject-tag -input=./${service}pb/$service.pb.go # inject tag
 
 sed -i 's/Register%sHandler(/Register%sHandlerGW(/g' ./${service}pb/$service.pb.gw.go

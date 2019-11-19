@@ -99,13 +99,13 @@ func registerRoutesFor{SRV}Handler(groups map[string]*gin.RouterGroup, customFn 
 `, camelSrv, v.Name, camelSrv, v.Name, v.Method, v.ApiPath, PD.PackageName, v.Name)
 	}
 
-	imPkg := _defaultPkgPrefix + PD.PackageName
+	imPkg := projectBasePrefix + PD.PackageName
 	context := fmt.Sprintf(tmpContext, imPkg, imPkg, imPkg, constVarBlock, mapValBlock)
 	context = strings.ReplaceAll(context, "{PKG}", PD.PackageName)
 	context = strings.ReplaceAll(context, "{SRV}", camelSrv)
 
 	fn := GetTargetFileName(PD, "http.init", rootdir)
-	return writeContext(fn, header, context, false)
+	return writeContext(fn, header, context, true)
 }
 
 func genHttp(PD *Generator, rootdir string) error {

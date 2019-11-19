@@ -3,16 +3,17 @@ package main
 import (
 	"flag"
 	"fmt"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/tools/gen-zeus/generator"
 	"log"
 	"os"
-
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/tools/gen-zeus/generator"
+	"path/filepath"
 )
 
 func main() {
 
 	sourceRoot := flag.String("dest", ".", "生成工程存储路径，不需要工程目录名称，例如/home/xxx/zeus_app_project/src")
 	protoFile := flag.String("proto", "", "server proto file.")
+	projectBase := flag.String("base", "", "project base prefix.")
 
 	flag.Parse()
 	var err error
@@ -22,6 +23,18 @@ func main() {
 		return
 	}
 
+	if len(*projectBase) > 0 && (*projectBase)[len(*projectBase)-1] != '/' {
+		*projectBase += "/"
+		generator.SetProjectBasePrefix(*projectBase)
+	} else if fullPath, err := filepath.Abs(filepath.Dir(*sourceRoot + "/")); err != nil {
+		log.Fatalf("Can not get full path %s, %s", *sourceRoot, err)
+		return
+	} else {
+		baseName := filepath.Base(fullPath)
+		if baseName != "" {
+			generator.SetProjectBasePrefix(baseName + "/")
+		}
+	}
 	reader, err := os.Open(*protoFile)
 	if err != nil {
 		log.Fatalf("Can not open proto file %s,error is %v", *protoFile, err)
@@ -72,11 +85,11 @@ func main() {
 	//	errcount++
 	//}
 
-	err = generator.GenerateProtoCopy(g, *sourceRoot, *protoFile)
-	if err != nil {
-		fmt.Printf("Generate build-proto.sh file failed, error is %v\n", err)
-		errcount++
-	}
+	//err = generator.GenerateProtoCopy(g, *sourceRoot, *protoFile)
+	//if err != nil {
+	//	fmt.Printf("Generate build-proto.sh file failed, error is %v\n", err)
+	//	errcount++
+	//}
 
 	err = generator.GenerateBuildProtoSh(g, *sourceRoot)
 	if err != nil {

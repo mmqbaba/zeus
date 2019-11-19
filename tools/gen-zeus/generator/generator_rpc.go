@@ -38,8 +38,8 @@ func gm%sHandlerRegister(s server.Server, opts ...server.HandlerOption) (err err
 
 `
 	camelSrvName := CamelCase(PD.SvrName)
-	context := fmt.Sprintf(tmpContext, _defaultPkgPrefix+PD.PackageName, _defaultPkgPrefix+PD.PackageName,
-		_defaultPkgPrefix+PD.PackageName, PD.PackageName, camelSrvName, camelSrvName, camelSrvName, camelSrvName, camelSrvName)
+	context := fmt.Sprintf(tmpContext, projectBasePrefix+PD.PackageName, projectBasePrefix+PD.PackageName,
+		projectBasePrefix+PD.PackageName, PD.PackageName, camelSrvName, camelSrvName, camelSrvName, camelSrvName, camelSrvName)
 	fn := GetTargetFileName(PD, "rpc.init", rootdir)
 	return writeContext(fn, header, context, false)
 }

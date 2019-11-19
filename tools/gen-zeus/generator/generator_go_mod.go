@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"strings"
 )
 
 func GenerateGoMod(PD *Generator, rootdir string) (err error) {
@@ -14,7 +15,7 @@ replace (
 	github.com/golang/lint => golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3
 	github.com/hashicorp/consul => github.com/hashicorp/consul v1.5.1
 	github.com/testcontainers/testcontainer-go => github.com/testcontainers/testcontainers-go v0.0.4
-	gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus => ../../zeus
+	gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus => ../zeus
 )
 
 require (
@@ -31,7 +32,7 @@ require (
 )
 
 `
-	fullPkg := _defaultPkgPrefix + PD.PackageName
+	fullPkg := strings.TrimRight(projectBasePrefix, "/")
 	context := fmt.Sprintf(tmpContext, fullPkg)
 	fn := GetTargetFileName(PD, "go.mod", rootdir)
 	return writeContext(fn, header, context, false)

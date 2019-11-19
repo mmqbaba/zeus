@@ -24,7 +24,7 @@ import (
 )
 
 `
-	context := fmt.Sprintf(tmpContext, _defaultPkgPrefix+PD.PackageName, _defaultPkgPrefix+PD.PackageName)
+	context := fmt.Sprintf(tmpContext, projectBasePrefix+PD.PackageName, projectBasePrefix+PD.PackageName)
 	fn := GetTargetFileName(PD, "cmd.init", rootdir)
 	return writeContext(fn, header, context, false)
 }
@@ -84,7 +84,7 @@ func main() {
 }
 
 `
-	context := strings.Replace(tmpContext, "{PRJ}", _defaultPkgPrefix+PD.PackageName, 1)
+	context := strings.Replace(tmpContext, "{PRJ}", projectBasePrefix+PD.PackageName, 1)
 	fn := GetTargetFileName(PD, "cmd.main", rootdir)
 	return writeContext(fn, header, context, false)
 }

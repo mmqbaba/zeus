@@ -57,44 +57,44 @@ import (
 
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
 
-	gomicro "zeus_app/{PKGNAME}/proto/{PKGNAME}pb"
+	gomicro "zeus_app/{PKG}/proto/{PKG}pb"
 )
 
 var cli client.Client
 
-type helloService struct {
+type {SRV}Service struct {
 	mux    sync.RWMutex
 	name   string
-	client gomicro.{SRVNAME}Service
+	client gomicro.{SRV}Service
 }
 
-// {PKGNAME}Srv
-var {PKGNAME}Srv {PKGNAME}Service
+// {PKG}Srv
+var {PKG}Srv {SRV}Service
 
-func New{SRVNAME}Service(ctx context.Context) (gomicro.{SRVNAME}Service, error) {
-	{PKGNAME}Srv.mux.RLock()
-	if {PKGNAME}Srv.client != nil {
-		defer {PKGNAME}Srv.mux.RUnlock()
-		return {PKGNAME}Srv.client, nil
+func New{SRV}Service(ctx context.Context) (gomicro.{SRV}Service, error) {
+	{PKG}Srv.mux.RLock()
+	if {PKG}Srv.client != nil {
+		defer {PKG}Srv.mux.RUnlock()
+		return {PKG}Srv.client, nil
 	}
-	{PKGNAME}Srv.mux.RUnlock()
+	{PKG}Srv.mux.RUnlock()
 
-	{PKGNAME}Srv.mux.Lock()
-	defer {PKGNAME}Srv.mux.Unlock()
+	{PKG}Srv.mux.Lock()
+	defer {PKG}Srv.mux.Unlock()
 	cli, err := zeusctx.ExtractGMClient(ctx)
 	if err != nil {
 		return nil, err
 	}
-	{PKGNAME}Srv.name = "zeus"
-	{PKGNAME}Srv.client = gomicro.New{SRVNAME}Service({PKGNAME}Srv.name, cli)
-	return {PKGNAME}Srv.client, nil
+	{PKG}Srv.name = "{SRV}"
+	{PKG}Srv.client = gomicro.New{SRV}Service({PKG}Srv.name, cli)
+	return {PKG}Srv.client, nil
 }
 
 `
 	camelSrvName := CamelCase(PD.SvrName)
 
-	context = strings.ReplaceAll(context, "{PKGNAME}", PD.PackageName)
-	context = strings.ReplaceAll(context, "{SRVNAME}", camelSrvName)
+	context = strings.ReplaceAll(context, "{PKG}", PD.PackageName)
+	context = strings.ReplaceAll(context, "{SRV}", camelSrvName)
 
 	fn := GetTargetFileName(PD, "resource.rpcclient", rootdir)
 	return writeContext(fn, header, context, false)

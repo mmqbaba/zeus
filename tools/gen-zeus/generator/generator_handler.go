@@ -39,6 +39,8 @@ func genHandleFun(PD *Generator, rootdir string) (err error) {
 import (
 	"context"
 
+	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
+
 	gomicro "%s/proto/%spb"
 )
 
@@ -46,27 +48,31 @@ import (
 
 	postFunc := `
 func (h *%s) %s(ctx context.Context, req *gomicro.%s, rsp *gomicro.%s) (err error) {
+	logger := zeusctx.ExtractLogger(ctx)
+	logger.Debug("%s")
 
 	return
 }
 `
 	streamFunc := `
 func (h *%s) %s(ctx context.Context, stream gomicro.%s_%sStream) (err error) {
-	
+	logger := zeusctx.ExtractLogger(ctx)
+	logger.Debug("%s")
+
 	return
 }
 `
 	camelSrvName := CamelCase(PD.SvrName)
 	for _, v := range PD.Rpcapi {
-		context := fmt.Sprintf(tmpContext, _defaultPkgPrefix+PD.PackageName, PD.PackageName)
+		context := fmt.Sprintf(tmpContext, projectBasePrefix+PD.PackageName, PD.PackageName)
 		if v.IsStreamsRequest {
-			funtext := fmt.Sprintf(streamFunc, camelSrvName, v.Name, camelSrvName, v.Name)
+			funtext := fmt.Sprintf(streamFunc, camelSrvName, v.Name, camelSrvName, v.Name, v.Name)
 			context += funtext
 		} else if v.IsPost {
-			funtext := fmt.Sprintf(postFunc, camelSrvName, v.Name, v.RequestType, v.ReturnsType)
+			funtext := fmt.Sprintf(postFunc, camelSrvName, v.Name, v.RequestType, v.ReturnsType, v.Name)
 			context += funtext
 		} else {
-			funtext := fmt.Sprintf(postFunc, camelSrvName, v.Name, v.RequestType, v.ReturnsType)
+			funtext := fmt.Sprintf(postFunc, camelSrvName, v.Name, v.RequestType, v.ReturnsType, v.Name)
 			context += funtext
 		}
 
