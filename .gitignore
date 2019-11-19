@@ -7,3 +7,4 @@
 go.sum
 ~$
 !tools/bin/*.exe
+*.out
