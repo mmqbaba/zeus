@@ -1,0 +1,9 @@
+syntax="proto3";
+
+package errdef;
+
+// 0 ~ 19999
+enum ErrCode {
+    ECodeSuccessed = 0; // ok,http.StatusOK
+    ECodeSystem = 10001; // 系统错误,http.StatusOK
+}
