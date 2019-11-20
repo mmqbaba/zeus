@@ -13,8 +13,11 @@ pbout=${service}pb
 
 test -f ../proto/${service}.proto || exit 1
 # gen-zeus
-gen-zeus --proto ../proto/${service}.proto --dest ../
-
+gen-zeus --proto ../proto/${service}.proto --dest ../ 
+if [ $? -eq 1 ]; then
+    echo "gen-zeus failed"
+    exit 1
+fi
 mkdir -p $projectpath/proto/${service}pb
 cd $projectpath/proto
 
@@ -31,6 +34,11 @@ protoc -I../../proto \
    --govalidators_out=./${service}pb \
    --swagger_out=logtostderr=true:. \
    $service.proto
+
+if [ $? -eq 1 ]; then
+    echo "protoc failed"
+    exit 1
+fi
 protoc-go-inject-tag -input=./${service}pb/$service.pb.go # inject tag
 
 sed -i 's/Register%sHandler(/Register%sHandlerGW(/g' ./${service}pb/$service.pb.gw.go

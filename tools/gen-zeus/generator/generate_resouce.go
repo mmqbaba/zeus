@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -57,7 +58,7 @@ import (
 
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
 
-	gomicro "zeus_app/{PKG}/proto/{PKG}pb"
+	gomicro "%s{PKG}/proto/{PKG}pb"
 )
 
 var cli client.Client
@@ -95,6 +96,7 @@ func New{SRV}Service(ctx context.Context) (gomicro.{SRV}Service, error) {
 
 	context = strings.ReplaceAll(context, "{PKG}", PD.PackageName)
 	context = strings.ReplaceAll(context, "{SRV}", camelSrvName)
+	context = fmt.Sprintf(context, projectBasePrefix)
 
 	fn := GetTargetFileName(PD, "resource.rpcclient", rootdir)
 	return writeContext(fn, header, context, false)

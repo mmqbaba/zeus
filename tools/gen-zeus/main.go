@@ -11,9 +11,10 @@ import (
 
 func main() {
 
-	sourceRoot := flag.String("dest", ".", "生成工程存储路径，不需要工程目录名称，例如/home/xxx/zeus_app_project/src")
+	sourceRoot := flag.String("dest", ".", "生成工程存储路径")
 	protoFile := flag.String("proto", "", "server proto file.")
 	projectBase := flag.String("base", "", "project base prefix.")
+	errdefProto := flag.String("errdef", "proto/errdef.proto", "errdef.proto path")
 
 	flag.Parse()
 	var err error
@@ -47,6 +48,9 @@ func main() {
 		log.Fatal(err)
 		return
 	}
+
+	generator.WalkErrDefProto(*sourceRoot, g, g.Imports, *errdefProto)
+
 	var errcount int = 0
 
 	err = generator.GenerateCmd(g, *sourceRoot)

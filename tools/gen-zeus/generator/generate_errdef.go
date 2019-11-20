@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -40,6 +41,8 @@ func genErrdefEnum(PD *Generator, rootdir string) error {
 	tmpContext := `package errdef
 
 import (
+	"net/http"
+
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 )
 
@@ -56,18 +59,35 @@ func init() {
 `
 	errConstBlock := ""
 	errInitBlock := ""
+	errcodeMap := make(map[int]string)
 	for _, errSet := range PD.ErrCodes {
 		if errSet.ErrCodeEnums != nil {
 			for _, e := range errSet.ErrCodeEnums {
-				if e.Integer < 20000 {
+				if e.Integer <= 0 {
 					continue
 				}
 				errConstBlock += fmt.Sprintf("	%s errors.ErrorCode = %d\n", e.Name, e.Integer)
 				errMsg := ""
+				httpCode := ""
 				if e.InlineComment != nil {
-					errMsg = strings.TrimSpace(e.InlineComment.Message())
+					msgs := strings.Split(strings.TrimSpace(e.InlineComment.Message()), "^")
+					if len(msgs) > 0 {
+						errMsg = strings.TrimSpace(msgs[0])
+					}
+					if len(msgs) > 1 {
+						httpCode = strings.TrimSpace(msgs[1])
+					}
+				}
+				if nm, ok := errcodeMap[e.Integer]; ok {
+					err := fmt.Errorf("errcode %d：%s 与 %s 重复\n", e.Integer, nm, e.Name)
+					log.Fatalln(err)
+					return err
 				}
 				errInitBlock += fmt.Sprintf(`	errors.ECodeMsg[%s] = "%s"`, e.Name, errMsg) + "\n"
+				if httpCode != "" {
+					errInitBlock += fmt.Sprintf(`	errors.ECodeStatus[%s] = %s`, e.Name, httpCode) + "\n"
+				}
+				errcodeMap[e.Integer] = e.Name
 			}
 		}
 	}

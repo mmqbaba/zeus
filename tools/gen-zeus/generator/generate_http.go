@@ -92,10 +92,10 @@ func registerRoutesFor{SRV}Handler(groups map[string]*gin.RouterGroup, customFn 
 `, camelSrv, v.Name, camelSrv, v.Name)
 
 		mapValBlock += fmt.Sprintf(`	Route_%sHdlr_%s: &zeusmwhttp.Route{
-	RLink:  Route_%sHdlr_%s,
-	Method: %s,
-	Path:   "%s",
-	Handle: zeusmwhttp.GenerateGinHandle(%sHdlr.%s),
+		RLink:  Route_%sHdlr_%s,
+		Method: %s,
+		Path:   "%s",
+		Handle: zeusmwhttp.GenerateGinHandle(%sHdlr.%s),
 	},
 `, camelSrv, v.Name, camelSrv, v.Name, v.Method, v.ApiPath, PD.PackageName, v.Name)
 	}

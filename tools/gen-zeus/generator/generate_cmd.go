@@ -34,8 +34,8 @@ func genCmdMain(PD *Generator, rootdir string) error {
 	tmpContext := `package main
 
 import (
-	"log"
 	"fmt"
+	"log"
 	"os"
 	"runtime"
 	"strconv"

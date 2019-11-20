@@ -1,9 +1,12 @@
 package generator
 
 import (
+	"fmt"
 	"github.com/emicklei/proto"
 	"io"
 	"math/rand"
+	"os"
+	"path"
 	"strings"
 	"time"
 )
@@ -26,12 +29,70 @@ func New(reader io.Reader) (*Generator, error) {
 		proto.WithPackage(t.handlePackage),
 		proto.WithOption(t.handleOption),
 		proto.WithRPC(t.handleRpc),
-		proto.WithEnum(t.handleEnum))
+		proto.WithEnum(t.handleEnum),
+		withImport(t.handleImport),
+	)
 
 	if len(t.GopackageName) == 0 {
 		t.GopackageName = t.PackageName
 	}
+
 	return t, nil
+}
+
+func WalkErrDefProto(rootdir string, gen *Generator, imps []string, errdefs ...string) {
+	var ims []string
+	for _, ef := range imps {
+		if path.Base(ef) != _errdefFileName {
+			continue
+		}
+		ims = append(ims, ef)
+	}
+	for _, ef := range errdefs {
+		if ef == "" {
+			continue
+		}
+		ims = append(ims, ef)
+	}
+
+	for _, v := range ims {
+		filepath := path.Join(rootdir, "/", v)
+		if !FileExists(filepath) {
+			fmt.Printf("Skip: %s file not exist.\n", filepath)
+			continue
+		}
+		reader, err := os.Open(filepath)
+		if err != nil {
+			fmt.Printf("Can not open proto file %s,error is %v", filepath, err)
+			continue
+		}
+		parser := proto.NewParser(reader)
+		definition, err := parser.Parse()
+		if err != nil {
+			fmt.Printf("Can not Parse proto file %s,error is %v", filepath, err)
+			continue
+		}
+		ngen := &Generator{}
+		proto.Walk(definition,
+			proto.WithEnum(gen.handleEnum),
+			withImport(ngen.handleImport),
+		)
+		reader.Close()
+		WalkErrDefProto(rootdir, gen, ngen.Imports)
+	}
+}
+
+func withImport(apply func(*proto.Import)) proto.Handler {
+	return func(v proto.Visitee) {
+		if s, ok := v.(*proto.Import); ok {
+			apply(s)
+		}
+	}
+}
+
+func (t *Generator) handleImport(p *proto.Import) {
+	//fmt.Println(path.Base(p.Filename), p.Kind)
+	t.Imports = append(t.Imports, p.Filename)
 }
 
 func (t *Generator) handlePackage(p *proto.Package) {
@@ -88,6 +149,7 @@ func (t *Generator) handleRpc(m *proto.RPC) {
 }
 
 func (t *Generator) handleEnum(e *proto.Enum) {
+	//fmt.Println(e.Name)
 	if strings.HasSuffix(e.Name, "ErrCode") {
 		//log.Info(*e)
 		var pv ProtoVistor
