@@ -136,13 +136,7 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 	logger := zeusctx.ExtractLogger(ctx)
 	logger.Debug("clientLogWrap")
 
-	ng, err := zeusctx.ExtractEngine(ctx)
-	if err != nil {
-		logger.Error(err)
-		err = &gmerrors.Error{Id: "", Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: "zeusctx.ExtractEngine"}
-		return
-	}
-
+	ng := l.ng
 	///////// tracer begin
 	name := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
 	cfg, err := ng.GetConfiger()
