@@ -41,8 +41,8 @@ func genErrdefEnum(PD *Generator, rootdir string) error {
 	tmpContext := `package errdef
 
 import (
-	%s
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
+	%s
 )
 
 // 每个子项目特有的错误码定义，避免使用 0 ~ 19999，与公共库冲突
@@ -97,7 +97,7 @@ func init() {
 	}
 	importHttp := ""
 	if isImportHttp {
-		importHttp = `net/http`
+		importHttp = `"net/http"`
 	}
 	context := fmt.Sprintf(tmpContext, importHttp, errConstBlock, errInitBlock)
 	fn := GetTargetFileName(PD, "errdef.enum", rootdir)

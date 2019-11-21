@@ -154,9 +154,10 @@ func main() {
 	}
 
 	if errcount == 0 {
-		fmt.Println("Generate rpc engin success!")
+		fmt.Printf("\n\nGenerate zeus engin success!\n")
 	} else {
-		fmt.Println("Generate rpc engin have some error, please check error information!")
+		fmt.Printf("\n\nGenerate zeus engin have some error, please check error information!\n")
+		os.Exit(1)
 	}
 	return
 }
