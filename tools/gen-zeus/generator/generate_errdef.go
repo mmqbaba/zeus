@@ -63,7 +63,9 @@ func init() {
 	for _, errSet := range PD.ErrCodes {
 		if errSet.ErrCodeEnums != nil {
 			for _, e := range errSet.ErrCodeEnums {
-				if e.Integer < 20000 {
+				if e.Integer <= 0 {
+					continue
+				} else if e.Integer < 20000 {
 					fmt.Printf("！Invalid errcode %d ( < 20000)\n", e.Integer)
 					continue
 				}
