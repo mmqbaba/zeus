@@ -6,4 +6,5 @@ package errdef;
 enum ErrCode {
     ECodeSuccessed = 0; // ok^http.StatusOK
     ECodeSystem = 10001; // 系统错误^http.StatusOK
+    ECodeSystemAPI = 10002; // 系统api层错误^http.StatusOK
 }

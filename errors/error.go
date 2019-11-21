@@ -4,6 +4,7 @@ import (
 	syserrors "errors"
 	"net/http"
 	"reflect"
+	"strconv"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
@@ -57,6 +58,19 @@ func (e Error) Write(w http.ResponseWriter) error {
 	return err
 }
 
+// ErrorCode 错误码
+type ErrorCode int
+
+func (c ErrorCode) String() string {
+	return strconv.Itoa(int(c)) + ":" + ECodeMsg[c]
+}
+
+// ParseErr 错误转义
+func (c ErrorCode) ParseErr(msg string) *Error {
+	return New(c, msg, "")
+}
+
+// AssertError .
 func AssertError(e error) (err *Error) {
 	if e == nil {
 		return
