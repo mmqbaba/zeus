@@ -7,4 +7,13 @@ enum ErrCode {
     ECodeSuccessed = 0; // ok^http.StatusOK
     ECodeSystem = 10001; // 系统错误^http.StatusOK
     ECodeSystemAPI = 10002; // 系统api层错误^http.StatusOK
+    ECodeSignature = 10003; // 签名错误^http.StatusOK
+    ECodeEBusAPI = 10004; // 请求网关ebus接口错误^http.StatusOK
+    ECodeBadRequest = 10005; // bad request^http.StatusBadRequest
+    ECodeInternal = 10006; // 服务器内部错误^http.StatusInternalServerError
+    ECodeNotFound = 10007; // 未能成功匹配路由^http.StatusNotFound
+    ECodeUnauthorized = 10008; // 未认证的请求^http.StatusUnauthorized
+    ECodeNoPermission = 10009; // 没有权限^http.StatusForbidden
+    ECodeInvalidParams = 10010; // 请求参数错误^http.StatusOK
+    ECodeProxyFailed = 10011; // 代理服务错误^http.StatusBadRequest
 }
