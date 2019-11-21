@@ -74,7 +74,7 @@ func GetTargetFileName(PD *Generator, objtype string, rootdir string, opts ...st
 		//dirname := fmt.Sprintf("%s/%s/errdef", rootdir, PD.PackageName)
 		dirname := fmt.Sprintf("%s/errdef", rootdir)
 		CheckPrepareDir(dirname)
-		fn = dirname + "/errcode.go"
+		fn = dirname + "/errdef.go"
 	case "cmd.init":
 		dirname := fmt.Sprintf("%s/%s/cmd/app", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
@@ -131,6 +131,10 @@ func GetTargetFileName(PD *Generator, objtype string, rootdir string, opts ...st
 		dirname := fmt.Sprintf("%s/%s/proto/%spb", rootdir, PD.PackageName, PD.PackageName)
 		CheckPrepareDir(dirname)
 		fn = dirname
+	case "proto.errdef":
+		dirname := fmt.Sprintf("%s/proto", rootdir)
+		CheckPrepareDir(dirname)
+		fn = dirname + "/errdef.proto"
 	case "proto":
 		dirname := fmt.Sprintf("%s/%s/proto", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
@@ -175,6 +179,10 @@ func GetTargetFileName(PD *Generator, objtype string, rootdir string, opts ...st
 		dirname := fmt.Sprintf("%s/%s", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
 		fn = fmt.Sprintf("%s/Dockerfile", dirname)
+	case "zeus.errdef":
+		dirname := fmt.Sprintf("%s/errors", rootdir)
+		CheckPrepareDir(dirname)
+		fn = fmt.Sprintf("%s/errdef.go", dirname)
 	default:
 		fmt.Print("Can not support object type")
 		return ""

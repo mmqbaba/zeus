@@ -53,6 +53,24 @@ func WalkErrDefProto(rootdir string, gen *Generator, imps []string, errdefs ...s
 			continue
 		}
 		ims = append(ims, ef)
+		filepath := path.Join(rootdir, "/", ef)
+		if !FileExists(filepath) {
+			header := ``
+			context := `syntax="proto3";
+
+package errdef;
+
+
+// 每个子项目特有的错误码定义，避免使用 0 ~ 19999，与公共库冲突
+enum ErrCode {
+    // 只是用做占位
+    ECodeHolder = 0;
+
+}
+
+`
+			writeContext(filepath, header, context, false)
+		}
 	}
 
 	for _, v := range ims {

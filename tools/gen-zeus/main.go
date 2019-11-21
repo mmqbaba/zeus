@@ -15,28 +15,35 @@ func main() {
 	protoFile := flag.String("proto", "", "server proto file.")
 	projectBase := flag.String("base", "", "project base prefix.")
 	errdefProto := flag.String("errdef", "proto/errdef.proto", "errdef.proto path")
+	isZeuserr := flag.Bool("onlyzeuserr", false, "gen-zeus -onlyzeuserr -errdef=errors/errdef.proto")
 
 	flag.Parse()
 	var err error
-	if len(*protoFile) <= 0 || !generator.FileExists(*protoFile) {
-		fmt.Printf("can not find protofile(%s)\n", *protoFile)
-		flag.Usage()
-		return
+	var reader *os.File
+	if !*isZeuserr {
+		if len(*protoFile) <= 0 || !generator.FileExists(*protoFile) {
+			fmt.Printf("can not find protofile(%s)\n", *protoFile)
+			flag.Usage()
+			return
+		}
+
+		if len(*projectBase) > 0 && (*projectBase)[len(*projectBase)-1] != '/' {
+			*projectBase += "/"
+			generator.SetProjectBasePrefix(*projectBase)
+		} else if fullPath, err := filepath.Abs(filepath.Dir(*sourceRoot + "/")); err != nil {
+			log.Fatalf("Can not get full path %s, %s", *sourceRoot, err)
+			return
+		} else {
+			baseName := filepath.Base(fullPath)
+			if baseName != "" {
+				generator.SetProjectBasePrefix(baseName + "/")
+			}
+		}
+		reader, err = os.Open(*protoFile)
+	} else {
+		reader, err = os.Open(*errdefProto)
 	}
 
-	if len(*projectBase) > 0 && (*projectBase)[len(*projectBase)-1] != '/' {
-		*projectBase += "/"
-		generator.SetProjectBasePrefix(*projectBase)
-	} else if fullPath, err := filepath.Abs(filepath.Dir(*sourceRoot + "/")); err != nil {
-		log.Fatalf("Can not get full path %s, %s", *sourceRoot, err)
-		return
-	} else {
-		baseName := filepath.Base(fullPath)
-		if baseName != "" {
-			generator.SetProjectBasePrefix(baseName + "/")
-		}
-	}
-	reader, err := os.Open(*protoFile)
 	if err != nil {
 		log.Fatalf("Can not open proto file %s,error is %v", *protoFile, err)
 		return
@@ -48,7 +55,10 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-
+	if *isZeuserr {
+		generator.GenerateZeusErrdef(g, *sourceRoot)
+		return
+	}
 	generator.WalkErrDefProto(*sourceRoot, g, g.Imports, *errdefProto)
 
 	var errcount int = 0

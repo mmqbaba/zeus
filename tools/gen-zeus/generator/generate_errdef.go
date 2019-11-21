@@ -41,8 +41,7 @@ func genErrdefEnum(PD *Generator, rootdir string) error {
 	tmpContext := `package errdef
 
 import (
-	"net/http"
-
+	%s
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 )
 
@@ -60,10 +59,12 @@ func init() {
 	errConstBlock := ""
 	errInitBlock := ""
 	errcodeMap := make(map[int]string)
+	isImportHttp := false
 	for _, errSet := range PD.ErrCodes {
 		if errSet.ErrCodeEnums != nil {
 			for _, e := range errSet.ErrCodeEnums {
-				if e.Integer <= 0 {
+				if e.Integer < 20000 {
+					fmt.Printf("！Invalid errcode %d ( < 20000)\n", e.Integer)
 					continue
 				}
 				errConstBlock += fmt.Sprintf("	%s errors.ErrorCode = %d\n", e.Name, e.Integer)
@@ -86,12 +87,17 @@ func init() {
 				errInitBlock += fmt.Sprintf(`	errors.ECodeMsg[%s] = "%s"`, e.Name, errMsg) + "\n"
 				if httpCode != "" {
 					errInitBlock += fmt.Sprintf(`	errors.ECodeStatus[%s] = %s`, e.Name, httpCode) + "\n"
+					isImportHttp = true
 				}
 				errcodeMap[e.Integer] = e.Name
 			}
 		}
 	}
-	context := fmt.Sprintf(tmpContext, errConstBlock, errInitBlock)
+	importHttp := ""
+	if isImportHttp {
+		importHttp = `net/http`
+	}
+	context := fmt.Sprintf(tmpContext, importHttp, errConstBlock, errInitBlock)
 	fn := GetTargetFileName(PD, "errdef.enum", rootdir)
 	return writeContext(fn, header, context, true)
 }
