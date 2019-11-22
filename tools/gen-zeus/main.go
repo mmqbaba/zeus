@@ -153,6 +153,12 @@ func main() {
 		errcount++
 	}
 
+	err = generator.GenerateConf(g, *sourceRoot)
+	if err != nil {
+		fmt.Printf("Generate conf/zeus.josn file failed, error is %v\n", err)
+		errcount++
+	}
+
 	if errcount == 0 {
 		fmt.Printf("\n\nGenerate zeus engin success!\n")
 	} else {
