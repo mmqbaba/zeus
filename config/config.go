@@ -39,7 +39,7 @@ type DebugSwitch struct {
 }
 
 type Trace struct {
-	ServiceName string  `json:"srvice_name"`
+	ServiceName string  `json:"service_name"`
 	TraceUrl   string  `json:"trace_url"`
 	Rate       float64 `json:"rate"`
 	Sampler    string  `json:"sampler"`

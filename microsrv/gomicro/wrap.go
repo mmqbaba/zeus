@@ -57,7 +57,6 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 				}
 				span.Finish()
 			}()
-			ext.SpanKindRPCClient.Set(span)
 			body, _ := utils.Marshal(req.Body())
 			span.SetTag("grpc server receive", string(body))
 			///////// tracer finish
