@@ -126,7 +126,7 @@ func ParseCommandLine() (options Options, err error) {
 	flag.StringVar(&options.LogFormat, "logFormat", "", "log fromat to use (text, json)")
 	flag.StringVar(&options.LogLevel, "logLevel", "", "log at or above(debug, info, warn, error, fatal, panic) this level to the logging output(default >=info)")
 
-	flag.StringVar(&options.ConfEntryPath, "confEntryPath", "", "config entry path")
+	flag.StringVar(&options.ConfEntryPath, "confEntryPath", "./conf/zeus.json", "config entry path")
 	flag.BoolVar(&options.Version, "version", false, "show version")
 
 	flag.Parse()
