@@ -171,6 +171,9 @@ func assertError(e error) (err *zeuserrors.Error) {
 	if e == nil {
 		return
 	}
+	if reflect.ValueOf(e).IsNil() {
+		return
+	}
 	var zeusErr *zeuserrors.Error
 	if errors.As(e, &zeusErr) {
 		err = zeusErr
