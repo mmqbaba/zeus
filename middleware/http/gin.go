@@ -171,7 +171,7 @@ func assertError(e error) (err *zeuserrors.Error) {
 	if e == nil {
 		return
 	}
-	if reflect.ValueOf(e).IsNil() {
+	if utils.IsBlank(reflect.ValueOf(e)) {
 		return
 	}
 	var zeusErr *zeuserrors.Error

@@ -15,7 +15,7 @@ type Error struct {
 	ErrMsg    string      `json:"errmsg"`  // 错误信息
 	Cause     string      `json:"cause,omitempty"`
 	ServiceID string      `json:"serviceid,omitempty"` // 服务ID
-	TracerID  string      `json:"tracerid,omitempty"` // tracerID
+	TracerID  string      `json:"tracerid,omitempty"`  // tracerID
 	Data      interface{} `json:"data,omitempty"`
 }
 
@@ -75,7 +75,7 @@ func AssertError(e error) (err *Error) {
 	if e == nil {
 		return
 	}
-	if reflect.ValueOf(e).IsNil() {
+	if utils.IsBlank(reflect.ValueOf(e)) {
 		return
 	}
 	var zeusErr *Error

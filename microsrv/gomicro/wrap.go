@@ -74,7 +74,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 				c = zeusctx.RedisToContext(c, ng.GetContainer().GetRedisCli().GetCli())
 			}
 			err = fn(c, req, rsp)
-			if err != nil && !reflect.ValueOf(err).IsNil() {
+			if err != nil && !utils.IsBlank(reflect.ValueOf(err)) {
 				span.SetTag("grpc server answer error", err)
 				// zeus错误包装为gomicro错误
 				var zeusErr *zeuserrors.Error

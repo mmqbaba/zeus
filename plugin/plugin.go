@@ -2,8 +2,10 @@ package plugin
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/micro/go-micro/client"
+	"github.com/micro/go-micro"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
@@ -25,7 +27,9 @@ type Container struct {
 	logger        *logrus.Logger
 	tracer        *tracing.TracerWrap
 	// http
-	// grpc
+	httpHandler http.Handler
+	// gomicro grpc
+	gomicroService micro.Service
 	// redisPool       *redis.Pool
 	// dbPool          *sql.DB
 	// transport       *http.Transport
@@ -196,4 +200,20 @@ func (c *Container) SetServiceID(id string) {
 
 func (c *Container) GetServiceID() string {
 	return c.serviceID
+}
+
+func (c *Container) SetHTTPHandler(h http.Handler) {
+	c.httpHandler = h
+}
+
+func (c *Container) GetHTTPHandler() http.Handler {
+	return c.httpHandler
+}
+
+func (c *Container) SetGoMicroService(s micro.Service) {
+	c.gomicroService = s
+}
+
+func (c *Container) GetGoMicroService() micro.Service {
+	return c.gomicroService
 }

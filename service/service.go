@@ -82,10 +82,22 @@ func Run(cnt *plugin.Container, conf *Options, opts ...Option) (err error) {
 	}
 	s := NewService(opt, cnt, opts...)
 
+	if err = s.Init(); err != nil {
+		return
+	}
+	if err = s.RunServer(); err != nil {
+		log.Printf("[zeus] [service.Run] err: %s\n", err)
+		s.watcherCancelC <- struct{}{} // 服务启动失败，通知停止engine的监听
+		return
+	}
+	return
+}
+
+func (s *Service) Init() (err error) {
 	s.initConfEntry()
 
 	if fn, ok := engineProvidors[confEntry.EngineType]; ok && fn != nil {
-		if s.ng, err = fn(cnt); err != nil {
+		if s.ng, err = fn(s.container); err != nil {
 			log.Printf("[zeus] [service.Run] err: %s\n", err)
 		}
 	} else {
@@ -100,12 +112,12 @@ func Run(cnt *plugin.Container, conf *Options, opts ...Option) (err error) {
 		return
 	}
 
-	// 启动服务，服务发现注册，http/grpc
-	if err = s.startServer(); err != nil {
+	if err = s.initServer(); err != nil {
 		log.Printf("[zeus] [service.Run] err: %s\n", err)
 		s.watcherCancelC <- struct{}{} // 服务启动失败，通知停止engine的监听
 		return
 	}
+
 	return
 }
 
@@ -240,7 +252,7 @@ type gwOption struct {
 	swaggerJSONFile string
 }
 
-func (s *Service) startServer() (err error) {
+func (s *Service) initServer() (err error) {
 	// gomicro-grpc and gw-http
 	log.Println("[zeus] start server ...")
 	configer, err := s.ng.GetConfiger()
@@ -267,6 +279,7 @@ func (s *Service) startServer() (err error) {
 	if err != nil {
 		return
 	}
+	s.container.SetGoMicroService(gomicroservice)
 
 	gw, err := s.newHTTPGateway(gwOption{
 		grpcEndpoint:    fmt.Sprintf("localhost:%d", serverPort),
@@ -275,7 +288,13 @@ func (s *Service) startServer() (err error) {
 	if err != nil {
 		return
 	}
+	s.container.SetHTTPHandler(gw)
 
+	return
+}
+
+func (s *Service) RunServer() (err error) {
+	gw := s.container.GetHTTPHandler()
 	go func() {
 		addr := fmt.Sprintf("%s:%d", s.options.ApiInterface, s.options.ApiPort)
 		log.Printf("http server listen on %s", addr)
@@ -284,7 +303,7 @@ func (s *Service) startServer() (err error) {
 			log.Fatal(err)
 		}
 	}()
-
+	gomicroservice := s.container.GetGoMicroService()
 	// Run the service
 	if err = gomicroservice.Run(); err != nil {
 		log.Println("[zeus] err:", err)
