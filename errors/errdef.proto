@@ -5,15 +5,104 @@ package errdef;
 // 0 ~ 19999
 enum ErrCode {
     ECodeSuccessed = 0; // ok^http.StatusOK
-    ECodeSystem = 10001; // 系统错误^http.StatusOK
-    ECodeSystemAPI = 10002; // 系统api层错误^http.StatusOK
-    ECodeSignature = 10003; // 签名错误^http.StatusOK
-    ECodeEBusAPI = 10004; // 请求网关ebus接口错误^http.StatusOK
-    ECodeBadRequest = 10005; // bad request^http.StatusBadRequest
-    ECodeInternal = 10006; // 服务器内部错误^http.StatusInternalServerError
-    ECodeNotFound = 10007; // 未能成功匹配路由^http.StatusNotFound
-    ECodeUnauthorized = 10008; // 未认证的请求^http.StatusUnauthorized
-    ECodeNoPermission = 10009; // 没有权限^http.StatusForbidden
-    ECodeInvalidParams = 10010; // 请求参数错误^http.StatusOK
-    ECodeProxyFailed = 10011; // 代理服务错误^http.StatusBadRequest
+    // 系统错误
+    ECodeSystem = 10001; // system error^http.StatusOK
+    // 系统api层错误
+    ECodeSystemAPI = 10002; // system api error^http.StatusOK
+    // 网关验签是错误
+    ECodeSignature = 10003; // signature invalid^http.StatusOK
+    // 请求错误
+    ECodeBadRequest = 10004; // bad request^http.StatusOK
+    // uid错误
+    ECodeBadUserID = 10005; // invalid userid^http.StatusOK
+    // 认证token错误
+    ECodeBadToken = 10006; // invalid access_token^http.StatusOK
+    // 认证方式错误
+    ECodeBadAuthWay = 10007; // invalid auth_way^http.StatusOK
+    // 用户没有实名
+    ECodeNotRealname = 10008; // user not realname^http.StatusOK
+    // 个人用户需要认证
+    ECodeNeedPerAuth = 10009; // person need auth^http.StatusOK
+    // 企业用户需要认证
+    ECodeNeedOrgAuth = 10010; // org need auth^http.StatusOK
+    // 无效的请求参数
+    ECodeInvalidParams = 10011; // invalid params^http.StatusOK
+    // 无此权限
+    ECodeNoPermission = 10012; // no permission^http.StatusOK
+    // 请求网关ebus接口错误
+    ECodeEBusAPI = 10013; // request ebus api failed^http.StatusOK
+    // redis错误
+    ECodeRedisErr = 10014; // redis error^http.StatusOK
+    // mongo错误
+    ECodeMongoErr = 10015; // mongo error^http.StatusOK
+    // mysql错误
+    ECodeMysqlErr = 10016; // mysql error^http.StatusOK
+    // obs错误
+    ECodeObsErr = 10017; // obs error^http.StatusOK
+    // 查询无记录
+    ECodeNoRecord = 10018; // no record^http.StatusOK
+    // 文件不存在
+    ECodeNoFile = 10019; // no file^http.StatusOK
+    // grpc调用错误
+    ECodeGrpcError = 10020; // grpc invoke error^http.StatusOK
+    // url不存在
+    ECodeUrlNotFound = 10021; // url not found^http.StatusOK
+    // 获取uuid失败
+    ECodeUUIDErr = 10022; // get uuid error^http.StatusOK
+    // 获取metadata错误
+    ECodeMetadataErr = 10023; // get metedata error^http.StatusOK
+    // 类型转换错误
+    ECodeTypeCovert = 10024; // type convert error^http.StatusOK
+    // protobuf序列化错误
+    ECodePbMarshal = 10025; // marshal protobuf error^http.StatusOK
+    // 业务id/服务供应商id错误
+    ECodeBusOrSp = 10026; // busid or spid error^http.StatusOK
+    // 认证错误
+    ECodeAuthErr = 10027; // authentication error^http.StatusOK
+    // 无效的用户类型(个人/企业)
+    ECodeInvalidUserType = 10028; // invalid usertype^http.StatusOK
+    // 获取第三方服务供应商token失败
+    ECodeGetSpTokenFailed = 10029; // get sp token failed^http.StatusOK
+    // json序列化错误
+    ECodeJsonMarshal = 10030; // json marshal error^http.StatusOK
+    // json反序列化错误
+    ECodeJsonUnmarshal = 10031; // json unmarshal error^http.StatusOK
+    // tifclient请求错误
+    ECodeTifClientRequest = 10032; // tifclient request error^http.StatusOK
+    // 获取第三方服务供应商账号失败
+    ECodeCreateSpAccountFailed = 10033; // create sp account failed^http.StatusOK
+    // tifclient请求查询法人信息失败
+    ECodeTifClientGetCorpsFailed = 10034; // tifclient request get corps failed^http.StatusOK
+    // xml序列化错误
+    ECodeXmlMarshal = 10035; // xml marshal error^http.StatusOK
+    // xml反序列化错误
+    ECodeXmlUnmarshal = 10036; // xml unmarshal error^http.StatusOK
+    // 生成random token 失败
+    ECodeLockRandToken = 10037; // gen lock random token error^http.StatusOK
+    // 释放锁失败
+    ECodeLockUnlockFailed = 10038; // lock unlock failed^http.StatusOK
+    // 获取锁失败
+    ECodeLockNotObtained = 10039; // lock not obtained^http.StatusOK
+    // 刷新锁失败
+    ECodeLockRefreshFailed = 10040; // lock refresh failed^http.StatusOK
+    // 锁到期失效
+    ECodeLockDurationExceeded = 10041; // lock duration exceeded^http.StatusOK
+    // 空错误
+    ECodeNilZeusErr = 10042; // zeuserr was nil^http.StatusOK
+    // 内部方法调用错误
+    ECodeInternalFuctionCalledErr = 10043; // internal fuction call error^http.StatusOK
+    // 发布消息失败
+    ECodePublishMsgFailed = 10044; // publish message failed^http.StatusOK
+    // model解析错误
+    ECodeMysqlModelParseFailed = 10045; // model parse failed^http.StatusOK
+    // 配置相关错误
+    ECodeAppCfg = 10046; // appcfg error^http.StatusOK
+    // 服务器内部错误
+    ECodeInternal = 10047; // 服务器内部错误^http.StatusInternalServerError
+    // 未能成功匹配路由
+    ECodeNotFound = 10048; // 未能成功匹配路由^http.StatusNotFound
+    // 未认证的请求
+    ECodeUnauthorized = 10049; // 未认证的请求^http.StatusUnauthorized
+    // 代理服务错误
+    ECodeProxyFailed = 10050; // 代理服务错误^http.StatusBadRequest
 }
