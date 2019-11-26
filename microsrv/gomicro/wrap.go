@@ -72,10 +72,10 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			}
 			if ng.GetContainer().GetRedisCli() != nil {
 				c = zeusctx.RedisToContext(c, ng.GetContainer().GetRedisCli().GetCli())
-      }
-      if ng.GetContainer().GetMongo() != nil {
-        c = zeusctx.MongoToContext(c, ng.GetContainer().GetMongo())
-      }
+			}
+			if ng.GetContainer().GetMongo() != nil {
+				c = zeusctx.MongoToContext(c, ng.GetContainer().GetMongo())
+			}
 			err = fn(c, req, rsp)
 			if err != nil && !utils.IsBlank(reflect.ValueOf(err)) {
 				span.SetTag("grpc server answer error", err)
