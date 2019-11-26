@@ -187,6 +187,22 @@ func GetTargetFileName(PD *Generator, objtype string, rootdir string, opts ...st
 		dirname := fmt.Sprintf("%s/%s/conf", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
 		fn = fmt.Sprintf("%s/zeus.json", dirname)
+	case "editor":
+		dirname := fmt.Sprintf("%s", rootdir)
+		CheckPrepareDir(dirname)
+		fn = fmt.Sprintf("%s/.editorconfig", dirname)
+	case "gitignore":
+		dirname := fmt.Sprintf("%s", rootdir)
+		CheckPrepareDir(dirname)
+		fn = fmt.Sprintf("%s/.gitignore", dirname)
+	case "unittest.handler":
+		dirname := fmt.Sprintf("%s/%s/handler", rootdir, PD.PackageName)
+		CheckPrepareDir(dirname)
+		fn = dirname + "/unittest_init_test.go"
+	case "unittest.main":
+		dirname := fmt.Sprintf("%s/%s", rootdir, PD.PackageName)
+		CheckPrepareDir(dirname)
+		fn = fmt.Sprintf("%s/%s_test.go", dirname, PD.PackageName)
 	default:
 		fmt.Print("Can not support object type")
 		return ""
