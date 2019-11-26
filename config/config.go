@@ -21,6 +21,7 @@ type Entry struct {
 type AppConf struct {
 	LogConf             LogConf                `json:"log_conf" toml:"log_conf" yaml:"log_conf"`
 	Redis               Redis                  `json:"redis"`
+	MongoDB             MongoDB                `json:"mongodb"`
 	MongoDBSource       map[string]MongoDB     `json:"mongodb_source"`
 	MysqlSource         map[string]MysqlDB     `json:"mysql_source"`
 	RedisSource         map[string]Redis       `json:"redis_source"`
@@ -40,12 +41,12 @@ type DebugSwitch struct {
 
 type Trace struct {
 	ServiceName string  `json:"service_name"`
-	TraceUrl   string  `json:"trace_url"`
-	Rate       float64 `json:"rate"`
-	Sampler    string  `json:"sampler"`
-	Mod        uint64  `json:"mod"`
-	OnlyLogErr bool    `json:"only_log_err"` // true 只记录出错日志
-	Enable     bool    `json:"enable"`       // 启用组件
+	TraceUrl    string  `json:"trace_url"`
+	Rate        float64 `json:"rate"`
+	Sampler     string  `json:"sampler"`
+	Mod         uint64  `json:"mod"`
+	OnlyLogErr  bool    `json:"only_log_err"` // true 只记录出错日志
+	Enable      bool    `json:"enable"`       // 启用组件
 }
 
 type MongoDB struct {
@@ -118,7 +119,7 @@ type TopicInfo struct {
 }
 
 type GoMicro struct {
-	ServiceName         string   `json:"service_name"`
+	ServiceName        string   `json:"service_name"`
 	ServerPort         uint32   `json:"server_port"`
 	RegistryPluginType string   `json:"registry_plugin_type"` // etcd/consul
 	RegistryAddrs      []string `json:"registry_addrs"`       // etcd/consul address

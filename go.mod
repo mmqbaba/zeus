@@ -38,6 +38,7 @@ require (
 	github.com/prometheus/client_golang v1.2.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/tebeka/strftime v0.1.3 // indirect
+	go.mongodb.org/mongo-driver v1.0.2
 	go.uber.org/zap v1.12.0 // indirect
 	golang.org/x/crypto v0.0.0-20191105034135-c7e5f84aec59 // indirect
 	golang.org/x/net v0.0.0-20191105084925-a882066a44e0 // indirect

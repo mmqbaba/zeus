@@ -4,25 +4,25 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/micro/go-micro/client"
 	"github.com/micro/go-micro"
+	"github.com/micro/go-micro/client"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	zeuslog "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/log"
-	redisclient "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
+	zeusmongo "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo"
+	zeusredis "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
 	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace/zipkin"
 )
 
 // Container contain comm obj
 type Container struct {
-	serviceID string
-	appcfg    config.AppConf
-
-	redis *redisclient.Client
-	// gomicro
+	serviceID     string
+	appcfg        config.AppConf
+	redis         *zeusredis.Client
+	mongo         *zeusmongo.Client
 	gomicroClient client.Client
 	logger        *logrus.Logger
 	tracer        *tracing.TracerWrap
@@ -30,7 +30,7 @@ type Container struct {
 	httpHandler http.Handler
 	// gomicro grpc
 	gomicroService micro.Service
-	// redisPool       *redis.Pool
+
 	// dbPool          *sql.DB
 	// transport       *http.Transport
 	// svc             XUtil
@@ -46,6 +46,7 @@ func (c *Container) Init(appcfg *config.AppConf) {
 	c.initRedis(&appcfg.Redis)
 	c.initLogger(&appcfg.LogConf)
 	c.initTracer(&appcfg.Trace)
+	c.initMongo(&appcfg.MongoDB)
 	log.Println("[Container.Init] finish")
 	c.appcfg = *appcfg
 }
@@ -61,6 +62,9 @@ func (c *Container) Reload(appcfg *config.AppConf) {
 	if c.appcfg.Trace != appcfg.Trace {
 		c.reloadTracer(&appcfg.Trace)
 	}
+	if c.appcfg.MongoDB != appcfg.MongoDB {
+		c.reloadMongo(&appcfg.MongoDB)
+	}
 	log.Println("[Container.Reload] finish")
 	c.appcfg = *appcfg
 }
@@ -68,7 +72,7 @@ func (c *Container) Reload(appcfg *config.AppConf) {
 // Redis
 func (c *Container) initRedis(cfg *config.Redis) {
 	if cfg.Enable {
-		c.redis = redisclient.InitClient(cfg)
+		c.redis = zeusredis.InitClient(cfg)
 	}
 }
 
@@ -77,7 +81,7 @@ func (c *Container) reloadRedis(cfg *config.Redis) {
 		if c.redis != nil {
 			c.redis.Reload(cfg)
 		} else {
-			c.redis = redisclient.InitClient(cfg)
+			c.redis = zeusredis.InitClient(cfg)
 		}
 	} else if c.redis != nil {
 		// 释放
@@ -86,7 +90,7 @@ func (c *Container) reloadRedis(cfg *config.Redis) {
 	}
 }
 
-func (c *Container) GetRedisCli() *redisclient.Client {
+func (c *Container) GetRedisCli() *zeusredis.Client {
 	return c.redis
 }
 
@@ -116,14 +120,6 @@ func (c *Container) reloadLogger(cfg *config.LogConf) {
 func (c *Container) GetLogger() *logrus.Logger {
 	return c.logger
 }
-
-// func (r *Container) SetRedisPool(p *redis.Pool) {
-// 	r.redisPool = p
-// }
-
-// func (r *Container) GetRedisPool() *redis.Pool {
-// 	return r.redisPool
-// }
 
 // func (r *Container) SetDBPool(p *sql.DB) {
 // 	r.dbPool = p
@@ -216,4 +212,41 @@ func (c *Container) SetGoMicroService(s micro.Service) {
 
 func (c *Container) GetGoMicroService() micro.Service {
 	return c.gomicroService
+}
+
+// Mongo
+func (c *Container) initMongo(cfg *config.MongoDB) {
+	var err error
+	if cfg.Enable {
+		zeusmongo.InitDefalut(cfg)
+		c.mongo, err = zeusmongo.DefaultClient()
+		if err != nil {
+			log.Println("mgoc.DefaultClient err: ", err)
+			return
+		}
+	}
+}
+
+func (c *Container) reloadMongo(cfg *config.MongoDB) {
+	var err error
+	if cfg.Enable {
+		if c.mongo != nil {
+			zeusmongo.ReloadDefault(cfg)
+			c.mongo, err = zeusmongo.DefaultClient()
+			if err != nil {
+				log.Println("mgoc.DefaultClient err: ", err)
+				return
+			}
+		} else {
+			c.initMongo(cfg)
+		}
+	} else if c.mongo != nil {
+		// 释放
+		zeusmongo.DefaultClientRelease()
+		c.mongo = nil
+	}
+}
+
+func (c *Container) GetMongo() *zeusmongo.Client {
+	return c.mongo
 }

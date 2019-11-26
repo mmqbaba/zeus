@@ -106,6 +106,9 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		if ng.GetContainer().GetRedisCli() != nil {
 			ctx = zeusctx.RedisToContext(ctx, ng.GetContainer().GetRedisCli().GetCli())
 		}
+		if ng.GetContainer().GetMongo() != nil {
+			ctx = zeusctx.MongoToContext(ctx, ng.GetContainer().GetMongo())
+		}
 
 		c.Set(ZEUS_CTX, ctx)
 		l.Debugln("access start", c.Request.URL.Path)
