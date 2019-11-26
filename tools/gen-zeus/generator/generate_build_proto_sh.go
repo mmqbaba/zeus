@@ -18,6 +18,10 @@ if [ $? -eq 1 ]; then
     echo "gen-zeus failed"
     exit 1
 fi
+
+# 生成handler单元测试模板
+gotests -w -all ./handler/
+
 mkdir -p $projectpath/proto/${service}pb
 cd $projectpath/proto
 

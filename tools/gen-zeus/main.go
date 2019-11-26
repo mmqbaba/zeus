@@ -159,6 +159,24 @@ func main() {
 		errcount++
 	}
 
+	err = generator.GenerateEditorconfig(g, *sourceRoot)
+	if err != nil {
+		fmt.Printf("Generate .editorconfig file failed, error is %v\n", err)
+		errcount++
+	}
+
+	err = generator.GenerateGitignore(g, *sourceRoot)
+	if err != nil {
+		fmt.Printf("Generate .gitignore file failed, error is %v\n", err)
+		errcount++
+	}
+
+	err = generator.GenerateUnittest(g, *sourceRoot)
+	if err != nil {
+		fmt.Printf("Generate unittest files failed, error is %v\n", err)
+		errcount++
+	}
+
 	if errcount == 0 {
 		fmt.Printf("\n\nGenerate zeus engin success!\n")
 	} else {
