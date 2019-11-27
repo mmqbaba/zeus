@@ -210,6 +210,7 @@ func (s *Service) loadEngine() (err error) {
 				}
 			case <-s.watcherErrorC:
 				log.Println("[zeus] watcher error, change processor shutdown")
+				return
 			}
 		}
 	}()
