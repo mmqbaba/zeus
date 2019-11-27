@@ -69,10 +69,11 @@ type Redis struct {
 }
 
 type MysqlDB struct {
-	DataSourceName string `json:"datasourcename"`
-	MaxIdleConns   int    `json:"maxidleconns"`
-	MaxOpenConns   int    `json:"maxopenconns"`
-	Enable         bool   `json:"enable"` // 启用组件
+	DataSourceName  string `json:"datasourcename"`
+	MaxIdleConns    int    `json:"maxidleconns"`
+	MaxOpenConns    int    `json:"maxopenconns"`
+	TraceOnlyLogErr bool   `json:"trace_only_log_err"`
+	Enable          bool   `json:"enable"` // 启用组件
 }
 
 type EBus struct {
