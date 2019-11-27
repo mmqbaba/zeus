@@ -21,6 +21,8 @@ import (
 
 const ZEUS_CTX = "zeusctx"
 
+var zeusEngine engine.Engine
+
 var SuccessResponse SuccessResponseHandler = defaultSuccessResponse
 var ErrorResponse ErrorResponseHandler = defaultErrorResponse
 
@@ -46,6 +48,7 @@ func (w bodyLogWriter) Write(b []byte) (int, error) {
 }
 
 func Access(ng engine.Engine) gin.HandlerFunc {
+	zeusEngine = ng
 	return func(c *gin.Context) {
 		logger := ng.GetContainer().GetLogger()
 		ctx := c.Request.Context()
@@ -101,7 +104,6 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		////// zipkin finish
 		l = l.WithFields(logrus.Fields{"tracerid": span.Context().(zipkintracer.SpanContext).TraceID.ToHex()})
 		ctx = zeusctx.LoggerToContext(spnctx, l)
-		ctx = zeusctx.EngineToContext(ctx, ng)
 		ctx = zeusctx.GMClientToContext(ctx, ng.GetContainer().GetGoMicroClient())
 		if ng.GetContainer().GetRedisCli() != nil {
 			ctx = zeusctx.RedisToContext(ctx, ng.GetContainer().GetRedisCli().GetCli())
@@ -134,22 +136,12 @@ func ExtractTracerID(c *gin.Context) string {
 	return span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
 }
 
-func ExtractEngine(c *gin.Context) (engine.Engine, error) {
-	ctx := c.Request.Context()
-	if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
-		ctx = cc
-	}
-	return zeusctx.ExtractEngine(ctx)
-}
-
 func defaultSuccessResponse(c *gin.Context, rsp interface{}) {
 	logger := ExtractLogger(c)
 	logger.Debug("defaultSuccessResponse")
 	res := zeuserrors.New(zeuserrors.ECodeSuccessed, "", "")
 	res.TracerID = ExtractTracerID(c)
-	if ng, _ := ExtractEngine(c); ng != nil {
-		res.ServiceID = ng.GetContainer().GetServiceID()
-	}
+	res.ServiceID = zeusEngine.GetContainer().GetServiceID()
 	res.Data = rsp
 	res.Write(c.Writer)
 }
@@ -162,11 +154,7 @@ func defaultErrorResponse(c *gin.Context, err error) {
 		zeusErr = zeuserrors.New(zeuserrors.ECodeSystem, "err was a nil error or was a nil *zeuserrors.Error", "assertError")
 	}
 	zeusErr.TracerID = ExtractTracerID(c)
-	if utils.IsEmptyString(zeusErr.ServiceID) {
-		if ng, _ := ExtractEngine(c); ng != nil {
-			zeusErr.ServiceID = ng.GetContainer().GetServiceID()
-		}
-	}
+	zeusErr.ServiceID = zeusEngine.GetContainer().GetServiceID()
 	zeusErr.Write(c.Writer)
 }
 

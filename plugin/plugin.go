@@ -12,7 +12,9 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	zeuslog "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/log"
 	zeusmongo "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo"
+	zeusmysql "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mysql"
 	zeusredis "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/tifclient"
 	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace/zipkin"
 )
@@ -47,6 +49,8 @@ func (c *Container) Init(appcfg *config.AppConf) {
 	c.initLogger(&appcfg.LogConf)
 	c.initTracer(&appcfg.Trace)
 	c.initMongo(&appcfg.MongoDB)
+	c.initTifClient(appcfg)
+	c.initMysql(appcfg.MysqlSource)
 	log.Println("[Container.Init] finish")
 	c.appcfg = *appcfg
 }
@@ -65,6 +69,8 @@ func (c *Container) Reload(appcfg *config.AppConf) {
 	if c.appcfg.MongoDB != appcfg.MongoDB {
 		c.reloadMongo(&appcfg.MongoDB)
 	}
+	c.initTifClient(appcfg)
+	c.initMysql(appcfg.MysqlSource)
 	log.Println("[Container.Reload] finish")
 	c.appcfg = *appcfg
 }
@@ -249,4 +255,14 @@ func (c *Container) reloadMongo(cfg *config.MongoDB) {
 
 func (c *Container) GetMongo() *zeusmongo.Client {
 	return c.mongo
+}
+
+// tifclient
+func (c *Container) initTifClient(appconf *config.AppConf) {
+	tifclient.InitClient(appconf)
+}
+
+// mysql
+func (c *Container) initMysql(conf map[string]config.MysqlDB) {
+	zeusmysql.ReloadConfig(conf)
 }

@@ -27,8 +27,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
 			logger := ng.GetContainer().GetLogger()
 			l := logger.WithFields(logrus.Fields{"tag": "gomicro-serverlogwrap"})
-			c := zeusctx.EngineToContext(ctx, ng)
-			c = zeusctx.GMClientToContext(c, ng.GetContainer().GetGoMicroClient())
+			c := zeusctx.GMClientToContext(ctx, ng.GetContainer().GetGoMicroClient())
 			///////// tracer begin
 			name := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
 			cfg, err := ng.GetConfiger()
