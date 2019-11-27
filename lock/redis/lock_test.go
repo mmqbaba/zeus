@@ -33,17 +33,18 @@ func TestObtain(t *testing.T) {
 				"unittest:lock:",
 				nil,
 			},
-			&Locker{},
+			nil,
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := Obtain(tt.args.ctx, tt.args.client, tt.args.key, tt.args.opts)
+			got, err := Obtain(tt.args.ctx, tt.args.client, tt.args.key, tt.args.opts)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Obtain() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+			t.Logf("Got = %#v", got)
 		})
 	}
 }
