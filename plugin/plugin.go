@@ -14,6 +14,7 @@ import (
 	zeusmongo "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo"
 	zeusmysql "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mysql"
 	zeusredis "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/sequence"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/tifclient"
 	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace/zipkin"
@@ -198,6 +199,7 @@ func (c *Container) GetTracer() *tracing.TracerWrap {
 
 func (c *Container) SetServiceID(id string) {
 	c.serviceID = id
+	sequence.Load(id)
 }
 
 func (c *Container) GetServiceID() string {
