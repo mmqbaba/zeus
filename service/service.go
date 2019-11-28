@@ -31,7 +31,7 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine/etcd"
 	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/zcontainer"
 	swagger "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger/ui"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
@@ -63,15 +63,15 @@ func init() {
 	}
 }
 
-func newEtcdEngine(cnt *plugin.Container) (engine.Engine, error) {
+func newEtcdEngine(cnt zcontainer.Container) (engine.Engine, error) {
 	return etcd.New(confEntry, cnt)
 }
 
-func newFileEngine(cnt *plugin.Container) (engine.Engine, error) {
+func newFileEngine(cnt zcontainer.Container) (engine.Engine, error) {
 	return nil, nil
 }
 
-func Run(cnt *plugin.Container, conf *Options, opts ...Option) (err error) {
+func Run(cnt zcontainer.Container, conf *Options, opts ...Option) (err error) {
 	opt, err := ParseCommandLine()
 	if err != nil {
 		log.Printf("[zeus] [service.Run] err: %s\n", err)
@@ -123,14 +123,14 @@ func (s *Service) Init() (err error) {
 
 type Service struct {
 	options        *Options
-	container      *plugin.Container
+	container      zcontainer.Container
 	ng             engine.Engine
 	watcherCancelC chan struct{}
 	watcherErrorC  chan struct{}
 	watcherWg      sync.WaitGroup
 }
 
-func NewService(options Options, container *plugin.Container, opts ...Option) *Service {
+func NewService(options Options, container zcontainer.Container, opts ...Option) *Service {
 	o := options
 	for _, opt := range opts {
 		if opt != nil {

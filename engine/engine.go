@@ -2,7 +2,7 @@ package engine
 
 import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/zcontainer"
 )
 
 // Engine for configuration and plugin container
@@ -19,7 +19,7 @@ type Engine interface {
 	GetConfiger() (config.Configer, error)
 
 	// GetContainer 组件容器
-	GetContainer() *plugin.Container
+	GetContainer() zcontainer.Container
 }
 
-type NewEngineFn func(cnt *plugin.Container) (Engine, error)
+type NewEngineFn func(cnt zcontainer.Container) (Engine, error)

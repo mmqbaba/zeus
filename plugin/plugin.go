@@ -11,16 +11,18 @@ import (
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	zeuslog "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/log"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo/zmongo"
 	zeusmongo "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo"
 	zeusmysql "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mysql"
 	zeusredis "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis/zredis"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/sequence"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/tifclient"
 	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace/zipkin"
 )
 
-// Container contain comm obj
+// Container contain comm obj, impl zcontainer
 type Container struct {
 	serviceID     string
 	appcfg        config.AppConf
@@ -97,7 +99,7 @@ func (c *Container) reloadRedis(cfg *config.Redis) {
 	}
 }
 
-func (c *Container) GetRedisCli() *zeusredis.Client {
+func (c *Container) GetRedisCli() zredis.Redis {
 	return c.redis
 }
 
@@ -128,53 +130,53 @@ func (c *Container) GetLogger() *logrus.Logger {
 	return c.logger
 }
 
-// func (r *Container) SetDBPool(p *sql.DB) {
-// 	r.dbPool = p
+// func (c *Container) SetDBPool(p *sql.DB) {
+// 	c.dbPool = p
 // }
 
-// func (r *Container) GetDBPool() *sql.DB {
-// 	return r.dbPool
+// func (c *Container) GetDBPool() *sql.DB {
+// 	return c.dbPool
 // }
 
-// func (r *Container) SetTransport(tr *http.Transport) {
-// 	r.transport = tr
+// func (c *Container) SetTransport(tr *http.Transport) {
+// 	c.transport = tr
 // }
 
-// func (r *Container) GetTransport() *http.Transport {
-// 	return r.transport
+// func (c *Container) GetTransport() *http.Transport {
+// 	return c.transport
 // }
 
-// func (r *Container) SetSvcOptions(opt interface{}) {
-// 	r.serviceOptions = opt
+// func (c *Container) SetSvcOptions(opt interface{}) {
+// 	c.serviceOptions = opt
 // }
 
-// func (r *Container) GetSvcOptions() interface{} {
-// 	return r.serviceOptions
+// func (c *Container) GetSvcOptions() interface{} {
+// 	return c.serviceOptions
 // }
 
-// func (r *Container) SetSvc(svc XUtil) {
-// 	r.svc = svc
+// func (c *Container) SetSvc(svc XUtil) {
+// 	c.svc = svc
 // }
 
-// func (r *Container) GetSvc() XUtil {
-// 	return r.svc
+// func (c *Container) GetSvc() XUtil {
+// 	return c.svc
 // }
 
-// func (r *Container) SetMQProducer(p *mq.MqProducer) {
-// 	r.mqProducer = p
+// func (c *Container) SetMQProducer(p *mq.MqProducer) {
+// 	c.mqProducer = p
 // }
 
-// func (r *Container) GetMQProducer() *mq.MqProducer {
-// 	return r.mqProducer
+// func (c *Container) GetMQProducer() *mq.MqProducer {
+// 	return c.mqProducer
 // }
 
-// func (r *Container) Release() {
-// if r.redisPool != nil {
-// 	r.redisPool.Close()
+// func (c *Container) Release() {
+// if c.redisPool != nil {
+// 	c.redisPool.Close()
 // }
 
-// if r.dbPool != nil {
-// 	r.dbPool.Close()
+// if c.dbPool != nil {
+// 	c.dbPool.Close()
 // }
 // }
 
@@ -255,7 +257,7 @@ func (c *Container) reloadMongo(cfg *config.MongoDB) {
 	}
 }
 
-func (c *Container) GetMongo() *zeusmongo.Client {
+func (c *Container) GetMongo() zmongo.Mongo {
 	return c.mongo
 }
 

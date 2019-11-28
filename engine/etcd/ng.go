@@ -11,7 +11,7 @@ import (
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/zcontainer"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
 
@@ -19,7 +19,7 @@ type ng struct {
 	entry      *config.Entry
 	configer   config.Configer
 	client     *etcd.Client
-	container  *plugin.Container
+	container  zcontainer.Container
 	context    context.Context
 	cancelFunc context.CancelFunc
 	options    *Options
@@ -31,7 +31,7 @@ type Options struct {
 
 type Option func(o *Options)
 
-func New(entry *config.Entry, container *plugin.Container, opts ...Option) (engine.Engine, error) {
+func New(entry *config.Entry, container zcontainer.Container, opts ...Option) (engine.Engine, error) {
 	n := &ng{
 		entry:     entry,
 		container: container,
@@ -174,7 +174,7 @@ func (n *ng) GetConfiger() (config.Configer, error) {
 	return n.configer, nil
 }
 
-func (n *ng) GetContainer() *plugin.Container {
+func (n *ng) GetContainer() zcontainer.Container {
 	return n.container
 }
 

@@ -26,7 +26,6 @@ import (
 var appconf *config.AppConf
 
 func InitClient(conf *config.AppConf) {
-    // en.GetMongo()
 	appconf = conf
 }
 

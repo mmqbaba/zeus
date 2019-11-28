@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 
-	zeusmongo "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo/zmongo"
 )
 
 type ctxMongoMarker struct{}
 
 type ctxMongo struct {
-	cli *zeusmongo.Client
+	cli zmongo.Mongo
 }
 
 var (
@@ -18,7 +18,7 @@ var (
 )
 
 // ExtractMongo takes the mongo from ctx.
-func ExtractMongo(ctx context.Context) (c *zeusmongo.Client, err error) {
+func ExtractMongo(ctx context.Context) (c zmongo.Mongo, err error) {
 	r, ok := ctx.Value(ctxMongoKey).(*ctxMongo)
 	if !ok || r == nil {
 		return nil, errors.New("ctxMongo was not set or nil")
@@ -30,7 +30,7 @@ func ExtractMongo(ctx context.Context) (c *zeusmongo.Client, err error) {
 
 // MongoToContext adds the mongo to the context for extraction later.
 // Returning the new context that has been created.
-func MongoToContext(ctx context.Context, c *zeusmongo.Client) context.Context {
+func MongoToContext(ctx context.Context, c zmongo.Mongo) context.Context {
 	r := &ctxMongo{
 		cli: c,
 	}
