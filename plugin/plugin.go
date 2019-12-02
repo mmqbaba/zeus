@@ -11,8 +11,8 @@ import (
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	zeuslog "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/log"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo/zmongo"
 	zeusmongo "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo/zmongo"
 	zeusmysql "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mysql"
 	zeusredis "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis/zredis"
@@ -26,8 +26,8 @@ import (
 type Container struct {
 	serviceID     string
 	appcfg        config.AppConf
-	redis         *zeusredis.Client
-	mongo         *zeusmongo.Client
+	redis         zredis.Redis
+	mongo         zmongo.Mongo
 	gomicroClient client.Client
 	logger        *logrus.Logger
 	tracer        *tracing.TracerWrap
