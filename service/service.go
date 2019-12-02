@@ -29,6 +29,7 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine/etcd"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine/file"
 	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/zcontainer"
@@ -67,8 +68,9 @@ func newEtcdEngine(cnt zcontainer.Container) (engine.Engine, error) {
 	return etcd.New(confEntry, cnt)
 }
 
+// newFileEngine fileengine的实现，目前并不完善，不要应用到生产，可简单用在开发测试
 func newFileEngine(cnt zcontainer.Container) (engine.Engine, error) {
-	return nil, nil
+	return file.New(confEntry, cnt)
 }
 
 func Run(cnt zcontainer.Container, conf *Options, opts ...Option) (err error) {
