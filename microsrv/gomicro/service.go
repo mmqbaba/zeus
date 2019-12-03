@@ -18,7 +18,7 @@ func NewService(ctx context.Context, conf config.GoMicro, opts ...micro.Option) 
 	// discovery/registry
 	reg := etcdv3.NewRegistry(
 		registry.Addrs(conf.RegistryAddrs...),
-		etcdv3.Auth(conf.RegistryAuthUser, conf.RegistryAutPwd),
+		etcdv3.Auth(conf.RegistryAuthUser, conf.RegistryAuthPwd),
 	)
 
 	o := []micro.Option{

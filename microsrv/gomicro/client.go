@@ -16,7 +16,7 @@ func NewClient(ctx context.Context, conf config.GoMicro, opts ...client.Option) 
 	// etcd registry
 	reg := etcdv3.NewRegistry(
 		registry.Addrs(conf.RegistryAddrs...),
-		etcdv3.Auth(conf.RegistryAuthUser, conf.RegistryAutPwd),
+		etcdv3.Auth(conf.RegistryAuthUser, conf.RegistryAuthPwd),
 	)
 	o := []client.Option{
 		client.Registry(reg),
