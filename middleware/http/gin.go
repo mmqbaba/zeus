@@ -9,6 +9,8 @@ import (
 	"reflect"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang/protobuf/jsonpb"
+	proto "github.com/golang/protobuf/proto"
 	"github.com/opentracing/opentracing-go"
 	zipkintracer "github.com/openzipkin/zipkin-go-opentracing"
 	"github.com/sirupsen/logrus"
@@ -20,6 +22,7 @@ import (
 )
 
 const ZEUS_CTX = "zeusctx"
+const ZEUS_HTTP_TAG_RAW_RSP = "zeus_http_tag_raw_rsp"
 
 var zeusEngine engine.Engine
 
@@ -139,6 +142,23 @@ func ExtractTracerID(c *gin.Context) string {
 func defaultSuccessResponse(c *gin.Context, rsp interface{}) {
 	logger := ExtractLogger(c)
 	logger.Debug("defaultSuccessResponse")
+	if c.GetBool(ZEUS_HTTP_TAG_RAW_RSP) {
+		if p, ok := rsp.(proto.Message); ok {
+			m := &jsonpb.Marshaler{
+				EnumsAsInts:  true,
+				EmitDefaults: true,
+				OrigName:     true,
+			}
+			b := bytes.NewBufferString("")
+			m.Marshal(b, p)
+			c.Writer.Header().Set("Content-Type", "application/json")
+			c.Writer.WriteHeader(http.StatusOK)
+			c.Writer.Write(b.Bytes())
+			return
+		}
+		c.JSON(http.StatusOK, rsp)
+		return
+	}
 	res := zeuserrors.New(zeuserrors.ECodeSuccessed, "", "")
 	res.TracerID = ExtractTracerID(c)
 	res.ServiceID = zeusEngine.GetContainer().GetServiceID()
@@ -205,5 +225,13 @@ func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 			return
 		}
 		SuccessResponse(c, rspV.Interface())
+	}
+}
+
+// TagRawRsp 标记返回值原样返回
+func TagRawRsp(raw bool) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.Set(ZEUS_HTTP_TAG_RAW_RSP, raw)
+		c.Next()
 	}
 }

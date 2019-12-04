@@ -1,10 +1,15 @@
 package errors
 
 import (
+	"bytes"
 	syserrors "errors"
+	"fmt"
 	"net/http"
 	"reflect"
 	"strconv"
+
+	"github.com/golang/protobuf/jsonpb"
+	proto "github.com/golang/protobuf/proto"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
@@ -38,6 +43,18 @@ func (e Error) Error() string {
 }
 
 func (e Error) toJSONString() string {
+	if p, ok := e.Data.(proto.Message); ok {
+		m := &jsonpb.Marshaler{
+			EnumsAsInts:  true,
+			EmitDefaults: true,
+			OrigName:     true,
+		}
+		b := bytes.NewBufferString("")
+		m.Marshal(b, p)
+		tmpl := `{"errcode":%d,"errmsg":"%s","cause":"%s","serviceid":"%s","tracerid":"%s","data":%s}`
+		ret := fmt.Sprintf(tmpl, e.ErrCode, e.ErrMsg, e.Cause, e.ServiceID, e.TracerID, b.Bytes())
+		return ret
+	}
 	b, _ := utils.Marshal(e)
 	return string(b)
 }
