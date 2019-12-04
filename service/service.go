@@ -220,6 +220,16 @@ func (s *Service) loadEngine() (err error) {
 	if s.options.LoadEngineFn != nil {
 		s.options.LoadEngineFn(s.ng)
 	}
+	if s.options.ProcessChangeFn != nil {
+		utils.AsyncFuncSafe(context.Background(), func(args ...interface{}) {
+			configer, err := s.ng.GetConfiger()
+			if err != nil {
+				log.Println("[ProcessChangeFn] s.ng.GetConfiger() err:", err)
+				return
+			}
+			s.options.ProcessChangeFn(configer)
+		}, nil)
+	}
 	return
 }
 
