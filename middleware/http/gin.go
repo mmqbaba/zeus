@@ -24,6 +24,7 @@ import (
 const ZEUS_CTX = "zeusctx"
 const ZEUS_HTTP_TAG_RAW_RSP = "zeus_http_tag_raw_rsp"
 const ZEUS_HTTP_REWRITE_ERR = "zeus_http_rewrite_err"
+const ZEUS_HTTP_REWRITE_RESPONSE = "zeus_http_rewrite_response"
 const ZEUS_HTTP_ERR = "zeus_http_err"
 
 var zeusEngine engine.Engine
@@ -165,6 +166,15 @@ func defaultSuccessResponse(c *gin.Context, rsp interface{}) {
 	res.TracerID = ExtractTracerID(c)
 	res.ServiceID = zeusEngine.GetContainer().GetServiceID()
 	res.Data = rsp
+	f, exists := c.Get(ZEUS_HTTP_REWRITE_RESPONSE)
+	if exists && f != nil {
+		c.Set(ZEUS_HTTP_REWRITE_RESPONSE, nil)
+		ff, ok := f.(reWriteResponseFn)
+		if ok {
+			ff(c, rsp)
+			return
+		}
+	}
 	res.Write(c.Writer)
 }
 
@@ -254,6 +264,16 @@ type reWriteErrFn func(c *gin.Context, err error)
 func SetReWriteErrFn(f reWriteErrFn) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		c.Set(ZEUS_HTTP_REWRITE_ERR, f)
+		c.Next()
+	}
+}
+
+type reWriteResponseFn func(c *gin.Context, rsp interface{})
+
+// SetReWriteResponseFn 自定义返回处理
+func SetReWriteResponseFn(f reWriteResponseFn) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.Set(ZEUS_HTTP_REWRITE_RESPONSE, f)
 		c.Next()
 	}
 }
