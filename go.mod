@@ -42,7 +42,7 @@ require (
 	github.com/tebeka/strftime v0.1.3 // indirect
 	go.mongodb.org/mongo-driver v1.0.2
 	go.uber.org/ratelimit v0.1.0
-	go.uber.org/zap v1.12.0 // indirect
+	go.uber.org/zap v1.12.0
 	golang.org/x/crypto v0.0.0-20191105034135-c7e5f84aec59 // indirect
 	golang.org/x/net v0.0.0-20191105084925-a882066a44e0 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
