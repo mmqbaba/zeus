@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"math/rand"
 	"strconv"
+	"sync"
 	"time"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
@@ -27,7 +28,11 @@ const (
 	COUNT_BITS      = 16
 )
 
-var buffer bytes.Buffer
+var bufferPool = &sync.Pool{
+	New: func() interface{} {
+		return &bytes.Buffer{}
+	},
+}
 var id uint32
 var pool = make(chan uint64, 5)
 var last_sec uint64 = 0
@@ -74,6 +79,8 @@ func GetUUID() (string, error) {
 	if c, ok := <-pool; !ok {
 		return "", errors.ECodeUUIDErr.ParseErr("")
 	} else {
+		buffer := bufferPool.Get().(*bytes.Buffer)
+		defer bufferPool.Put(buffer)
 		buffer.Reset()
 		buffer.WriteString(strconv.Itoa(int(id)))
 		buffer.WriteString("-")
