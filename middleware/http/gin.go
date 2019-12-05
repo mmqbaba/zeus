@@ -23,6 +23,8 @@ import (
 
 const ZEUS_CTX = "zeusctx"
 const ZEUS_HTTP_TAG_RAW_RSP = "zeus_http_tag_raw_rsp"
+const ZEUS_HTTP_REWRITE_ERR = "zeus_http_rewrite_err"
+const ZEUS_HTTP_ERR = "zeus_http_err"
 
 var zeusEngine engine.Engine
 
@@ -175,6 +177,16 @@ func defaultErrorResponse(c *gin.Context, err error) {
 	}
 	zeusErr.TracerID = ExtractTracerID(c)
 	zeusErr.ServiceID = zeusEngine.GetContainer().GetServiceID()
+	c.Set(ZEUS_HTTP_ERR, err)
+	f, exists := c.Get(ZEUS_HTTP_REWRITE_ERR)
+	if exists && f != nil {
+		c.Set(ZEUS_HTTP_REWRITE_ERR, nil)
+		ff, ok := f.(reWriteErrFn)
+		if ok {
+			ff(c, err)
+			return
+		}
+	}
 	zeusErr.Write(c.Writer)
 }
 
@@ -205,7 +217,7 @@ func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 
 		req := reqV.Interface()
 		if err := c.ShouldBind(req); err != nil {
-			ExtractLogger(c).Error(err)
+			ExtractLogger(c).Debug(err)
 			ErrorResponse(c, zeuserrors.ECodeInvalidParams.ParseErr(err.Error()))
 			return
 		}
@@ -232,6 +244,16 @@ func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 func TagRawRsp(raw bool) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		c.Set(ZEUS_HTTP_TAG_RAW_RSP, raw)
+		c.Next()
+	}
+}
+
+type reWriteErrFn func(c *gin.Context, err error)
+
+// SetReWriteErrFn 自定义错误处理
+func SetReWriteErrFn(f reWriteErrFn) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.Set(ZEUS_HTTP_REWRITE_ERR, f)
 		c.Next()
 	}
 }
