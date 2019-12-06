@@ -105,4 +105,10 @@ enum ErrCode {
     ECodeUnauthorized = 10049; // 未认证的请求^http.StatusUnauthorized
     // 代理服务错误
     ECodeProxyFailed = 10050; // 代理服务错误^http.StatusBadRequest
+    // protobuf反序列化错误
+    ECodePbUnmarshal = 10051; // unmarshal protobuf error^http.StatusOK
+    // JSONPB序列化错误
+    ECodeJSONPBMarshal = 10052; // marshal jsonpb error^http.StatusOK
+    // JSONPB反序列化错误
+    ECodeJSONPBUnmarshal = 10053; // unmarshal jsonpb error^http.StatusOK
 }

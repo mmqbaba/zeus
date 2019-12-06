@@ -58,6 +58,9 @@ const (
 	ECodeNotFound                 ErrorCode = 10048
 	ECodeUnauthorized             ErrorCode = 10049
 	ECodeProxyFailed              ErrorCode = 10050
+	ECodePbUnmarshal              ErrorCode = 10051
+	ECodeJSONPBMarshal            ErrorCode = 10052
+	ECodeJSONPBUnmarshal          ErrorCode = 10053
 )
 
 // ECodeMsg error message
@@ -113,6 +116,9 @@ var ECodeMsg = map[ErrorCode]string{
 	ECodeNotFound:                 "未能成功匹配路由",
 	ECodeUnauthorized:             "未认证的请求",
 	ECodeProxyFailed:              "代理服务错误",
+	ECodePbUnmarshal:              "unmarshal protobuf error",
+	ECodeJSONPBMarshal:            "marshal jsonpb error",
+	ECodeJSONPBUnmarshal:          "unmarshal jsonpb error",
 }
 
 // ECodeStatus http status code
@@ -168,4 +174,7 @@ var ECodeStatus = map[ErrorCode]int{
 	ECodeNotFound:                 http.StatusNotFound,
 	ECodeUnauthorized:             http.StatusUnauthorized,
 	ECodeProxyFailed:              http.StatusBadRequest,
+	ECodePbUnmarshal:              http.StatusOK,
+	ECodeJSONPBMarshal:            http.StatusOK,
+	ECodeJSONPBUnmarshal:          http.StatusOK,
 }

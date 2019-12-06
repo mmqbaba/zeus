@@ -26,6 +26,8 @@ const ZEUS_HTTP_TAG_RAW_RSP = "zeus_http_tag_raw_rsp"
 const ZEUS_HTTP_REWRITE_ERR = "zeus_http_rewrite_err"
 const ZEUS_HTTP_REWRITE_RESPONSE = "zeus_http_rewrite_response"
 const ZEUS_HTTP_ERR = "zeus_http_err"
+const ZEUS_HTTP_DISABLE_PB_VALIDATE = "zeus_http_disable_pb_validate"
+const ZEUS_HTTP_USE_GINBIND_VALIDATE_FOR_PB = "zeus_http_use_ginbind_validate_for_pb"
 
 var zeusEngine engine.Engine
 
@@ -216,6 +218,10 @@ func assertError(e error) (err *zeuserrors.Error) {
 	return
 }
 
+type validator interface {
+	Validate() error
+}
+
 func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		h := reflect.ValueOf(handleFunc)
@@ -226,10 +232,53 @@ func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 		rspV := reflect.New(rspT)
 
 		req := reqV.Interface()
-		if err := c.ShouldBind(req); err != nil {
-			ExtractLogger(c).Debug(err)
-			ErrorResponse(c, zeuserrors.ECodeInvalidParams.ParseErr(err.Error()))
-			return
+		// 针对proto.Message进行反序列化和校验
+		if pb, ok := req.(proto.Message); ok {
+			if c.GetBool(ZEUS_HTTP_USE_GINBIND_VALIDATE_FOR_PB) {
+				if err := c.ShouldBind(req); err != nil {
+					ExtractLogger(c).Debug(err)
+					ErrorResponse(c, zeuserrors.ECodeInvalidParams.ParseErr(err.Error()))
+					return
+				}
+			} else {
+				val := make(map[string]interface{})
+				if err := c.ShouldBind(&val); err != nil {
+					ExtractLogger(c).Debug(err)
+					ErrorResponse(c, zeuserrors.ECodeJsonUnmarshal.ParseErr(err.Error()))
+					return
+				}
+				b, err := utils.Marshal(val)
+				if err != nil {
+					ExtractLogger(c).Debug(err)
+					ErrorResponse(c, zeuserrors.ECodeJsonMarshal.ParseErr(err.Error()))
+					return
+				}
+				m := jsonpb.Unmarshaler{
+					AllowUnknownFields: true,
+				}
+				err = m.Unmarshal(bytes.NewBuffer(b), pb)
+				if err != nil {
+					ExtractLogger(c).Debug(err)
+					ErrorResponse(c, zeuserrors.ECodeJSONPBUnmarshal.ParseErr(err.Error()))
+					return
+				}
+				if !c.GetBool(ZEUS_HTTP_DISABLE_PB_VALIDATE) {
+					if v, ok := req.(validator); v != nil && ok {
+						if err := v.Validate(); err != nil {
+							ExtractLogger(c).Debug(err)
+							ErrorResponse(c, zeuserrors.ECodeInvalidParams.ParseErr(err.Error()))
+							return
+						}
+					}
+				}
+			}
+		} else {
+			// 非proto.Message
+			if err := c.ShouldBind(req); err != nil {
+				ExtractLogger(c).Debug(err)
+				ErrorResponse(c, zeuserrors.ECodeInvalidParams.ParseErr(err.Error()))
+				return
+			}
 		}
 		ctx := c.Request.Context()
 		if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
@@ -254,6 +303,22 @@ func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 func TagRawRsp(raw bool) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		c.Set(ZEUS_HTTP_TAG_RAW_RSP, raw)
+		c.Next()
+	}
+}
+
+// DisablePBValidate 对实现validate接口的pb.message禁用pb数据校验
+func DisablePBValidate(b bool) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.Set(ZEUS_HTTP_DISABLE_PB_VALIDATE, b)
+		c.Next()
+	}
+}
+
+// UseGinBindValidateForPB 使用gin bind对pb进行数据绑定和校验
+func UseGinBindValidateForPB(b bool) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.Set(ZEUS_HTTP_USE_GINBIND_VALIDATE_FOR_PB, b)
 		c.Next()
 	}
 }
