@@ -115,6 +115,7 @@ func (l *LogBuilder) setOutput() (err error) {
 		}
 		l.Logger.AddHook(h)
 		l.Logger.SetOutput(ioutil.Discard)
+		l.Logger.SetNoLock()
 	default:
 		err = fmt.Errorf("unsupport log output: %s", output)
 		return

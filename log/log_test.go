@@ -14,8 +14,8 @@ func BenchmarkLogInfo(b *testing.B) {
 			Log:                 "file",
 			Level:               "info",
 			LogDir:              "./",
-			Format:              "text",
-			DisableReportCaller: true,
+			Format:              "json",
+			DisableReportCaller: false,
 		}
 		lb, _ := New(conf)
 		l := lb.Logger.WithFields(logrus.Fields{
@@ -36,8 +36,8 @@ func BenchmarkLogInfo(b *testing.B) {
 			Log:                 "file",
 			Level:               "info",
 			LogDir:              "./",
-			Format:              "text",
-			DisableReportCaller: false,
+			Format:              "json",
+			DisableReportCaller: true,
 		}
 		lb, _ := New(conf)
 		l := lb.Logger.WithFields(logrus.Fields{
