@@ -14,7 +14,7 @@ import (
 )
 
 type Options struct {
-	ServiceName   string
+	ServiceName  string
 	ApiPort      int
 	ApiInterface string
 
@@ -37,7 +37,8 @@ type Options struct {
 
 	ProcessChangeFn ProcessChangeFn
 
-	LoadEngineFn LoadEngineFn
+	LoadEngineFn          LoadEngineFn
+	InitServiceCompleteFn InitServiceCompleteFn
 
 	GoMicroServerWrapGenerateFn []GoMicroServerWrapGenerateFn
 	GoMicroClientWrapGenerateFn []GoMicroClientWrapGenerateFn
@@ -56,6 +57,8 @@ type HttpGWHandlerRegisterFn func(ctx context.Context, endpoint string, opts []g
 type HttpHandlerRegisterFn func(ctx context.Context, prefix string, ng engine.Engine) (http.Handler, error)
 
 type LoadEngineFn func(ng engine.Engine)
+
+type InitServiceCompleteFn func(ng engine.Engine)
 
 type GoMicroServerWrapGenerateFn func(ng engine.Engine) func(fn server.HandlerFunc) server.HandlerFunc
 type GoMicroClientWrapGenerateFn func(ng engine.Engine) func(c client.Client) client.Client
@@ -87,6 +90,12 @@ func WithHttpHandlerRegisterFnOption(fn HttpHandlerRegisterFn) Option {
 func WithLoadEngineFnOption(fn LoadEngineFn) Option {
 	return func(o *Options) {
 		o.LoadEngineFn = fn
+	}
+}
+
+func WithInitServiceCompleteFnOption(fn InitServiceCompleteFn) Option {
+	return func(o *Options) {
+		o.InitServiceCompleteFn = fn
 	}
 }
 
