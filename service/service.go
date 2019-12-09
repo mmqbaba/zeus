@@ -120,6 +120,13 @@ func (s *Service) Init() (err error) {
 		return
 	}
 
+	// 触发服务初始化完成事件
+	if s.options.InitServiceCompleteFn != nil {
+		utils.AsyncFuncSafe(context.Background(), func(args ...interface{}) {
+			s.options.InitServiceCompleteFn(s.ng)
+		}, nil)
+	}
+
 	return
 }
 
@@ -292,13 +299,6 @@ func (s *Service) initServer() (err error) {
 		return
 	}
 	s.container.SetHTTPHandler(gw)
-
-	// 触发服务初始化完成事件
-	if s.options.InitServiceCompleteFn != nil {
-		utils.AsyncFuncSafe(context.Background(), func(args ...interface{}) {
-			s.options.InitServiceCompleteFn(s.ng)
-		}, nil)
-	}
 
 	return
 }
