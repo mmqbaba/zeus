@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/protobuf/jsonpb"
@@ -30,6 +31,19 @@ const ZEUS_HTTP_DISABLE_PB_VALIDATE = "zeus_http_disable_pb_validate"
 const ZEUS_HTTP_USE_GINBIND_VALIDATE_FOR_PB = "zeus_http_use_ginbind_validate_for_pb"
 
 var zeusEngine engine.Engine
+var bytesBuffPool = &sync.Pool{
+	New: func() interface{} {
+		return &bytes.Buffer{}
+	},
+}
+var jsonPBMarshaler = &jsonpb.Marshaler{
+	EnumsAsInts:  true,
+	EmitDefaults: true,
+	OrigName:     true,
+}
+var jsonPBUmarshaler = &jsonpb.Unmarshaler{
+	AllowUnknownFields: true,
+}
 
 var SuccessResponse SuccessResponseHandler = defaultSuccessResponse
 var ErrorResponse ErrorResponseHandler = defaultErrorResponse
@@ -92,7 +106,10 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 				c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 			}
 		}
-		blw := &bodyLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
+		bf := bytesBuffPool.Get().(*bytes.Buffer)
+		defer bytesBuffPool.Put(bf)
+		bf.Reset()
+		blw := &bodyLogWriter{body: bf, ResponseWriter: c.Writer}
 		if cfg.Get().Trace.OnlyLogErr {
 			c.Writer = blw
 		}
@@ -149,16 +166,13 @@ func defaultSuccessResponse(c *gin.Context, rsp interface{}) {
 	logger.Debug("defaultSuccessResponse")
 	if c.GetBool(ZEUS_HTTP_TAG_RAW_RSP) {
 		if p, ok := rsp.(proto.Message); ok {
-			m := &jsonpb.Marshaler{
-				EnumsAsInts:  true,
-				EmitDefaults: true,
-				OrigName:     true,
-			}
-			b := bytes.NewBufferString("")
-			m.Marshal(b, p)
+			bf := bytesBuffPool.Get().(*bytes.Buffer)
+			defer bytesBuffPool.Put(bf)
+			bf.Reset()
+			jsonPBMarshaler.Marshal(bf, p)
 			c.Writer.Header().Set("Content-Type", "application/json")
 			c.Writer.WriteHeader(http.StatusOK)
-			c.Writer.Write(b.Bytes())
+			c.Writer.Write(bf.Bytes())
 			return
 		}
 		c.JSON(http.StatusOK, rsp)
@@ -253,10 +267,11 @@ func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 					ErrorResponse(c, zeuserrors.ECodeJsonMarshal.ParseErr(err.Error()))
 					return
 				}
-				m := jsonpb.Unmarshaler{
-					AllowUnknownFields: true,
-				}
-				err = m.Unmarshal(bytes.NewBuffer(b), pb)
+				bf := bytesBuffPool.Get().(*bytes.Buffer)
+				defer bytesBuffPool.Put(bf)
+				bf.Reset()
+				bf.Write(b)
+				err = jsonPBUmarshaler.Unmarshal(bf, pb)
 				if err != nil {
 					ExtractLogger(c).Debug(err)
 					ErrorResponse(c, zeuserrors.ECodeJSONPBUnmarshal.ParseErr(err.Error()))

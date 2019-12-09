@@ -7,12 +7,24 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"sync"
 
 	"github.com/golang/protobuf/jsonpb"
 	proto "github.com/golang/protobuf/proto"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
+
+var bytesBuffPool = &sync.Pool{
+	New: func() interface{} {
+		return &bytes.Buffer{}
+	},
+}
+var jsonPBMarshaler = &jsonpb.Marshaler{
+	EnumsAsInts:  true,
+	EmitDefaults: true,
+	OrigName:     true,
+}
 
 // Error .
 type Error struct {
@@ -44,15 +56,12 @@ func (e Error) Error() string {
 
 func (e Error) toJSONString() string {
 	if p, ok := e.Data.(proto.Message); ok {
-		m := &jsonpb.Marshaler{
-			EnumsAsInts:  true,
-			EmitDefaults: true,
-			OrigName:     true,
-		}
-		b := bytes.NewBufferString("")
-		m.Marshal(b, p)
+		bf := bytesBuffPool.Get().(*bytes.Buffer)
+		defer bytesBuffPool.Put(bf)
+		bf.Reset()
+		jsonPBMarshaler.Marshal(bf, p)
 		tmpl := `{"errcode":%d,"errmsg":"%s","cause":"%s","serviceid":"%s","tracerid":"%s","data":%s}`
-		ret := fmt.Sprintf(tmpl, e.ErrCode, e.ErrMsg, e.Cause, e.ServiceID, e.TracerID, b.Bytes())
+		ret := fmt.Sprintf(tmpl, e.ErrCode, e.ErrMsg, e.Cause, e.ServiceID, e.TracerID, bf.Bytes())
 		return ret
 	}
 	b, _ := utils.Marshal(e)
