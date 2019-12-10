@@ -13,7 +13,7 @@ pbout=${service}pb
 
 test -f ../proto/${service}.proto || exit 1
 # gen-zeus
-gen-zeus --proto ../proto/${service}.proto --dest ../ 
+gen-zeus --proto ../proto/${service}.proto --dest ../
 if [ $? -eq 1 ]; then
     echo "gen-zeus failed"
     exit 1
@@ -31,7 +31,7 @@ protoc -I../../proto \
    -I$GOPATH/src \
    -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
    -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway \
-   --proto_path=${GOPATH}/src/github.com/google/protobuf/src \
+   -I../../../zeus/proto/third_party \
    --go_out=plugins=grpc:./${service}pb \
    --grpc-gateway_out=logtostderr=true:./${service}pb \
    --micro_out=./${service}pb \
@@ -54,6 +54,7 @@ sed -i 's/ Register%sHandler / Register%sHandlerGW /g' ./${service}pb/$service.p
 #    -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
 #    -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway \
 #    --proto_path=${GOPATH}/src/github.com/google/protobuf/src \
+#    -I../../../zeus/proto/third_party \
 #    --go_out=plugins=grpc:./$service \
 #    --grpc-gateway_out=logtostderr=true:./$service \
 #    --micro_out=./$service \

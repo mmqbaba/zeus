@@ -61,34 +61,29 @@ import (
 	gomicro "%s{PKG}/proto/{PKG}pb"
 )
 
-var cli client.Client
-
-type {SRV}Service struct {
-	mux    sync.RWMutex
-	name   string
-	client gomicro.{SRV}Service
-}
-
-// {PKG}Srv
 var {PKG}Srv {SRV}Service
 
-func New{SRV}Service(ctx context.Context) (gomicro.{SRV}Service, error) {
-	{PKG}Srv.mux.RLock()
-	if {PKG}Srv.client != nil {
-		defer {PKG}Srv.mux.RUnlock()
-		return {PKG}Srv.client, nil
-	}
-	{PKG}Srv.mux.RUnlock()
+type {SRV}Service struct {
+	gomicro.{SRV}Service
+	once sync.Once
+	name   string
+}
 
-	{PKG}Srv.mux.Lock()
-	defer {PKG}Srv.mux.Unlock()
-	cli, err := zeusctx.ExtractGMClient(ctx)
+func New{SRV}Service(ctx context.Context) (gomicro.{SRV}Service, error) {
+	var err error
+	{PKG}Srv.once.Do(func() {
+		var cli client.Client
+		cli, err = zeusctx.ExtractGMClient(ctx)
+		if err != nil {
+			return
+		}
+		{PKG}Srv.name = "{PKG}"
+		{PKG}Srv.{SRV}Service = gomicro.New{SRV}Service({PKG}Srv.name, cli)
+	})
 	if err != nil {
 		return nil, err
 	}
-	{PKG}Srv.name = "{PKG}"
-	{PKG}Srv.client = gomicro.New{SRV}Service({PKG}Srv.name, cli)
-	return {PKG}Srv.client, nil
+	return &{PKG}Srv, nil
 }
 
 `
