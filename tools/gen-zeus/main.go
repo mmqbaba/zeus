@@ -9,7 +9,24 @@ import (
 	"path/filepath"
 )
 
+var (
+	BuildDate = ""
+	Version   = ""
+	GoVersion = ""
+)
+
 func main() {
+	log.Println("----------version info----------")
+	log.Printf("Git Commit Hash: %s\n", Version)
+	log.Printf("Build Date     : %s\n", BuildDate)
+	log.Printf("Golang Version : %s\n", GoVersion)
+	log.Println("--------------------------------")
+	fmt.Print("\n")
+
+	args := os.Args
+	if len(args) == 2 && (args[1] == "--version" || args[1] == "-version" || args[1] == "-v") {
+		return
+	}
 
 	sourceRoot := flag.String("dest", ".", "生成工程存储路径")
 	protoFile := flag.String("proto", "", "server proto file.")
