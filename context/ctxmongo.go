@@ -23,6 +23,9 @@ func ExtractMongo(ctx context.Context) (c zmongo.Mongo, err error) {
 	if !ok || r == nil {
 		return nil, errors.New("ctxMongo was not set or nil")
 	}
+	if r.cli == nil {
+		return nil, errors.New("ctxMongo.cli was not set or nil")
+	}
 
 	c = r.cli
 	return

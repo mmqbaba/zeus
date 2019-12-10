@@ -23,6 +23,9 @@ func ExtractEngine(ctx context.Context) (n engine.Engine, err error) {
 	if !ok || r == nil {
 		return nil, errors.New("ctxEngine was not set or nil")
 	}
+	if r.n == nil {
+		return nil, errors.New("ctxEngine.n was not set or nil")
+	}
 
 	n = r.n
 	return

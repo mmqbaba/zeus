@@ -23,6 +23,9 @@ func ExtractContainer(ctx context.Context) (cnt zcontainer.Container, err error)
 	if !ok || r == nil {
 		return nil, errors.New("ctxContainer was not set or nil")
 	}
+	if r.cnt == nil {
+		return nil, errors.New("ctxContainer.cnt was not set or nil")
+	}
 
 	cnt = r.cnt
 	return

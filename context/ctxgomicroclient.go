@@ -23,6 +23,9 @@ func ExtractGMClient(ctx context.Context) (cli client.Client, err error) {
 	if !ok || c == nil {
 		return nil, errors.New("ctxGMClient was not set or nil")
 	}
+	if c.cli == nil {
+		return nil, errors.New("ctxGMClient.cli was not set or nil")
+	}
 
 	cli = c.cli
 	return

@@ -23,6 +23,9 @@ func ExtractRedis(ctx context.Context) (rdc *redis.Client, err error) {
 	if !ok || r == nil {
 		return nil, errors.New("ctxRedis was not set or nil")
 	}
+	if r.cli == nil {
+		return nil, errors.New("ctxRedis.cli was not set or nil")
+	}
 
 	rdc = r.cli
 	return
