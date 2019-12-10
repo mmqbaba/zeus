@@ -31,7 +31,7 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine/etcd"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine/file"
 	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro"
+	zgomicro "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/zcontainer"
 	swagger "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger/ui"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
@@ -325,7 +325,7 @@ func (s *Service) RunServer() (err error) {
 func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err error) {
 	var gomicroservice micro.Service
 	opts := []micro.Option{
-		micro.WrapHandler(gomicro.GenerateServerLogWrap(s.ng)), // 保证serverlogwrap在最前
+		micro.WrapHandler(zgomicro.GenerateServerLogWrap(s.ng)), // 保证serverlogwrap在最前
 	}
 	if len(s.options.GoMicroServerWrapGenerateFn) != 0 {
 		for _, fn := range s.options.GoMicroServerWrapGenerateFn {
@@ -337,7 +337,7 @@ func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err err
 	}
 	// new micro client
 	cliOpts := []client.Option{
-		client.Wrap(gomicro.GenerateClientLogWrap(s.ng)), // 保证在最前
+		client.Wrap(zgomicro.GenerateClientLogWrap(s.ng)), // 保证在最前
 	}
 	if len(s.options.GoMicroClientWrapGenerateFn) != 0 {
 		for _, fn := range s.options.GoMicroClientWrapGenerateFn {
@@ -347,9 +347,9 @@ func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err err
 			}
 		}
 	}
-	cli, err := gomicro.NewClient(context.Background(), conf, cliOpts...)
+	cli, err := zgomicro.NewClient(context.Background(), conf, cliOpts...)
 	if err != nil {
-		log.Println("[zeus] [s.newGomicroSrv] gomicro.NewClient err:", err)
+		log.Println("[zeus] [s.newGomicroSrv] zgomicro.NewClient err:", err)
 		return
 	}
 	// 把client设置到container
@@ -362,7 +362,7 @@ func (s *Service) newGomicroSrv(conf config.GoMicro) (gms micro.Service, err err
 		return nil
 	}))
 	// new micro service
-	gomicroservice = gomicro.NewService(context.Background(), conf, opts...)
+	gomicroservice = zgomicro.NewService(context.Background(), conf, opts...)
 	if s.options.GoMicroHandlerRegisterFn != nil {
 		if err = s.options.GoMicroHandlerRegisterFn(gomicroservice.Server()); err != nil {
 			log.Println("[zeus] [s.newGomicroSrv] GoMicroHandlerRegister err:", err)

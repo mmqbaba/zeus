@@ -1,4 +1,4 @@
-package limiter
+package leakylimiter
 
 import (
 	"go.uber.org/ratelimit"

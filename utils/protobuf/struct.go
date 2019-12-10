@@ -1,4 +1,4 @@
-package protobuf
+package zprotobuf
 
 import (
 	"fmt"

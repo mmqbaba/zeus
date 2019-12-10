@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	leakylimiter "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/ratelimit/leaky"
-	tokenlimiter "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/ratelimit/token"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/ratelimit/leaky"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/ratelimit/token"
 )
 
 func main() {
