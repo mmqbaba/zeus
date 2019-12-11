@@ -70,7 +70,7 @@ func main() {
 	log.Printf("[NumCPU] %v\n", num)
 	gmp := os.Getenv("GOMAXPROCS")
 	if gmp != "" {
-		r, e := strconv.Atoi(gmp)\
+		r, e := strconv.Atoi(gmp)
 		// 限制线程数在cpu核数范围内
 		if e == nil && r < num && r > 0 {
 			num = r
