@@ -61,7 +61,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			///////// tracer finish
 			l = l.WithFields(logrus.Fields{"tracerid": tracer.GetTraceID(spnctx)})
 			c = zeusctx.LoggerToContext(spnctx, l)
-			l.Debug("serverLogWrap")
+
 			if v, ok := req.Body().(validator); ok && v != nil {
 				if err = v.Validate(); err != nil {
 					zeusErr := zeuserrors.New(zeuserrors.ECodeInvalidParams, err.Error(), "validator.Validate")

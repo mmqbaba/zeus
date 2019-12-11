@@ -201,8 +201,12 @@ func defaultErrorResponse(c *gin.Context, err error) {
 	if zeusErr == nil {
 		zeusErr = zeuserrors.New(zeuserrors.ECodeSystem, "err was a nil error or was a nil *zeuserrors.Error", "assertError")
 	}
-	zeusErr.TracerID = ExtractTracerID(c)
-	zeusErr.ServiceID = zeusEngine.GetContainer().GetServiceID()
+	if utils.IsEmptyString(zeusErr.TracerID) {
+		zeusErr.TracerID = ExtractTracerID(c)
+	}
+	if utils.IsEmptyString(zeusErr.ServiceID) {
+		zeusErr.ServiceID = zeusEngine.GetContainer().GetServiceID()
+	}
 	c.Set(ZEUS_HTTP_ERR, err)
 	f, exists := c.Get(ZEUS_HTTP_REWRITE_ERR)
 	if exists && f != nil {
