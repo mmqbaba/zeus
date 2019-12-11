@@ -60,7 +60,7 @@ func main() {
 	log.Printf("Golang Version : %s\n", GoVersion)
 	log.Println("--------------------------------")
 	fmt.Print("\n")
-	
+
 	args := os.Args
 	if len(args) == 2 && (args[1] == "--version" || args[1] == "-version" || args[1] == "-v") {
 		return
@@ -70,14 +70,15 @@ func main() {
 	log.Printf("[NumCPU] %v\n", num)
 	gmp := os.Getenv("GOMAXPROCS")
 	if gmp != "" {
-		r, e := strconv.Atoi(gmp)
+		r, e := strconv.Atoi(gmp)\
+		// 限制线程数在cpu核数范围内
 		if e == nil && r < num && r > 0 {
 			num = r
 		}
 	}
 	log.Printf("[GOMAXPROCS] %v\n", num)
-	curr := runtime.GOMAXPROCS(num)
-	log.Printf("[CURRENT GOMAXPROCS] %v\n", curr)
+	runtime.GOMAXPROCS(num)
+
 	log.Println("service run ...")
 	if err := service.Run(container.GetContainer(), nil, global.ServiceOpts...); err != nil {
 		log.Printf("Service exited with error: %s\n", err)
