@@ -445,6 +445,8 @@ func grpcGatewayHTTPError(ctx context.Context, mux *gruntime.ServeMux, marshaler
 		}
 	}
 
+	zeuserrors.ECodeProxyFailed.ParseErr(msg).Write(w)
+
 	// body := &struct {
 	// 	Error   string     `protobuf:"bytes,100,name=error" json:"error"`
 	// 	Code    int32      `protobuf:"varint,1,name=code" json:"code"`

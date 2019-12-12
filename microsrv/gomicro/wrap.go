@@ -145,7 +145,6 @@ type clientLogWrap struct {
 
 func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) (err error) {
 	logger := zeusctx.ExtractLogger(ctx)
-	logger.Debug("clientLogWrap")
 
 	ng := l.ng
 	///////// tracer begin
