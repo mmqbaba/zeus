@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/micro/go-micro/client"
 	gmerrors "github.com/micro/go-micro/errors"
@@ -59,13 +60,18 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			body, _ := utils.Marshal(req.Body())
 			span.SetTag("grpc server receive", string(body))
 			///////// tracer finish
-			l = l.WithFields(logrus.Fields{"tracerid": tracer.GetTraceID(spnctx)})
+			tracerID := tracer.GetTraceID(spnctx)
+			l = l.WithFields(logrus.Fields{"tracerid": tracerID})
 			c = zeusctx.LoggerToContext(spnctx, l)
 
 			if v, ok := req.Body().(validator); ok && v != nil {
 				if err = v.Validate(); err != nil {
 					zeusErr := zeuserrors.New(zeuserrors.ECodeInvalidParams, err.Error(), "validator.Validate")
-					err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: zeusErr.Cause}
+					status := zeusErr.Cause
+					if !strings.HasPrefix(status, tracerID+"@") {
+						status = tracerID + "@" + zeusErr.Cause
+					}
+					err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: status}
 					return
 				}
 			}
@@ -86,7 +92,11 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 					if utils.IsEmptyString(serviceID) {
 						serviceID = ng.GetContainer().GetServiceID()
 					}
-					err = &gmerrors.Error{Id: serviceID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: zeusErr.Cause}
+					status := zeusErr.Cause
+					if !strings.HasPrefix(status, tracerID+"@") {
+						status = tracerID + "@" + zeusErr.Cause
+					}
+					err = &gmerrors.Error{Id: serviceID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: status}
 					return
 				}
 				if errors.As(err, &gmErr) {
@@ -94,7 +104,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 					return
 				}
 
-				err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: err.Error()}
+				err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: tracerID + "@" + err.Error()}
 				return
 			}
 			err = nil
