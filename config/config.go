@@ -106,6 +106,7 @@ type Broker struct {
 	Hosts           []string     `json:"hosts"`
 	Type            string       `json:"type"`
 	NeedAuth        bool         `json:"need_auth"`
+	ExternalAuth    bool         `json:"external_auth"`
 	User            string       `json:"user"`
 	Pwd             string       `json:"pwd"`
 	TopicPrefix     string       `json:"topic_prefix"`

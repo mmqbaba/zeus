@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package broker; // 别名
+option go_package="pubsub/pb/broker"; // 实际的包路径
+
+// 公共数据结构
+message Header {
+    string id = 1; // 消息唯一id
+    string category = 2; // 类别 1-缓存 2-日志 3-邮件 其他...
+    string source = 3; // 来源(服务名)
+    string action = 4; // 事件
+    map<string, string> customdata = 5; // 其他自定义数据
+}
+
+message Sample {
+    Header header = 1;
+    message Body {
+        string id = 1;
+        string name = 2;
+    }
+    Body body = 2;
+}

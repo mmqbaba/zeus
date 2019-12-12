@@ -9,6 +9,7 @@ replace (
 )
 
 require (
+	github.com/Shopify/sarama v1.22.1
 	github.com/coreos/etcd v3.3.13+incompatible
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/elazarl/go-bindata-assetfs v1.0.0
