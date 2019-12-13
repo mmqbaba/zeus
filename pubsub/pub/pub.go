@@ -14,7 +14,7 @@ import (
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	zbroker "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/broker"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/pb/broker"
+	brokerpb "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/pb/broker"
 )
 
 type pubClient struct {
@@ -24,7 +24,7 @@ type pubClient struct {
 	wrPublishers sync.RWMutex
 }
 
-func (pc *pubClient) publish(ctx context.Context, header *broker.Header, msg interface{}) (err error) {
+func (pc *pubClient) publish(ctx context.Context, header *brokerpb.Header, msg interface{}) (err error) {
 	topic := fmt.Sprintf("%s.%s.%s", pc.topicPrefix, header.Category, header.Source)
 	if p, ok := pc.publishers[topic]; ok && p != nil {
 		return p.Publish(ctx, msg)
@@ -37,7 +37,7 @@ func (pc *pubClient) publish(ctx context.Context, header *broker.Header, msg int
 }
 
 // Publish 发布消息
-func Publish(ctx context.Context, header *broker.Header, msg interface{}) error {
+func Publish(ctx context.Context, header *brokerpb.Header, msg interface{}) error {
 	if defaultPubClient == nil {
 		return errors.New("DefaultPubClient未初始化")
 	}

@@ -19,6 +19,11 @@ import (
 	zbroker "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/broker"
 )
 
+type SubConfig struct {
+	BrokerConf *config.Broker
+	Handlers   map[string]interface{}
+}
+
 type subServer struct {
 	topicPrefix string
 	topics      []*config.TopicInfo

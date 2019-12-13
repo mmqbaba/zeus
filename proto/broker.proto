@@ -20,3 +20,9 @@ message Sample {
     }
     Body body = 2;
 }
+
+message RequestSample {
+    string message = 1;
+    int32 count = 2;
+    bool finished = 3;
+}
