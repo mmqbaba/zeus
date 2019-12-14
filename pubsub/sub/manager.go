@@ -12,29 +12,39 @@ import (
 )
 
 type Manager struct {
-	List map[string]*subServer
+	subs map[string]*subServer
 }
 
-func NewManager(list map[string]*config.Broker) (m *Manager, err error) {
+type ManagerConfig struct {
+	Conf map[string]*SubConfig
+}
+
+type SubConfig struct {
+	BrokerConf *config.Broker
+	Handlers   map[string]interface{}
+}
+
+func NewManager(mc *ManagerConfig) (m *Manager, err error) {
 	tmp := &Manager{
-		List: make(map[string]*subServer),
+		subs: make(map[string]*subServer),
 	}
-	for k, c := range list {
+	for k, c := range mc.Conf {
 		var ss *subServer
-		ss, err = newS(c, nil)
+		ss, err = newS(c.BrokerConf, nil)
 		if err != nil {
 			log.Println(err)
 			panic(err)
 		}
-		tmp.List[k] = ss
+		ss.handlers = c.Handlers
+		tmp.subs[k] = ss
 	}
 	m = tmp
 	return
 }
 
-func (m *Manager) Subscribe(ctx context.Context, handlers map[string]map[string]interface{}) (err error) {
-	for k, ss := range m.List {
-		err = ss.subscribe(ctx, handlers[k])
+func (m *Manager) Subscribe(ctx context.Context) (err error) {
+	for _, ss := range m.subs {
+		err = ss.subscribe(ctx, ss.handlers)
 		if err != nil {
 			return
 		}
@@ -43,7 +53,7 @@ func (m *Manager) Subscribe(ctx context.Context, handlers map[string]map[string]
 }
 
 func (m *Manager) Run(ctx context.Context) {
-	for _, ss := range m.List {
+	for _, ss := range m.subs {
 		tmp := ss
 		utils.AsyncFuncSafe(ctx, func(args ...interface{}) {
 			err := tmp.run(ctx)

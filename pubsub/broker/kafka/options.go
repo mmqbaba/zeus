@@ -47,6 +47,18 @@ func (h *consumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cl
 		if err := h.kopts.Codec.Unmarshal(msg.Value, &m); err != nil {
 			continue
 		}
+		if _, ok := m.Header["Micro-Id"]; !ok {
+			// {"Header":{"Content-Type":"application/json","Micro-Id":"990001ec-d996-4da7-b04b-ba5e6e5c7236","Micro-Topic":"dev.sample.zeus"}
+			m.Header = map[string]string{
+				"Content-Type": "application/json",
+				"Broker":       "kafka",
+				"Topic":        msg.Topic,
+				// "Micro-Id":     "kafka-broker",
+				// "Micro-Topic":  msg.Topic,
+			}
+			m.Body = msg.Value
+		}
+		m.Header["GroupID"] = h.subopts.Queue
 		if err := h.handler(&publication{
 			m:    &m,
 			t:    msg.Topic,

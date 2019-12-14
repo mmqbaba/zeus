@@ -13,6 +13,7 @@ import (
 	"github.com/micro/go-micro/client"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro/codec/json"
 	zbroker "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/broker"
 	brokerpb "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/pb/broker"
 )
@@ -26,6 +27,11 @@ type pubClient struct {
 
 func (pc *pubClient) publish(ctx context.Context, header *brokerpb.Header, msg interface{}) (err error) {
 	topic := fmt.Sprintf("%s.%s.%s", pc.topicPrefix, header.Category, header.Source)
+	//// _, ok := msg.(proto.Message)
+	// pmsg := pc.cli.NewMessage(topic, msg, func(opts *client.MessageOptions) {
+	// 	opts.ContentType = "application/xxx"
+	// })
+	// return pc.cli.Publish(ctx, pmsg)
 	if p, ok := pc.publishers[topic]; ok && p != nil {
 		return p.Publish(ctx, msg)
 	}
@@ -79,6 +85,8 @@ func newC(conf *config.Broker, cli client.Client) (c *pubClient, err error) {
 		}
 		cli = client.NewClient(
 			client.Broker(b),
+			client.ContentType("application/json"),
+			client.Codec("application/json", json.NewCodec),
 		)
 		// 初始化
 		if err = cli.Init(); err != nil {

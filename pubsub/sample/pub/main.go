@@ -6,19 +6,26 @@ import (
 	"log"
 	"time"
 
+	structpb "github.com/golang/protobuf/ptypes/struct"
+	"github.com/micro/go-micro/metadata"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	brokerpb "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/pb/broker"
 	zpub "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/pub"
 )
 
-var conf *config.Broker
-
 func main() {
-	conf = &config.Broker{}
 	pub()
 }
 
+type Request struct {
+	Message  string `json:"message"`
+	Count    int32  `json:"count"`
+	Finished bool   `json:"finished"`
+}
+
 func pub() {
+	conf := &config.Broker{}
+
 	// conf.Type = "redis"
 	// conf.TopicPrefix = "dev"
 
@@ -38,22 +45,45 @@ func pub() {
 		msg := new(brokerpb.Sample)
 		msg.Header = h
 		msg.Body = body
-		err := zpub.Publish(context.Background(), h, "hello")
-		log.Println("hello")
+		log.Printf("Publish Sample message: %+v\n", msg)
+		err := zpub.Publish(context.Background(), h, msg)
 		if err != nil {
 			fmt.Println("err==>>", err)
 		}
-		// err = zpub.Publish(context.Background(), h, msg)
-		// log.Println(msg)
-		// if err != nil {
-		// 	fmt.Println("err==>>", err)
-		// }
-		// rMsg := &brokerpb.RequestSample{Message: "hello world!", Count: 100, Finished: true}
-		// err = zpub.Publish(context.Background(), h, rMsg)
-		// log.Println(rMsg)
-		// if err != nil {
-		// 	fmt.Println("err==>>", err)
-		// }
+
+		sreq := &brokerpb.RequestSample{Message: "hello world!", Count: 100, Finished: true}
+		log.Printf("Publish SampleRequest message: %+v\n", sreq)
+		err = zpub.Publish(context.Background(), &brokerpb.Header{Id: fmt.Sprint(time.Now().Unix()), Category: "samplerequest", Source: "zeus"}, sreq)
+		if err != nil {
+			fmt.Println("err==>>", err)
+		}
+
+		sMsg := &structpb.Struct{
+			Fields: map[string]*structpb.Value{
+				"message": &structpb.Value{
+					Kind: &structpb.Value_StringValue{StringValue: "hello world!"},
+				},
+				"count": &structpb.Value{
+					Kind: &structpb.Value_NumberValue{NumberValue: 100},
+				},
+				"finished": &structpb.Value{
+					Kind: &structpb.Value_BoolValue{BoolValue: true},
+				},
+			},
+		}
+		log.Printf("Publish pbstruct message: %+v\n", sMsg)
+		err = zpub.Publish(context.Background(), &brokerpb.Header{Id: fmt.Sprint(time.Now().Unix()), Category: "pbstruct", Source: "zeus"}, sMsg)
+		if err != nil {
+			fmt.Println("err==>>", err)
+		}
+
+		req := &Request{Message: "hello world!", Count: 100, Finished: true}
+		log.Printf("Publish JSON Request message: %+v\n", req)
+		err = zpub.Publish(metadata.NewContext(context.Background(), metadata.Metadata{"for-handler": "json-request"}), &brokerpb.Header{Id: fmt.Sprint(time.Now().Unix()), Category: "jsonrequest", Source: "zeus"}, req)
+		if err != nil {
+			fmt.Println("err==>>", err)
+		}
+
 		time.Sleep(time.Second)
 	}
 }

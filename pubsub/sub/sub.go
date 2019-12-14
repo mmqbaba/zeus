@@ -17,19 +17,16 @@ import (
 	gmbroker "github.com/micro/go-micro/broker"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	zbroker "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/broker"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
-
-type SubConfig struct {
-	BrokerConf *config.Broker
-	Handlers   map[string]interface{}
-}
 
 type subServer struct {
 	topicPrefix string
 	topics      []*config.TopicInfo
 	srv         server.Server
 	// subscribers map[string]server.Subscriber
-	wr sync.RWMutex
+	wr       sync.RWMutex
+	handlers map[string]interface{}
 }
 
 func (ss *subServer) subscribe(ctx context.Context, handlers map[string]interface{}) (err error) {
@@ -40,7 +37,10 @@ func (ss *subServer) subscribe(ctx context.Context, handlers map[string]interfac
 			log.Printf("%s topic handler was nil\n", key)
 			continue
 		}
-		actualTopic := fmt.Sprintf("%s.%s.%s", ss.topicPrefix, t.Category, t.Source)
+		actualTopic := t.Topic
+		if utils.IsEmptyString(actualTopic) {
+			actualTopic = fmt.Sprintf("%s.%s.%s", ss.topicPrefix, t.Category, t.Source)
+		}
 		log.Printf("micro.RegisterSubscriber topic:%s, queue:%s", actualTopic, t.Queue)
 		// subscriber := server.NewSubscriber(actualTopic, h)
 		// err = ss.srv.Subscribe(subscriber)
@@ -111,6 +111,7 @@ func newS(conf *config.Broker, srv server.Server) (s *subServer, err error) {
 		// log.Printf("newS b.Address()========%+v\n", b.Address())
 		srv = server.NewServer(
 			server.Broker(b),
+			// server.Codec("application/json", server.DefaultCodecs["application/json"]),
 		)
 		// 初始化
 		if err = srv.Init(); err != nil {
