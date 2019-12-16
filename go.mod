@@ -42,6 +42,7 @@ require (
 	github.com/openzipkin/zipkin-go-opentracing v0.3.5
 	github.com/prometheus/client_golang v1.2.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
+	github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
 	github.com/tebeka/strftime v0.1.3 // indirect
 	go.mongodb.org/mongo-driver v1.0.2
 	go.uber.org/ratelimit v0.1.0
