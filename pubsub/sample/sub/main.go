@@ -68,7 +68,7 @@ func subManager() {
 			Type:  "rabbitmq",
 			Hosts: []string{"amqp://guest:guest@127.0.0.1:5672"},
 			SubscribeTopics: []*config.TopicInfo{
-				&config.TopicInfo{Topic: "pbstruct.zeus", Queue: "pbstruct.zeus"},
+				&config.TopicInfo{Topic: "pbstruct.zeus", Queue: "cache-zeus-rb"}, // 这里的Topic 是作为 routing-key
 			},
 		},
 	}
