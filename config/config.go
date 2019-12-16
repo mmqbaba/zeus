@@ -25,6 +25,7 @@ type AppConf struct {
 	MongoDBSource       map[string]MongoDB     `json:"mongodb_source"`
 	MysqlSource         map[string]MysqlDB     `json:"mysql_source"`
 	RedisSource         map[string]Redis       `json:"redis_source"`
+	BrokerSource        map[string]Broker      `json:"broker_source"`
 	EBus                EBus                   `json:"ebus"`
 	Ext                 map[string]interface{} `json:"ext"`
 	Trace               Trace                  `json:"trace"`

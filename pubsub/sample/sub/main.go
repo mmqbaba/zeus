@@ -45,37 +45,45 @@ func sub() {
 }
 
 func subManager() {
-	confList := map[string]*zsub.SubConfig{
-		"zeus": &zsub.SubConfig{
-			BrokerConf: &config.Broker{
-				Type:        "kafka",
-				TopicPrefix: "dev",
-				Hosts:       []string{"10.1.8.14:9094"},
-				SubscribeTopics: []*config.TopicInfo{
-					&config.TopicInfo{Category: "sample", Source: "zeus", Queue: "cache-zeus"},
-					&config.TopicInfo{Category: "pbstruct", Source: "zeus", Queue: "cache-zeus"},
-				},
-			},
-			Handlers: map[string]interface{}{
-				"sample.zeus":   SampleHandler,
-				"pbstruct.zeus": PBStructHandler,
+	brokerSource := map[string]config.Broker{
+		"zeus": config.Broker{
+			Type:        "kafka",
+			TopicPrefix: "dev",
+			Hosts:       []string{"10.1.8.14:9094"},
+			SubscribeTopics: []*config.TopicInfo{
+				&config.TopicInfo{Category: "sample", Source: "zeus", Queue: "cache-zeus"},
+				&config.TopicInfo{Category: "pbstruct", Source: "zeus", Queue: "cache-zeus"},
 			},
 		},
-		"dzqz": &zsub.SubConfig{
-			BrokerConf: &config.Broker{
-				Type:        "kafka",
-				TopicPrefix: "dev",
-				Hosts:       []string{"10.1.8.14:9094"},
-				SubscribeTopics: []*config.TopicInfo{
-					&config.TopicInfo{Category: "samplerequest", Source: "zeus", Queue: "cache-dzqz"},
-					&config.TopicInfo{Category: "jsonrequest", Source: "zeus", Queue: "cache-dzqz"},
-				},
-			},
-			Handlers: map[string]interface{}{
-				"samplerequest.zeus": SampleRequestHandler,
-				"jsonrequest.zeus":   JSONRequestHandler,
+		"dzqz": config.Broker{
+			Type:        "kafka",
+			TopicPrefix: "dev",
+			Hosts:       []string{"10.1.8.14:9094"},
+			SubscribeTopics: []*config.TopicInfo{
+				&config.TopicInfo{Category: "samplerequest", Source: "zeus", Queue: "cache-dzqz"},
+				&config.TopicInfo{Category: "jsonrequest", Source: "zeus", Queue: "cache-dzqz"},
 			},
 		},
+	}
+	handlers := map[string]map[string]interface{}{
+		"zeus": map[string]interface{}{
+			"sample.zeus":   SampleHandler,
+			"pbstruct.zeus": PBStructHandler,
+		},
+		"dzqz": map[string]interface{}{
+			"samplerequest.zeus": SampleRequestHandler,
+			"jsonrequest.zeus":   JSONRequestHandler,
+		},
+	}
+	confList := make(map[string]*zsub.SubConfig)
+	for s, b := range brokerSource {
+		// 此处需要注意：b为结构体类型，不能直接指针&b赋值，需要使用中间变量复制b结构体值
+		tmp := b
+		sc := &zsub.SubConfig{
+			BrokerConf: &tmp,
+			Handlers:   handlers[s],
+		}
+		confList[s] = sc
 	}
 	mc := &zsub.ManagerConfig{
 		Conf: confList,
