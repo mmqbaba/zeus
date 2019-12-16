@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/micro/go-micro/client"
+	"github.com/micro/go-micro/client/grpc"
 	"github.com/micro/go-micro/registry"
-	"github.com/micro/go-plugins/client/grpc"
 	"github.com/micro/go-plugins/registry/etcdv3"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
@@ -14,10 +14,16 @@ import (
 
 func NewClient(ctx context.Context, conf config.GoMicro, opts ...client.Option) (cli client.Client, err error) {
 	// etcd registry
-	reg := etcdv3.NewRegistry(
-		registry.Addrs(conf.RegistryAddrs...),
-		etcdv3.Auth(conf.RegistryAuthUser, conf.RegistryAuthPwd),
-	)
+	var reg registry.Registry
+	switch conf.RegistryPluginType {
+	case "etcd":
+		reg = etcdv3.NewRegistry(
+			registry.Addrs(conf.RegistryAddrs...),
+			etcdv3.Auth(conf.RegistryAuthUser, conf.RegistryAuthPwd),
+		)
+	default:
+		reg = registry.DefaultRegistry
+	}
 	o := []client.Option{
 		client.Registry(reg),
 		client.RequestTimeout(30 * time.Second),

@@ -16,16 +16,22 @@ import (
 
 func NewService(ctx context.Context, conf config.GoMicro, opts ...micro.Option) micro.Service {
 	// discovery/registry
-	reg := etcdv3.NewRegistry(
-		registry.Addrs(conf.RegistryAddrs...),
-		etcdv3.Auth(conf.RegistryAuthUser, conf.RegistryAuthPwd),
-	)
+	var reg registry.Registry
+	switch conf.RegistryPluginType {
+	case "etcd":
+		reg = etcdv3.NewRegistry(
+			registry.Addrs(conf.RegistryAddrs...),
+			etcdv3.Auth(conf.RegistryAuthUser, conf.RegistryAuthPwd),
+		)
+	default:
+		reg = registry.DefaultRegistry
+	}
 
 	o := []micro.Option{
 		micro.Name(conf.ServiceName),
 		micro.Address(fmt.Sprintf(":%d", conf.ServerPort)),
-		micro.RegisterTTL(30 * time.Second),
-		micro.RegisterInterval(20 * time.Second),
+		micro.RegisterTTL(15 * time.Second),
+		micro.RegisterInterval(10 * time.Second),
 		micro.Registry(reg),
 		micro.AfterStop(func() error {
 			log.Println("[gomicro] afterstop")

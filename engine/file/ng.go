@@ -15,12 +15,13 @@ import (
 
 // ng fileengine的实现，目前并不完善，不要应用到生产，可简单用在开发测试
 type ng struct {
-	entry      *config.Entry
-	configer   config.Configer
-	container  zcontainer.Container
-	context    context.Context
-	cancelFunc context.CancelFunc
-	options    *Options
+	entry                *config.Entry
+	configer             config.Configer
+	prevRawConfigContent []byte
+	container            zcontainer.Container
+	context              context.Context
+	cancelFunc           context.CancelFunc
+	options              *Options
 }
 
 type Options struct {
@@ -59,11 +60,14 @@ func (n *ng) Init() (err error) {
 func (n *ng) Subscribe(changes chan interface{}, cancelC chan struct{}) error {
 	for {
 		time.Sleep(10 * time.Second)
-		// TODO: 检测文件修改
 
 		d, err := ioutil.ReadFile(n.entry.ConfigPath)
 		if err != nil {
 			log.Printf("[zeus] [engine.Subscribe] error: %s\n", err)
+			continue
+		}
+		// TODO: 检测文件内容修改
+		if string(d) == "" || string(n.prevRawConfigContent) == string(d) {
 			continue
 		}
 		if err = n.refreshConfig(d); err != nil {
@@ -126,6 +130,7 @@ func (n *ng) refreshConfig(content []byte) (err error) {
 	if configer != nil {
 		log.Printf("[zeus] [engine.refreshConfig] 刷新配置成功，configpath: %s\n", n.entry.ConfigPath)
 		n.configer = configer
+		n.prevRawConfigContent = content
 		return
 	}
 	log.Printf("[zeus] [engine.refreshConfig] 刷新配置失败，保留原来配置，configpath: %s\n", n.entry.ConfigPath)
