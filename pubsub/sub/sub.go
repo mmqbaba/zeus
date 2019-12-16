@@ -31,7 +31,10 @@ type subServer struct {
 
 func (ss *subServer) subscribe(ctx context.Context, handlers map[string]interface{}) (err error) {
 	for _, t := range ss.topics {
-		key := fmt.Sprintf("%s.%s", t.Category, t.Source)
+		key := t.Topic
+		if utils.IsEmptyString(key) {
+			key = fmt.Sprintf("%s.%s", t.Category, t.Source)
+		}
 		h, ok := handlers[key]
 		if h == nil || !ok {
 			log.Printf("%s topic handler was nil\n", key)

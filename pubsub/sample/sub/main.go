@@ -64,6 +64,13 @@ func subManager() {
 				&config.TopicInfo{Category: "jsonrequest", Source: "zeus", Queue: "cache-dzqz"},
 			},
 		},
+		"zeus-rb": config.Broker{
+			Type:  "rabbitmq",
+			Hosts: []string{"amqp://guest:guest@127.0.0.1:5672"},
+			SubscribeTopics: []*config.TopicInfo{
+				&config.TopicInfo{Topic: "pbstruct.zeus", Queue: "pbstruct.zeus"},
+			},
+		},
 	}
 	handlers := map[string]map[string]interface{}{
 		"zeus": map[string]interface{}{
@@ -73,6 +80,9 @@ func subManager() {
 		"dzqz": map[string]interface{}{
 			"samplerequest.zeus": SampleRequestHandler,
 			"jsonrequest.zeus":   JSONRequestHandler,
+		},
+		"zeus-rb": map[string]interface{}{
+			"pbstruct.zeus": PBStructHandler,
 		},
 	}
 	confList := make(map[string]*zsub.SubConfig)

@@ -220,8 +220,8 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 			header[k], _ = v.(string)
 		}
 		if _, ok := header["Micro-Id"]; !ok {
-			headers["Content-Type"] = "application/json"
-			headers["Broker"] = "rabbitmq"
+			header["Content-Type"] = "application/json"
+			header["Broker"] = "rabbitmq"
 		}
 		m := &broker.Message{
 			Header: header,
