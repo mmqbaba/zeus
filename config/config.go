@@ -106,7 +106,8 @@ type Obs struct {
 type Broker struct {
 	Hosts           []string     `json:"hosts"`
 	Type            string       `json:"type"`
-	ExchangeName    string       `json:"exchange_name"` // for rabbitmq
+	ExchangeName    string       `json:"exchange_name"`    // for rabbitmq
+	ExchangeDurable bool         `json:"exchange_durable"` // for rabbitmq
 	NeedAuth        bool         `json:"need_auth"`
 	ExternalAuth    bool         `json:"external_auth"`
 	User            string       `json:"user"`

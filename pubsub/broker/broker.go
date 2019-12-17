@@ -43,6 +43,9 @@ func New(conf *config.Broker) (b broker.Broker, err error) {
 		if conf.ExternalAuth {
 			opts = append(opts, rabbitmq.ExternalAuth())
 		}
+		if conf.ExchangeDurable {
+			opts = append(opts, rabbitmq.DurableExchange())
+		}
 		mb.Broker = rabbitmq.NewBroker(opts...)
 		b = mb
 		return
