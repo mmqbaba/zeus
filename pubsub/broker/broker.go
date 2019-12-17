@@ -39,7 +39,7 @@ func New(conf *config.Broker) (b broker.Broker, err error) {
 	case "rabbitmq":
 		mb := new(brokerWrap)
 		mb.mqType = conf.Type
-		opts := []broker.Option{broker.Addrs(conf.Hosts...), rabbitmq.Exchange(conf.ExchangeName)}
+		opts := []broker.Option{broker.Addrs(conf.Hosts...), rabbitmq.Exchange(conf.ExchangeName), rabbitmq.ExchangeKind(conf.ExchangeKind)}
 		if conf.ExternalAuth {
 			opts = append(opts, rabbitmq.ExternalAuth())
 		}

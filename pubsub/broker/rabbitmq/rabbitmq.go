@@ -312,10 +312,20 @@ func (r *rbroker) getExchange() exchange {
 
 	if e, ok := r.opts.Context.Value(exchangeKey{}).(string); ok {
 		ex.name = e
+		if len(ex.name) == 0 {
+			ex.name = DefaultExchange.name
+		}
 	}
 
 	if d, ok := r.opts.Context.Value(durableExchange{}).(bool); ok {
 		ex.durable = d
+	}
+
+	if t, ok := r.opts.Context.Value(exchangeKindKey{}).(string); ok {
+		ex.kind = t
+		if len(ex.kind) == 0 {
+			ex.kind = DefaultExchange.kind
+		}
 	}
 
 	return ex

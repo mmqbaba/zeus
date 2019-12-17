@@ -79,3 +79,9 @@ type ackSuccessKey struct{}
 func AckOnSuccess() broker.SubscribeOption {
 	return setSubscribeOption(ackSuccessKey{}, true)
 }
+
+type exchangeKindKey struct{}
+
+func ExchangeKind(t string) broker.Option {
+	return setBrokerOption(exchangeKindKey{}, t)
+}

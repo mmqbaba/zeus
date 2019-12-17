@@ -108,6 +108,7 @@ type Broker struct {
 	Type            string       `json:"type"`
 	ExchangeName    string       `json:"exchange_name"`    // for rabbitmq
 	ExchangeDurable bool         `json:"exchange_durable"` // for rabbitmq
+	ExchangeKind    string       `json:"exchange_kind"`    // for rabbitmq
 	NeedAuth        bool         `json:"need_auth"`
 	ExternalAuth    bool         `json:"external_auth"`
 	User            string       `json:"user"`

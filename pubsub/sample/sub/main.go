@@ -67,6 +67,8 @@ func subManager() {
 		"zeus-rb": config.Broker{
 			Type:  "rabbitmq",
 			Hosts: []string{"amqp://guest:guest@127.0.0.1:5672"},
+			// ExchangeName: "zeus",
+			// ExchangeKind: "direct",
 			SubscribeTopics: []*config.TopicInfo{
 				&config.TopicInfo{Topic: "pbstruct.zeus", Queue: "cache-zeus-rb"}, // 这里的Topic 是作为 routing-key
 			},
