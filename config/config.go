@@ -127,6 +127,7 @@ type TopicInfo struct {
 type GoMicro struct {
 	ServiceName        string   `json:"service_name"`
 	ServerPort         uint32   `json:"server_port"`
+	Advertise          string   `json:"advertise"`
 	RegistryPluginType string   `json:"registry_plugin_type"` // etcd/consul
 	RegistryAddrs      []string `json:"registry_addrs"`       // etcd/consul address
 	RegistryAuthUser   string   `json:"registry_authuser"`

@@ -6,9 +6,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/micro/go-grpc"
+	grpcserver "github.com/micro/go-grpc/server"
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/registry"
+	"github.com/micro/go-micro/server"
 	"github.com/micro/go-plugins/registry/etcdv3"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
@@ -27,12 +28,17 @@ func NewService(ctx context.Context, conf config.GoMicro, opts ...micro.Option) 
 		reg = registry.DefaultRegistry
 	}
 
+	grpcS := grpcserver.NewServer(
+		server.Advertise(conf.Advertise),
+	)
+
 	o := []micro.Option{
+		micro.Server(grpcS),
+		micro.Registry(reg),
 		micro.Name(conf.ServiceName),
 		micro.Address(fmt.Sprintf(":%d", conf.ServerPort)),
 		micro.RegisterTTL(15 * time.Second),
 		micro.RegisterInterval(10 * time.Second),
-		micro.Registry(reg),
 		micro.AfterStop(func() error {
 			log.Println("[gomicro] afterstop")
 			return nil
@@ -51,7 +57,8 @@ func NewService(ctx context.Context, conf config.GoMicro, opts ...micro.Option) 
 	}
 	o = append(o, opts...)
 	// new micro service
-	s := grpc.NewService(o...)
+	// s := grpc.NewService(o...)
+	s := micro.NewService(o...)
 	// // parse command line flags.
 	// s.Init() // 禁用掉，不parse
 	return s
