@@ -43,8 +43,8 @@ var (
 
 type rabbitMQConn struct {
 	Connection      *amqp.Connection
-	Channel         *rabbitMQChannel
-	ExchangeChannel *rabbitMQChannel
+	Channel         *rabbitMQChannel // 用于声明channel和queue
+	ExchangeChannel *rabbitMQChannel // 用于发布消息
 	exchange        exchange
 	url             string
 	prefetchCount   int
