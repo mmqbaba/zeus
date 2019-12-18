@@ -2,21 +2,30 @@ package zsub
 
 import (
 	"context"
+	"io"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	gmbroker "github.com/micro/go-micro/broker"
+	"github.com/micro/go-micro/codec"
+	"github.com/micro/go-micro/server"
+
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	zjson "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro/codec/json"
+	zbroker "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/broker"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
 
 type Manager struct {
-	subs map[string]*subServer
+	subs    map[string]*subServer
+	options *ManagerConfig
 }
 
 type ManagerConfig struct {
-	Conf map[string]*SubConfig
+	Conf        map[string]*SubConfig
+	JSONCodecFn func(io.ReadWriteCloser) codec.Codec
 }
 
 type SubConfig struct {
@@ -26,11 +35,39 @@ type SubConfig struct {
 
 func NewManager(mc *ManagerConfig) (m *Manager, err error) {
 	tmp := &Manager{
-		subs: make(map[string]*subServer),
+		subs:    make(map[string]*subServer),
+		options: mc,
 	}
 	for k, c := range mc.Conf {
 		var ss *subServer
-		ss, err = newS(c.BrokerConf, nil)
+		var b gmbroker.Broker
+		b, err = zbroker.New(c.BrokerConf)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		// 初始化broker
+		if err = b.Init(); err != nil {
+			log.Println("newS b.Init err:", err)
+			return
+		}
+		if err = b.Connect(); err != nil {
+			log.Println("newS b.Connect err:", err)
+			return
+		}
+		srvOpts := []server.Option{server.Broker(b)}
+		jsonCodeFn := zjson.NewCodec
+		if mc.JSONCodecFn != nil {
+			jsonCodeFn = mc.JSONCodecFn
+		}
+		srvOpts = append(srvOpts, server.Codec("application/json", jsonCodeFn))
+		srv := server.NewServer(srvOpts...)
+		// 初始化server
+		if err = srv.Init(); err != nil {
+			log.Println(err)
+			return
+		}
+		ss, err = newS(c.BrokerConf, srv)
 		if err != nil {
 			log.Println(err)
 			panic(err)

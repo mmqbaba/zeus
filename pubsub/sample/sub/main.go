@@ -6,6 +6,7 @@ import (
 
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/micro/go-micro/metadata"
+
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	brokerpb "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/proto"
 	zsub "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/sub"
@@ -84,7 +85,7 @@ func subManager() {
 			"jsonrequest.zeus":   JSONRequestHandler,
 		},
 		"zeus-rb": map[string]interface{}{
-			"pbstruct.zeus": PBStructHandler,
+			"pbstruct.zeus": RawDataHandler,
 		},
 	}
 	confList := make(map[string]*zsub.SubConfig)
@@ -145,5 +146,12 @@ func JSONRequestHandler(ctx context.Context, msg *Request) error {
 	m, _ := metadata.FromContext(ctx)
 	log.Println("metadata", m)
 	log.Printf("JSONRequestHandler %+v\n", msg)
+	return nil
+}
+
+func RawDataHandler(ctx context.Context, msg *[]byte) error {
+	m, _ := metadata.FromContext(ctx)
+	log.Println("metadata", m)
+	log.Printf("RawDataHandler %s\n", string(*msg))
 	return nil
 }

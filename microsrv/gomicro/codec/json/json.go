@@ -4,6 +4,7 @@ package json
 import (
 	"encoding/json"
 	"io"
+	"io/ioutil"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
@@ -26,6 +27,14 @@ func (c *Codec) ReadHeader(m *codec.Message, t codec.MessageType) error {
 
 func (c *Codec) ReadBody(b interface{}) error {
 	if b == nil {
+		return nil
+	}
+	if raw, ok := b.(*[]byte); ok {
+		d, err := ioutil.ReadAll(c.Conn)
+		if err != nil {
+			return err
+		}
+		*raw = d
 		return nil
 	}
 	if pb, ok := b.(proto.Message); ok {
