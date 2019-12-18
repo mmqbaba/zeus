@@ -100,6 +100,7 @@ func subManager() {
 	}
 	mc := &zsub.ManagerConfig{
 		Conf: confList,
+		// JSONCodecFn: NewCodec, // 可使用自定义实现的json Codec覆盖
 	}
 	m, err := zsub.NewManager(mc)
 	if err != nil {
