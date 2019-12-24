@@ -116,6 +116,7 @@ type Broker struct {
 	TopicPrefix     string       `json:"topic_prefix"`
 	SubscribeTopics []*TopicInfo `json:"subscribe_topics"` // 服务订阅的主题
 	EnablePub       bool         `json:"enable_pub"`       // 启用pub
+	EnableSub       bool         `json:"enable_sub"`       // 启用sub
 }
 
 type TopicInfo struct {
@@ -123,6 +124,7 @@ type TopicInfo struct {
 	Source   string `json:"source"`   // 服务来源
 	Queue    string `json:"queue"`    // 队列/组
 	Topic    string `json:"topic"`    // 主题
+	Handler  string `json:"handler"`  // 处理器
 }
 
 type GoMicro struct {
