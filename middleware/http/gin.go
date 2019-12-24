@@ -259,35 +259,49 @@ func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 					return
 				}
 			} else {
-				val := make(map[string]interface{})
-				if err := c.ShouldBind(&val); err != nil {
-					ExtractLogger(c).Debug(err)
-					ErrorResponse(c, zeuserrors.ECodeJsonUnmarshal.ParseErr(err.Error()))
-					return
-				}
-				b, err := utils.Marshal(val)
-				if err != nil {
-					ExtractLogger(c).Debug(err)
-					ErrorResponse(c, zeuserrors.ECodeJsonMarshal.ParseErr(err.Error()))
-					return
-				}
-				bf := bytesBuffPool.Get().(*bytes.Buffer)
-				defer bytesBuffPool.Put(bf)
-				bf.Reset()
-				bf.Write(b)
-				err = jsonPBUmarshaler.Unmarshal(bf, pb)
-				if err != nil {
-					ExtractLogger(c).Debug(err)
-					ErrorResponse(c, zeuserrors.ECodeJSONPBUnmarshal.ParseErr(err.Error()))
-					return
-				}
-				if !c.GetBool(ZEUS_HTTP_DISABLE_PB_VALIDATE) {
-					if v, ok := req.(validator); v != nil && ok {
-						if err := v.Validate(); err != nil {
-							ExtractLogger(c).Debug(err)
-							ErrorResponse(c, zeuserrors.ECodeInvalidParams.ParseErr(err.Error()))
-							return
+				if c.Request.Method == http.MethodPost || c.Request.Method == http.MethodPut {
+					// val := make(map[string]interface{})
+					// if err := c.ShouldBind(&val); err != nil {
+					// 	ExtractLogger(c).Debug(err)
+					// 	ErrorResponse(c, zeuserrors.ECodeJsonUnmarshal.ParseErr(err.Error()))
+					// 	return
+					// }
+					// b, err := utils.Marshal(val)
+					// if err != nil {
+					// 	ExtractLogger(c).Debug(err)
+					// 	ErrorResponse(c, zeuserrors.ECodeJsonMarshal.ParseErr(err.Error()))
+					// 	return
+					// }
+					// bf := bytesBuffPool.Get().(*bytes.Buffer)
+					// defer bytesBuffPool.Put(bf)
+					// bf.Reset()
+					// bf.Write(b)
+					err := jsonPBUmarshaler.Unmarshal(c.Request.Body, pb)
+					if err != nil {
+						ExtractLogger(c).Debug(err)
+						ErrorResponse(c, zeuserrors.ECodeJSONPBUnmarshal.ParseErr(err.Error()))
+						return
+					}
+					if !c.GetBool(ZEUS_HTTP_DISABLE_PB_VALIDATE) {
+						if v, ok := req.(validator); v != nil && ok {
+							if err := v.Validate(); err != nil {
+								ExtractLogger(c).Debug(err)
+								ErrorResponse(c, zeuserrors.ECodeInvalidParams.ParseErr(err.Error()))
+								return
+							}
 						}
+					}
+				} else if c.Request.Method == http.MethodGet || c.Request.Method == http.MethodDelete {
+					if err := c.ShouldBindQuery(req); err != nil {
+						ExtractLogger(c).Debug(err)
+						ErrorResponse(c, zeuserrors.ECodeInvalidParams.ParseErr(err.Error()))
+						return
+					}
+				} else {
+					if err := c.ShouldBind(req); err != nil {
+						ExtractLogger(c).Debug(err)
+						ErrorResponse(c, zeuserrors.ECodeInvalidParams.ParseErr(err.Error()))
+						return
 					}
 				}
 			}
