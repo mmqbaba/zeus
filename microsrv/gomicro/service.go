@@ -31,10 +31,10 @@ func NewService(ctx context.Context, conf config.GoMicro, opts ...micro.Option) 
 
 	// grpcS := grpcserver.NewServer(
 	// 	server.Advertise(conf.Advertise),
-    // )
-    grpcS := grpc.NewServer(
-        server.Advertise(conf.Advertise),
-    )
+	// )
+	grpcS := grpc.NewServer(
+		server.Advertise(conf.Advertise),
+	)
 
 	o := []micro.Option{
 		micro.Server(grpcS),
