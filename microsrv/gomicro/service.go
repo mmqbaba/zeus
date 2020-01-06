@@ -6,10 +6,11 @@ import (
 	"log"
 	"time"
 
-	grpcserver "github.com/micro/go-grpc/server"
+	// grpcserver "github.com/micro/go-grpc/server"
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/registry"
 	"github.com/micro/go-micro/server"
+	"github.com/micro/go-micro/server/grpc"
 	"github.com/micro/go-plugins/registry/etcdv3"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
@@ -28,9 +29,12 @@ func NewService(ctx context.Context, conf config.GoMicro, opts ...micro.Option) 
 		reg = registry.DefaultRegistry
 	}
 
-	grpcS := grpcserver.NewServer(
-		server.Advertise(conf.Advertise),
-	)
+	// grpcS := grpcserver.NewServer(
+	// 	server.Advertise(conf.Advertise),
+    // )
+    grpcS := grpc.NewServer(
+        server.Advertise(conf.Advertise),
+    )
 
 	o := []micro.Option{
 		micro.Server(grpcS),

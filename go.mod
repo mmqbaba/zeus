@@ -15,6 +15,7 @@ require (
 	github.com/elazarl/go-bindata-assetfs v1.0.0
 	github.com/emicklei/proto v1.8.0
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
+	github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3 // indirect
 	github.com/gin-gonic/gin v1.3.0
 	github.com/go-redis/redis v6.15.6+incompatible
 	github.com/go-sql-driver/mysql v1.4.1
@@ -31,7 +32,6 @@ require (
 	github.com/klauspost/cpuid v1.2.2 // indirect
 	github.com/lestrrat-go/file-rotatelogs v2.2.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.0 // indirect
-	github.com/micro/go-grpc v1.0.1
 	github.com/micro/go-micro v1.7.1-0.20190627135301-d8e998ad85fe
 	github.com/micro/go-plugins v1.1.1
 	github.com/onsi/ginkgo v1.10.3 // indirect
@@ -44,6 +44,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
 	github.com/tebeka/strftime v0.1.3 // indirect
+	github.com/ugorji/go/codec v0.0.0-20190320090025-2dc34c0b8780 // indirect
 	go.mongodb.org/mongo-driver v1.0.2
 	go.uber.org/ratelimit v0.1.0
 	go.uber.org/zap v1.12.0
@@ -53,4 +54,5 @@ require (
 	google.golang.org/genproto v0.0.0-20191028173616-919d9bdd9fe6 // indirect
 	google.golang.org/grpc v1.25.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
+	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
 )
