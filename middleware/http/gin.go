@@ -282,15 +282,6 @@ func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 						ErrorResponse(c, zeuserrors.ECodeJSONPBUnmarshal.ParseErr(err.Error()))
 						return
 					}
-					if !c.GetBool(ZEUS_HTTP_DISABLE_PB_VALIDATE) {
-						if v, ok := req.(validator); v != nil && ok {
-							if err := v.Validate(); err != nil {
-								ExtractLogger(c).Debug(err)
-								ErrorResponse(c, zeuserrors.ECodeInvalidParams.ParseErr(err.Error()))
-								return
-							}
-						}
-					}
 				} else if c.Request.Method == http.MethodGet || c.Request.Method == http.MethodDelete {
 					if err := c.ShouldBindQuery(req); err != nil {
 						ExtractLogger(c).Debug(err)
@@ -302,6 +293,15 @@ func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 						ExtractLogger(c).Debug(err)
 						ErrorResponse(c, zeuserrors.ECodeInvalidParams.ParseErr(err.Error()))
 						return
+					}
+				}
+				if !c.GetBool(ZEUS_HTTP_DISABLE_PB_VALIDATE) {
+					if v, ok := req.(validator); v != nil && ok {
+						if err := v.Validate(); err != nil {
+							ExtractLogger(c).Debug(err)
+							ErrorResponse(c, zeuserrors.ECodeInvalidParams.ParseErr(err.Error()))
+							return
+						}
 					}
 				}
 			}
