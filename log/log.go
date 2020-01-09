@@ -73,6 +73,7 @@ func (l *LogBuilder) setFormatter() (err error) {
 		f := &logrus.TextFormatter{
 			TimestampFormat: "2006-01-02 15:04:05",
 			FieldMap:        logrus.FieldMap{logrus.FieldKeyMsg: "message"},
+			DisableColors:   true,
 		}
 		l.Logger.SetFormatter(f)
 		l.formatter = f
