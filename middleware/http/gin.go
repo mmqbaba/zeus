@@ -29,6 +29,7 @@ const ZEUS_HTTP_REWRITE_RESPONSE = "zeus_http_rewrite_response"
 const ZEUS_HTTP_ERR = "zeus_http_err"
 const ZEUS_HTTP_DISABLE_PB_VALIDATE = "zeus_http_disable_pb_validate"
 const ZEUS_HTTP_USE_GINBIND_VALIDATE_FOR_PB = "zeus_http_use_ginbind_validate_for_pb"
+const ZEUS_HTTP_WRAP_HANDLER_CTX = "zeus_http_wrap_handler_ctx"
 
 var zeusEngine engine.Engine
 var bytesBuffPool = &sync.Pool{
@@ -317,6 +318,11 @@ func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 		if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
 			ctx = cc
 		}
+		if wrapHandlerCtx, exists := c.Get(ZEUS_HTTP_WRAP_HANDLER_CTX); wrapHandlerCtx != nil && exists {
+			if f, ok := wrapHandlerCtx.(wrapHandlerCtxFn); ok {
+				ctx = f(c, ctx)
+			}
+		}
 		ctxV := reflect.ValueOf(ctx)
 		ret := h.Call([]reflect.Value{ctxV, reqV, rspV})
 		if !ret[0].IsNil() {
@@ -372,6 +378,16 @@ type reWriteResponseFn func(c *gin.Context, rsp interface{})
 func SetReWriteResponseFn(f reWriteResponseFn) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		c.Set(ZEUS_HTTP_REWRITE_RESPONSE, f)
+		c.Next()
+	}
+}
+
+type wrapHandlerCtxFn func(c *gin.Context, ctx context.Context) context.Context
+
+// WrapHandlerCtx 包装handler ctx
+func WrapHandlerCtx(f wrapHandlerCtxFn) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.Set(ZEUS_HTTP_WRAP_HANDLER_CTX, f)
 		c.Next()
 	}
 }
