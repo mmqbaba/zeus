@@ -46,14 +46,16 @@ func WalkErrDefProto(rootdir string, gen *Generator, imps []string, errdefs ...s
 		if path.Base(ef) != _errdefFileName {
 			continue
 		}
-		ims = append(ims, ef)
+		filepath := ef
+		ims = append(ims, filepath)
 	}
 	for _, ef := range errdefs {
 		if ef == "" {
 			continue
 		}
-		ims = append(ims, ef)
-		filepath := path.Join(rootdir, "/", ef)
+		//filepath := path.Join(rootdir, "/", ef)
+		filepath := ef
+		ims = append(ims, filepath)
 		if !FileExists(filepath) {
 			header := ``
 			context := `syntax="proto3";
@@ -74,7 +76,7 @@ enum ErrCode {
 	}
 
 	for _, v := range ims {
-		filepath := path.Join(rootdir, "/", v)
+		filepath := v
 		if !FileExists(filepath) {
 			fmt.Printf("Skip: %s file not exist.\n", filepath)
 			continue

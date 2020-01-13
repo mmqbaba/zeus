@@ -46,6 +46,9 @@ docker: build docker-build
 docker-build:
 	docker build .
 
+error:
+	gen-zeus -onlyerr -errdef ../proto/errdef.proto -dest ../
+
 `
 	context := strings.ReplaceAll(tmpContext, "{PKG}", strings.ToLower(PD.PackageName))
 	fn := GetTargetFileName(PD, "makefile", rootdir)

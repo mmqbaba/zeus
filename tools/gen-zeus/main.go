@@ -33,11 +33,12 @@ func main() {
 	projectBase := flag.String("base", "", "project base prefix.")
 	errdefProto := flag.String("errdef", "proto/errdef.proto", "errdef.proto path")
 	isZeuserr := flag.Bool("onlyzeuserr", false, "gen-zeus -onlyzeuserr -errdef=errors/errdef.proto")
+	isOnlyErr := flag.Bool("onlyerr", false, "gen-zeus -onlyerr -errdef=proto/errdef.proto")
 
 	flag.Parse()
 	var err error
 	var reader *os.File
-	if !*isZeuserr {
+	if !*isZeuserr && !*isOnlyErr {
 		if len(*protoFile) <= 0 || !generator.FileExists(*protoFile) {
 			fmt.Printf("can not find protofile(%s)\n", *protoFile)
 			flag.Usage()
@@ -75,11 +76,18 @@ func main() {
 	if *isZeuserr {
 		generator.GenerateZeusErrdef(g, *sourceRoot)
 		return
+	} else if *isOnlyErr {
+		err = generator.GenerateErrdef(g, *sourceRoot)
+		if err != nil {
+			fmt.Printf("Generate errdef file failed, error is %v\n", err)
+			os.Exit(1)
+		}
+		return
 	}
+
 	generator.WalkErrDefProto(*sourceRoot, g, g.Imports, *errdefProto)
 
 	var errcount int = 0
-
 	err = generator.GenerateCmd(g, *sourceRoot)
 	if err != nil {
 		fmt.Printf("Generate cmd file failed, error is %v\n", err)
