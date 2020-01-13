@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 // Configer 配置初始化器
 type Configer interface {
 	Init(original []byte) error
@@ -34,6 +36,7 @@ type AppConf struct {
 	Broker              Broker                 `json:"broker"`
 	CurrentBusIdSpIdMap map[string]string      `json:"current_busid_spid_map,omitempty"`
 	GoMicro             GoMicro                `json:"go_micro"`
+	UpdateTime          time.Time              `json:"-"`
 }
 
 type DebugSwitch struct {

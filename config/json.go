@@ -1,19 +1,20 @@
 package config
 
 import (
-	"log"
 	"errors"
+	"log"
+	"time"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
 
 type Jsoner struct {
 	original []byte // 配置的原始数据
-	conf *AppConf
+	conf     *AppConf
 }
 
 func (j *Jsoner) Init(original []byte) (err error) {
-	if 	utils.IsEmptyString(string(original)) {
+	if utils.IsEmptyString(string(original)) {
 		msg := "Jsoner.Init failed, 配置原始数据不能为空"
 		log.Println(msg)
 		err = errors.New(msg)
@@ -26,6 +27,7 @@ func (j *Jsoner) Init(original []byte) (err error) {
 	}
 	j.original = original
 	j.conf = &conf
+	j.conf.UpdateTime = time.Now()
 	return nil
 }
 
