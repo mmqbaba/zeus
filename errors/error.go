@@ -96,6 +96,16 @@ func (c ErrorCode) ParseErr(msg string) *Error {
 	return New(c, msg, "")
 }
 
+func (c ErrorCode) Equal(err error) bool {
+	err1 := AssertError(err)
+	if err1 == nil {
+		return c == ECodeSuccessed
+	} else if c == ECodeSystem {
+		return false
+	}
+	return c == err1.ErrCode
+}
+
 // AssertError .
 func AssertError(e error) (err *Error) {
 	if e == nil {

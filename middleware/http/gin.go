@@ -145,6 +145,14 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 	}
 }
 
+func ExtractZeusCtx(c*gin.Context) context.Context {
+    ctx := c.Request.Context()
+    if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
+        ctx = cc
+    }
+    return ctx
+}
+
 func ExtractLogger(c *gin.Context) *logrus.Entry {
 	ctx := c.Request.Context()
 	if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
