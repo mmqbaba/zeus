@@ -12,6 +12,7 @@ require (
 	github.com/Shopify/sarama v1.24.1
 	github.com/coreos/etcd v3.3.13+incompatible
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
+	github.com/cweill/gotests v1.5.3 // indirect
 	github.com/elazarl/go-bindata-assetfs v1.0.0
 	github.com/emicklei/proto v1.8.0
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
@@ -51,6 +52,7 @@ require (
 	golang.org/x/crypto v0.0.0-20191105034135-c7e5f84aec59 // indirect
 	golang.org/x/net v0.0.0-20191105084925-a882066a44e0 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
+	golang.org/x/tools v0.0.0-20200206050830-dd0d5d485177 // indirect
 	google.golang.org/genproto v0.0.0-20191028173616-919d9bdd9fe6 // indirect
 	google.golang.org/grpc v1.25.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
