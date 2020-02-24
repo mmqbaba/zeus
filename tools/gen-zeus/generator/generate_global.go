@@ -33,8 +33,12 @@ func init() {
 	loadEngineFnOpt := service.WithLoadEngineFnOption(func(ng engine.Engine) {
 		log.Println("WithLoadEngineFnOption: SetNG success.")
 		SetNG(ng)
+		loadEngineSuccess(ng)
 	})
-	ServiceOpts = append(ServiceOpts, loadEngineFnOpt)
+	processChangeFnOpt := service.WithProcessChangeFnOption(func(event interface{}) {
+		processChange(event)
+	})
+	ServiceOpts = append(ServiceOpts, loadEngineFnOpt, processChangeFnOpt)
 	// // server wrap
 	// ServiceOpts = append(ServiceOpts, service.WithGoMicroServerWrapGenerateFnOption(gomicro.GenerateServerLogWrap))
 }
@@ -68,6 +72,27 @@ func GetConfig() (conf *config.AppConf) {
 func genGlobal(PD *Generator, rootdir string) error {
 	header := ``
 	context := `package global
+import (
+    "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+    "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
+)
+
+func loadConfig(conf *config.AppConf) {
+    // 加载配置
+    // TODO: do something here
+}
+
+func loadEngineSuccess(ng engine.Engine) {
+    loadConfig(GetConfig())
+    // 加载engine成功
+    // TODO: do something here
+}
+
+func processChange(event interface{}) {
+    loadConfig(GetConfig())
+    // 配置变更
+    // TODO: do something here
+}
 
 `
 	fn := GetTargetFileName(PD, "global", rootdir)
