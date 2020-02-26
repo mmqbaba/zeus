@@ -26,15 +26,20 @@ import (
 )
 
 var ng engine.Engine
-var ServiceOpts []service.Option
+var ServiceOpts = []service.Option{
+	service.WithLoadEngineFnOption(func(ng engine.Engine) {
+		log.Println("WithLoadEngineFnOption: SetNG success.")
+		SetNG(ng)
+	}),
+}
 
 func init() {
 	// load engine
-	loadEngineFnOpt := service.WithLoadEngineFnOption(func(ng engine.Engine) {
-		log.Println("WithLoadEngineFnOption: SetNG success.")
-		SetNG(ng)
-	})
-	ServiceOpts = append(ServiceOpts, loadEngineFnOpt)
+	//loadEngineFnOpt := service.WithLoadEngineFnOption(func(ng engine.Engine) {
+	//	log.Println("WithLoadEngineFnOption: SetNG success.")
+	//	SetNG(ng)
+	//})
+	//ServiceOpts = append(ServiceOpts, loadEngineFnOpt)
 	// // server wrap
 	// ServiceOpts = append(ServiceOpts, service.WithGoMicroServerWrapGenerateFnOption(gomicro.GenerateServerLogWrap))
 }
@@ -62,7 +67,7 @@ func GetConfig() (conf *config.AppConf) {
 
 `
 	fn := GetTargetFileName(PD, "global.init", rootdir)
-	return writeContext(fn, header, context, false)
+	return writeContext(fn, header, context, true)
 }
 
 func genGlobal(PD *Generator, rootdir string) error {

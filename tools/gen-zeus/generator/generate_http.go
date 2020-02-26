@@ -38,7 +38,7 @@ const (
 %s
 )
 
-var {PKG}Hdlr = &handler.{SRV}{}
+var {PKG}Hdlr = handler.New{SRV}()
 var {PKG}HdlrRoutes = map[zeusmwhttp.RouteLink]*zeusmwhttp.Route{
 %s
 }

@@ -89,7 +89,9 @@ func init() {
 				errInitBlock += fmt.Sprintf(`	errors.ECodeMsg[%s] = "%s"`, e.Name, errMsg) + "\n"
 				if httpCode != "" {
 					errInitBlock += fmt.Sprintf(`	errors.ECodeStatus[%s] = %s`, e.Name, httpCode) + "\n"
-					isImportHttp = true
+					if strings.Contains(httpCode, "http.") {
+						isImportHttp = true
+					}
 				}
 				errcodeMap[e.Integer] = e.Name
 			}
