@@ -126,7 +126,7 @@ type TopicInfo struct {
 	Category string `json:"category"` // 类别
 	Source   string `json:"source"`   // 服务来源
 	Queue    string `json:"queue"`    // 队列/组
-	Topic    string `json:"topic"`    // 主题
+	Topic    string `json:"topic"`    // 主题(会优先使用这个设置值)
 	Handler  string `json:"handler"`  // 处理器
 }
 

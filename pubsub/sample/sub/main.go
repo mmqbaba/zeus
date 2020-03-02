@@ -14,10 +14,13 @@ import (
 )
 
 func main() {
-	// sub()
-	subManager()
+	// 默认数据源(单个)
+	sub()
+	// 多个数据源
+	// subManager()
 }
 
+// sub 默认数据源(单个)
 func sub() {
 	conf := &config.Broker{}
 
@@ -45,6 +48,7 @@ func sub() {
 	}
 }
 
+// subManager 多个数据源
 func subManager() {
 	brokerSource := map[string]config.Broker{
 		"zeus": config.Broker{

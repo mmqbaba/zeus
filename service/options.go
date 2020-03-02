@@ -129,7 +129,7 @@ func ParseCommandLine() (options Options, err error) {
 	flag.IntVar(&options.ApiPort, "apiPort", 8081, "Port to provide api on")
 
 	// flag.StringVar(&options.Interface, "interface", "", "Interface to bind to")
-	flag.StringVar(&options.ApiInterface, "apiInterface", "127.0.0.1", "Interface to for API to bind to")
+	flag.StringVar(&options.ApiInterface, "apiInterface", "", "Interface to for API to bind to")
 
 	flag.StringVar(&options.Log, "log", "", "logging to use (console, file, redis, kafka, syslog or logstash)")
 	flag.StringVar(&options.LogFormat, "logFormat", "", "log fromat to use (text, json)")

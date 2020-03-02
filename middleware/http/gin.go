@@ -75,6 +75,7 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger := ng.GetContainer().GetLogger()
 		ctx := c.Request.Context()
+		ctx = zeusctx.GinCtxToContext(ctx, c)
 		l := logger.WithFields(logrus.Fields{"tag": "gin"})
 		////// zipkin begin
 		cfg, err := ng.GetConfiger()
@@ -143,6 +144,14 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		c.Next()
 		l.Debugln("access end", c.Request.URL.Path)
 	}
+}
+
+func ExtractZeusCtx(c *gin.Context) context.Context {
+	ctx := c.Request.Context()
+	if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
+		ctx = cc
+	}
+	return ctx
 }
 
 func ExtractLogger(c *gin.Context) *logrus.Entry {
