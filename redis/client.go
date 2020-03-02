@@ -4,6 +4,7 @@ import (
 	"log"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-redis/redis"
 
@@ -28,11 +29,15 @@ func newRedisClient(cfg *config.Redis) *redis.Client {
 			MasterName:    cfg.SentinelMastername,
 			SentinelAddrs: strings.Split(cfg.SentinelHost, ","),
 			Password:      cfg.Pwd,
+			PoolSize:      cfg.PoolSize,
+			IdleTimeout:   time.Duration(cfg.ConnIdleTimeout) * time.Second,
 		})
 	} else {
 		client = redis.NewClient(&redis.Options{
-			Addr:     cfg.Host,
-			Password: cfg.Pwd,
+			Addr:        cfg.Host,
+			Password:    cfg.Pwd,
+			PoolSize:    cfg.PoolSize,
+			IdleTimeout: time.Duration(cfg.ConnIdleTimeout) * time.Second,
 		})
 	}
 	if err := client.Ping().Err(); err != nil {

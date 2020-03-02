@@ -69,7 +69,8 @@ type Redis struct {
 	SentinelMastername string `json:"sentinel_mastername"`
 	Pwd                string `json:"pwd"`
 	PoolSize           int    `json:"poolsize"`
-	Enable             bool   `json:"enable"` // 启用组件
+	ConnIdleTimeout    int    `json:"conn_idle_timeout"` // 单位秒
+	Enable             bool   `json:"enable"`            // 启用组件
 }
 
 type MysqlDB struct {
