@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient"
 	"log"
 	"net/http"
 
@@ -54,6 +55,7 @@ func (c *Container) Init(appcfg *config.AppConf) {
 	c.initMongo(&appcfg.MongoDB)
 	c.initTifClient(appcfg)
 	c.initMysql(appcfg.MysqlSource)
+	c.initHttpClient(appcfg.HttpClient)
 	log.Println("[Container.Init] finish")
 	c.appcfg = *appcfg
 }
@@ -74,6 +76,7 @@ func (c *Container) Reload(appcfg *config.AppConf) {
 	}
 	c.initTifClient(appcfg)
 	c.initMysql(appcfg.MysqlSource)
+	c.initHttpClient(appcfg.HttpClient)
 	log.Println("[Container.Reload] finish")
 	c.appcfg = *appcfg
 }
@@ -269,4 +272,9 @@ func (c *Container) initTifClient(appconf *config.AppConf) {
 // mysql
 func (c *Container) initMysql(conf map[string]config.MysqlDB) {
 	zeusmysql.ReloadConfig(conf)
+}
+
+// httpclient
+func (c *Container) initHttpClient(conf map[string]config.HttpClientConf) {
+	httpclient.ReloadHttpClientConf(conf)
 }
