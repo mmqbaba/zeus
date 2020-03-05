@@ -7,7 +7,8 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
-	"sync"
+    "strings"
+    "sync"
 
 	"github.com/golang/protobuf/jsonpb"
 	proto "github.com/golang/protobuf/proto"
@@ -51,6 +52,9 @@ func New(code ErrorCode, msg, cause string) *Error {
 
 // Error for the error interface
 func (e Error) Error() string {
+    if strings.TrimSpace(e.Cause) == "" {
+        return e.ErrMsg
+    }
 	return e.ErrMsg + " (cause: " + e.Cause + ")"
 }
 
