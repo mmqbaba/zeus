@@ -109,6 +109,7 @@ type HttpClientConf struct {
 	//BackoffType           string         `json:"backoff_type"`
 	TimeOut             time.Duration `json:"time_out"`
 	UserAgent           string        `json:"user_agent"`
+	CaCertPath          string        `json:"ca_cert_path"`
 	InsecureSkipVerify  bool          `json:"insecure_skip_verify"`
 	DisableKeepAlives   bool          `json:"disable_keep_alives"`
 	MaxIdleConns        int           `json:"max_idle_conns"`

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -90,7 +91,6 @@ func newClient(cfg *config.HttpClientConf) *Client {
 	if cfg.TimeOut != 0 {
 		settings.Timeout = cfg.TimeOut * time.Millisecond
 	}
-
 	transport := http.Transport{}
 	if cfg.IdleConnTimeout != 0 {
 		transport.IdleConnTimeout = cfg.IdleConnTimeout * time.Millisecond
@@ -104,7 +104,18 @@ func newClient(cfg *config.HttpClientConf) *Client {
 	if cfg.MaxIdleConnsPerHost != 0 {
 		transport.MaxIdleConnsPerHost = cfg.MaxIdleConnsPerHost
 	}
+
+	if !cfg.InsecureSkipVerify && !utils.IsEmptyString(cfg.CaCertPath) {
+		caCrt, err := ioutil.ReadFile(cfg.CaCertPath)
+		if err != nil {
+			panic(fmt.Sprintf("%v:读取证书文件错误:%v!", cfg.HostName, err.Error()))
+		}
+		pool := x509.NewCertPool()
+		pool.AppendCertsFromPEM(caCrt)
+		transport.TLSClientConfig = &tls.Config{RootCAs: pool}
+	}
 	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: cfg.InsecureSkipVerify}
+	settings.Transport = transport
 
 	retrier := NewNoRetrier()
 	if cfg.RetryCount > 0 {
@@ -180,6 +191,18 @@ func (c *Client) do(ctx context.Context, request *http.Request) (rsp []byte, err
 	// todo
 	//request.Close = true
 	loger := zeusctx.ExtractLogger(ctx)
+	tracer := tracing.NewTracerWrap(opentracing.GlobalTracer())
+	name := request.URL.RawPath
+	ctx, span, _ := tracer.StartSpanFromContext(ctx, name)
+	ext.SpanKindConsumer.Set(span)
+	span.SetTag("httpclient request.method", request.Method)
+	defer func() {
+		//if err == nil { //todo
+		//    return
+		//}
+		span.Finish()
+	}()
+
 	var bodyReader *bytes.Reader
 
 	if request.Body != nil {
@@ -187,22 +210,10 @@ func (c *Client) do(ctx context.Context, request *http.Request) (rsp []byte, err
 		if err != nil {
 			return nil, err
 		}
+		span.SetTag("httpclient request.body", string(reqData))
 		bodyReader = bytes.NewReader(reqData)
 		request.Body = ioutil.NopCloser(bodyReader) // prevents closing the body between retries
 	}
-
-	tracer := tracing.NewTracerWrap(opentracing.GlobalTracer())
-	name := request.URL.RawPath
-	ctx, span, _ := tracer.StartSpanFromContext(ctx, name)
-	ext.SpanKindConsumer.Set(span)
-	span.SetTag("httpclient request.method", request.Method)
-	//span.SetTag("httpclient request.body", )
-	defer func() {
-		//if err == nil { //todo
-		//    return
-		//}
-		span.Finish()
-	}()
 
 	var response *http.Response
 
