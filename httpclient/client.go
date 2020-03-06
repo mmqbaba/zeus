@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/pkg/errors"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 	"io"
@@ -42,11 +42,6 @@ type httpClientSettings struct {
 	Host       string
 }
 
-//type ClientMgr struct {
-//    clients map[string]*Client
-//    rw      sync.RWMutex
-//}
-
 type Client struct {
 	client   *http.Client
 	settings httpClientSettings
@@ -67,7 +62,7 @@ func GetClient(ctx context.Context, instance string) (*Client, error) {
 	v, ok := httpclientInstance[instance]
 	if !ok {
 		loger.Error("unknown instance: " + instance)
-		return nil, errors.New("unknown instance: " + instance)
+		return nil, errors.ECodeHttpClient.ParseErr("unknown instance: " + instance)
 	}
 	return v, nil
 }
@@ -136,7 +131,7 @@ func newClient(cfg *config.HttpClientConf) *Client {
 func (c *Client) Get(ctx context.Context, url string, headers http.Header) ([]byte, error) {
 	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%v%v", c.settings.Host, url), nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "GET - request creation failed")
+		return nil, errors.ECodeHttpClient.ParseErr("GET - request creation failed")
 	}
 	request.Header = headers
 
@@ -146,7 +141,7 @@ func (c *Client) Get(ctx context.Context, url string, headers http.Header) ([]by
 func (c *Client) Post(ctx context.Context, url string, body io.Reader, headers http.Header) ([]byte, error) {
 	request, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%v%v", c.settings.Host, url), body)
 	if err != nil {
-		return nil, errors.Wrap(err, "POST - request creation failed")
+		return nil, errors.ECodeHttpClient.ParseErr("POST - request creation failed")
 	}
 
 	request.Header = headers
@@ -157,7 +152,7 @@ func (c *Client) Post(ctx context.Context, url string, body io.Reader, headers h
 func (c *Client) Put(ctx context.Context, url string, body io.Reader, headers http.Header) ([]byte, error) {
 	request, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%v%v", c.settings.Host, url), body)
 	if err != nil {
-		return nil, errors.Wrap(err, "PUT - request creation failed")
+		return nil, errors.ECodeHttpClient.ParseErr("PUT - request creation failed")
 	}
 
 	request.Header = headers
@@ -168,7 +163,7 @@ func (c *Client) Put(ctx context.Context, url string, body io.Reader, headers ht
 func (c *Client) Patch(ctx context.Context, url string, body io.Reader, headers http.Header) ([]byte, error) {
 	request, err := http.NewRequest(http.MethodPatch, fmt.Sprintf("%v%v", c.settings.Host, url), body)
 	if err != nil {
-		return nil, errors.Wrap(err, "PATCH - request creation failed")
+		return nil, errors.ECodeHttpClient.ParseErr("PATCH - request creation failed")
 	}
 
 	request.Header = headers
@@ -179,7 +174,7 @@ func (c *Client) Patch(ctx context.Context, url string, body io.Reader, headers 
 func (c *Client) Delete(ctx context.Context, url string, headers http.Header) ([]byte, error) {
 	request, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("%v%v", c.settings.Host, url), nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "DELETE - request creation failed")
+		return nil, errors.ECodeHttpClient.ParseErr("DELETE - request creation failed")
 	}
 
 	request.Header = headers
@@ -188,7 +183,6 @@ func (c *Client) Delete(ctx context.Context, url string, headers http.Header) ([
 }
 
 func (c *Client) do(ctx context.Context, request *http.Request) (rsp []byte, err error) {
-	// todo
 	//request.Close = true
 	loger := zeusctx.ExtractLogger(ctx)
 	tracer := tracing.NewTracerWrap(opentracing.GlobalTracer())
@@ -197,7 +191,7 @@ func (c *Client) do(ctx context.Context, request *http.Request) (rsp []byte, err
 	ext.SpanKindConsumer.Set(span)
 	span.SetTag("httpclient request.method", request.Method)
 	defer func() {
-		//if err == nil { //todo
+		//if err == nil {
 		//    return
 		//}
 		span.Finish()

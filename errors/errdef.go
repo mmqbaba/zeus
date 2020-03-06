@@ -61,6 +61,7 @@ const (
 	ECodePbUnmarshal              ErrorCode = 10051
 	ECodeJSONPBMarshal            ErrorCode = 10052
 	ECodeJSONPBUnmarshal          ErrorCode = 10053
+	ECodeHttpClient               ErrorCode = 10054
 )
 
 // ECodeMsg error message
@@ -119,6 +120,7 @@ var ECodeMsg = map[ErrorCode]string{
 	ECodePbUnmarshal:              "unmarshal protobuf error",
 	ECodeJSONPBMarshal:            "marshal jsonpb error",
 	ECodeJSONPBUnmarshal:          "unmarshal jsonpb error",
+	ECodeHttpClient:               "httpclient error",
 }
 
 // ECodeStatus http status code
@@ -177,4 +179,5 @@ var ECodeStatus = map[ErrorCode]int{
 	ECodePbUnmarshal:              http.StatusOK,
 	ECodeJSONPBMarshal:            http.StatusOK,
 	ECodeJSONPBUnmarshal:          http.StatusOK,
+	ECodeHttpClient:               http.StatusOK,
 }

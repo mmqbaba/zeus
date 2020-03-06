@@ -25,8 +25,7 @@ func TestClient_Get(t *testing.T) {
 			//MaxIdleConns:          0,
 			//MaxIdleConnsPerHost:   0,
 			//MaxConnsPerHost:       0,
-			//IdleConnTimeout:       0,
-			Enable: true,
+			//IdleConnTimeout:       0
 		},
 	}
 

@@ -106,17 +106,15 @@ type HttpClientConf struct {
 	RetryCount            uint32        `json:"retry_count"`
 	BackoffInterval       time.Duration `json:"backoff_interval"`
 	MaximumJitterInterval time.Duration `json:"maximum_jitter_interval"`
-	//BackoffType           string         `json:"backoff_type"`
-	TimeOut             time.Duration `json:"time_out"`
-	UserAgent           string        `json:"user_agent"`
-	CaCertPath          string        `json:"ca_cert_path"`
-	InsecureSkipVerify  bool          `json:"insecure_skip_verify"`
-	DisableKeepAlives   bool          `json:"disable_keep_alives"`
-	MaxIdleConns        int           `json:"max_idle_conns"`
-	MaxIdleConnsPerHost int           `json:"max_idle_conns_per_host"`
-	MaxConnsPerHost     int           `json:"max_conns_per_host"`
-	IdleConnTimeout     time.Duration `json:"idle_conn_timeout"`
-	Enable              bool          `json:"enable"` // 启用组件
+	TimeOut               time.Duration `json:"time_out"`
+	UserAgent             string        `json:"user_agent"`
+	CaCertPath            string        `json:"ca_cert_path"`
+	InsecureSkipVerify    bool          `json:"insecure_skip_verify"`
+	DisableKeepAlives     bool          `json:"disable_keep_alives"`
+	MaxIdleConns          int           `json:"max_idle_conns"`
+	MaxIdleConnsPerHost   int           `json:"max_idle_conns_per_host"`
+	MaxConnsPerHost       int           `json:"max_conns_per_host"`
+	IdleConnTimeout       time.Duration `json:"idle_conn_timeout"`
 }
 
 type Obs struct {
