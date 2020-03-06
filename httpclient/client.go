@@ -28,18 +28,20 @@ const (
 var httpclientInstance = make(map[string]*Client)
 
 var defaultSetting = httpClientSettings{
-	Transport:  http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: false}},
-	UserAgent:  defaultUsageAgent,
-	Timeout:    defaultHTTPTimeout,
-	RetryCount: defaultRetryCount,
+	Transport:       http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: false}},
+	UserAgent:       defaultUsageAgent,
+	Timeout:         defaultHTTPTimeout,
+	RetryCount:      defaultRetryCount,
+	TraceOnlyLogErr: true,
 }
 
 type httpClientSettings struct {
-	Transport  http.Transport
-	UserAgent  string
-	RetryCount uint32
-	Timeout    time.Duration
-	Host       string
+	Transport       http.Transport
+	UserAgent       string
+	RetryCount      uint32
+	Timeout         time.Duration
+	Host            string
+	TraceOnlyLogErr bool
 }
 
 type Client struct {
@@ -51,6 +53,9 @@ type Client struct {
 func ReloadHttpClientConf(conf map[string]config.HttpClientConf) error {
 	var tmpInstanceMap = make(map[string]*Client)
 	for instanceName, httpClientConf := range conf {
+		if v, ok := httpclientInstance[instanceName]; ok {
+			v.client.CloseIdleConnections()
+		}
 		tmpInstanceMap[instanceName] = newClient(&httpClientConf)
 	}
 	httpclientInstance = tmpInstanceMap
@@ -69,6 +74,8 @@ func GetClient(ctx context.Context, instance string) (*Client, error) {
 
 func newClient(cfg *config.HttpClientConf) *Client {
 	settings := defaultSetting
+
+	settings.TraceOnlyLogErr = cfg.TraceOnlyLogErr
 
 	if !utils.IsEmptyString(cfg.UserAgent) {
 		settings.UserAgent = cfg.UserAgent
@@ -191,9 +198,9 @@ func (c *Client) do(ctx context.Context, request *http.Request) (rsp []byte, err
 	ext.SpanKindConsumer.Set(span)
 	span.SetTag("httpclient request.method", request.Method)
 	defer func() {
-		//if err == nil {
-		//    return
-		//}
+		if c.settings.TraceOnlyLogErr && err == nil {
+			return
+		}
 		span.Finish()
 	}()
 

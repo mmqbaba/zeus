@@ -276,5 +276,9 @@ func (c *Container) initMysql(conf map[string]config.MysqlDB) {
 
 // httpclient
 func (c *Container) initHttpClient(conf map[string]config.HttpClientConf) {
+	flag := c.appcfg.Trace.OnlyLogErr
+	for _, v := range conf {
+		v.TraceOnlyLogErr = flag
+	}
 	httpclient.ReloadHttpClientConf(conf)
 }
