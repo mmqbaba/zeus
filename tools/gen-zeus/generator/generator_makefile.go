@@ -29,7 +29,7 @@ init:
 	sh build-proto.sh
 
 autoinit:
-	[ -f proto/{PKG}pb/{PKG}.micro.go ] || sh build-proto.sh
+	[ -f proto/{PKG}pb/{PKG}.micro.go ] || [ -f proto/{PKG}pb/{PKG}.pb.micro.go ] || sh build-proto.sh
 
 
 start:
