@@ -21,22 +21,23 @@ type Entry struct {
 
 // AppConf 应用的具体配置
 type AppConf struct {
-	LogConf             LogConf                `json:"log_conf" toml:"log_conf" yaml:"log_conf"`
-	Redis               Redis                  `json:"redis"`
-	MongoDB             MongoDB                `json:"mongodb"`
-	MongoDBSource       map[string]MongoDB     `json:"mongodb_source"`
-	MysqlSource         map[string]MysqlDB     `json:"mysql_source"`
-	RedisSource         map[string]Redis       `json:"redis_source"`
-	BrokerSource        map[string]Broker      `json:"broker_source"`
-	EBus                EBus                   `json:"ebus"`
-	Ext                 map[string]interface{} `json:"ext"`
-	Trace               Trace                  `json:"trace"`
-	Debug               DebugSwitch            `json:"debug"`
-	Obs                 Obs                    `json:"obs"`
-	Broker              Broker                 `json:"broker"`
-	CurrentBusIdSpIdMap map[string]string      `json:"current_busid_spid_map,omitempty"`
-	GoMicro             GoMicro                `json:"go_micro"`
-	UpdateTime          time.Time              `json:"-"`
+	LogConf             LogConf                   `json:"log_conf" toml:"log_conf" yaml:"log_conf"`
+	Redis               Redis                     `json:"redis"`
+	MongoDB             MongoDB                   `json:"mongodb"`
+	MongoDBSource       map[string]MongoDB        `json:"mongodb_source"`
+	MysqlSource         map[string]MysqlDB        `json:"mysql_source"`
+	RedisSource         map[string]Redis          `json:"redis_source"`
+	BrokerSource        map[string]Broker         `json:"broker_source"`
+	EBus                EBus                      `json:"ebus"`
+	Ext                 map[string]interface{}    `json:"ext"`
+	Trace               Trace                     `json:"trace"`
+	Debug               DebugSwitch               `json:"debug"`
+	Obs                 Obs                       `json:"obs"`
+	Broker              Broker                    `json:"broker"`
+	CurrentBusIdSpIdMap map[string]string         `json:"current_busid_spid_map,omitempty"`
+	GoMicro             GoMicro                   `json:"go_micro"`
+	HttpClient          map[string]HttpClientConf `json:"http_client"`
+	UpdateTime          time.Time                 `json:"-"`
 }
 
 type DebugSwitch struct {
@@ -97,6 +98,24 @@ type LogConf struct {
 	RotationTime        string `json:"rotation_time"`
 	LogDir              string `json:"log_dir"`
 	DisableReportCaller bool   `json:"disable_report_caller"`
+}
+
+type HttpClientConf struct {
+	InstanceName          string        `json:"instancename"`
+	HostName              string        `json:"host_name"`
+	RetryCount            uint32        `json:"retry_count"`
+	BackoffInterval       time.Duration `json:"backoff_interval"`
+	MaximumJitterInterval time.Duration `json:"maximum_jitter_interval"`
+	TimeOut               time.Duration `json:"time_out"`
+	UserAgent             string        `json:"user_agent"`
+	CaCertPath            string        `json:"ca_cert_path"`
+	InsecureSkipVerify    bool          `json:"insecure_skip_verify"`
+	DisableKeepAlives     bool          `json:"disable_keep_alives"`
+	MaxIdleConns          int           `json:"max_idle_conns"`
+	MaxIdleConnsPerHost   int           `json:"max_idle_conns_per_host"`
+	MaxConnsPerHost       int           `json:"max_conns_per_host"`
+	IdleConnTimeout       time.Duration `json:"idle_conn_timeout"`
+	TraceOnlyLogErr       bool
 }
 
 type Obs struct {

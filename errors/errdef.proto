@@ -111,4 +111,6 @@ enum ErrCode {
     ECodeJSONPBMarshal = 10052; // marshal jsonpb error^http.StatusOK
     // JSONPB反序列化错误
     ECodeJSONPBUnmarshal = 10053; // unmarshal jsonpb error^http.StatusOK
+    // httpclient错误
+    ECodeHttpClient = 10054; // httpclient error^http.StatusOK
 }
