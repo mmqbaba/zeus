@@ -10,7 +10,7 @@ replace (
 
 require (
 	github.com/Shopify/sarama v1.24.1
-	github.com/coreos/etcd v3.3.13+incompatible
+	github.com/coreos/etcd v3.3.17+incompatible
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/cweill/gotests v1.5.3 // indirect
 	github.com/elazarl/go-bindata-assetfs v1.0.0
@@ -25,7 +25,6 @@ require (
 	github.com/golang/protobuf v1.3.2
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.3
-	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0
 	github.com/grpc-ecosystem/grpc-gateway v1.12.0
 	github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869 // indirect
@@ -33,7 +32,7 @@ require (
 	github.com/klauspost/cpuid v1.2.2 // indirect
 	github.com/lestrrat-go/file-rotatelogs v2.2.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.0 // indirect
-	github.com/micro/go-micro v1.7.1-0.20190627135301-d8e998ad85fe
+	github.com/micro/go-micro v1.18.0
 	github.com/micro/go-plugins v1.1.1
 	github.com/onsi/ginkgo v1.10.3 // indirect
 	github.com/onsi/gomega v1.7.1 // indirect
@@ -41,7 +40,6 @@ require (
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/openzipkin-contrib/zipkin-go-opentracing v0.3.5 // indirect
 	github.com/openzipkin/zipkin-go-opentracing v0.3.5
-	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v1.2.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
@@ -50,12 +48,8 @@ require (
 	go.mongodb.org/mongo-driver v1.0.2
 	go.uber.org/ratelimit v0.1.0
 	go.uber.org/zap v1.12.0
-	golang.org/x/crypto v0.0.0-20191105034135-c7e5f84aec59 // indirect
-	golang.org/x/net v0.0.0-20191105084925-a882066a44e0 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	golang.org/x/tools v0.0.0-20200206050830-dd0d5d485177 // indirect
-	google.golang.org/genproto v0.0.0-20191028173616-919d9bdd9fe6 // indirect
-	google.golang.org/grpc v1.25.0
-	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
+	google.golang.org/grpc v1.25.1
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
 )
