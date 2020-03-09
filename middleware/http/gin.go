@@ -30,6 +30,7 @@ const ZEUS_HTTP_ERR = "zeus_http_err"
 const ZEUS_HTTP_DISABLE_PB_VALIDATE = "zeus_http_disable_pb_validate"
 const ZEUS_HTTP_USE_GINBIND_VALIDATE_FOR_PB = "zeus_http_use_ginbind_validate_for_pb"
 const ZEUS_HTTP_WRAP_HANDLER_CTX = "zeus_http_wrap_handler_ctx"
+const ZEUS_HTTP_WRAP_HANDLER_CTX_MUL = "zeus_http_wrap_handler_ctx_mul"
 
 var zeusEngine engine.Engine
 var bytesBuffPool = &sync.Pool{
@@ -332,6 +333,13 @@ func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 				ctx = f(c, ctx)
 			}
 		}
+		if wrapHandlerCtxList, exists := c.Get(ZEUS_HTTP_WRAP_HANDLER_CTX_MUL); wrapHandlerCtxList != nil && exists {
+			if fs, ok := wrapHandlerCtxList.([]wrapHandlerCtxFn); len(fs) > 0 && ok {
+				for _, f := range fs {
+					ctx = f(c, ctx)
+				}
+			}
+		}
 		ctxV := reflect.ValueOf(ctx)
 		ret := h.Call([]reflect.Value{ctxV, reqV, rspV})
 		if !ret[0].IsNil() {
@@ -393,10 +401,26 @@ func SetReWriteResponseFn(f reWriteResponseFn) func(c *gin.Context) {
 
 type wrapHandlerCtxFn func(c *gin.Context, ctx context.Context) context.Context
 
-// WrapHandlerCtx 包装handler ctx
+// WrapHandlerCtx 包装handler ctx，只支持单个包装器
 func WrapHandlerCtx(f wrapHandlerCtxFn) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		c.Set(ZEUS_HTTP_WRAP_HANDLER_CTX, f)
+		c.Next()
+	}
+}
+
+// WrapHandlerCtxMul 包装handler ctx，支持多个包装器
+func WrapHandlerCtxMul(fns ...wrapHandlerCtxFn) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		list := make([]wrapHandlerCtxFn, 0)
+		list = append(list, fns...)
+		if wrapHandlerCtxList, exists := c.Get(ZEUS_HTTP_WRAP_HANDLER_CTX_MUL); wrapHandlerCtxList != nil && exists {
+			if fnlist, ok := wrapHandlerCtxList.([]wrapHandlerCtxFn); ok {
+				fnlist = append(fnlist, list...)
+				list = fnlist
+			}
+		}
+		c.Set(ZEUS_HTTP_WRAP_HANDLER_CTX_MUL, list)
 		c.Next()
 	}
 }
