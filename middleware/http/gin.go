@@ -408,18 +408,39 @@ type wrapHandlerCtxFn func(c *gin.Context, ctx context.Context) context.Context
 // 	}
 // }
 
-// WrapHandlerCtx 包装handler ctx，支持多个包装器
+// WrapHandlerCtx 包装handler ctx，支持多个包装器（通过gin中间件添加）
 func WrapHandlerCtx(fns ...wrapHandlerCtxFn) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		list := make([]wrapHandlerCtxFn, 0)
-		list = append(list, fns...)
-		if wrapHandlerCtxList, exists := c.Get(ZEUS_HTTP_WRAP_HANDLER_CTX); wrapHandlerCtxList != nil && exists {
-			if fnlist, ok := wrapHandlerCtxList.([]wrapHandlerCtxFn); ok {
-				fnlist = append(fnlist, list...)
-				list = fnlist
-			}
-		}
-		c.Set(ZEUS_HTTP_WRAP_HANDLER_CTX, list)
+		// list := make([]wrapHandlerCtxFn, 0)
+		// list = append(list, fns...)
+		// if wrapHandlerCtxList, exists := c.Get(ZEUS_HTTP_WRAP_HANDLER_CTX); wrapHandlerCtxList != nil && exists {
+		// 	if fnlist, ok := wrapHandlerCtxList.([]wrapHandlerCtxFn); ok {
+		// 		fnlist = append(fnlist, list...)
+		// 		list = fnlist
+		// 	}
+		// }
+		// c.Set(ZEUS_HTTP_WRAP_HANDLER_CTX, list)
+		AddWrapHandlerCtxFn(c, fns...)
 		c.Next()
+	}
+}
+
+// AddWrapHandlerCtxFn 增加handlerctx包装器
+func AddWrapHandlerCtxFn(c *gin.Context, fns ...wrapHandlerCtxFn) {
+	list := make([]wrapHandlerCtxFn, 0)
+	list = append(list, fns...)
+	if wrapHandlerCtxList, exists := c.Get(ZEUS_HTTP_WRAP_HANDLER_CTX); wrapHandlerCtxList != nil && exists {
+		if fnlist, ok := wrapHandlerCtxList.([]wrapHandlerCtxFn); ok {
+			fnlist = append(fnlist, list...)
+			list = fnlist
+		}
+	}
+	c.Set(ZEUS_HTTP_WRAP_HANDLER_CTX, list)
+}
+
+func ZeusCtxWithValue(c *gin.Context, key interface{}, val interface{}) {
+	if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
+		ctx := context.WithValue(cc, key, val)
+		c.Set(ZEUS_CTX, ctx)
 	}
 }
