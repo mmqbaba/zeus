@@ -81,6 +81,9 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			if ng.GetContainer().GetMongo() != nil {
 				c = zeusctx.MongoToContext(c, ng.GetContainer().GetMongo())
 			}
+			if ng.GetContainer().GetHttpClient() != nil {
+				c = zeusctx.HttpclientToContext(c, ng.GetContainer().GetHttpClient())
+			}
 			err = fn(c, req, rsp)
 			if err != nil && !utils.IsBlank(reflect.ValueOf(err)) {
 				span.SetTag("grpc server answer error", err)

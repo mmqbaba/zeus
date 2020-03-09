@@ -11,10 +11,12 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
 	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 )
@@ -62,14 +64,30 @@ func ReloadHttpClientConf(conf map[string]config.HttpClientConf) error {
 	return nil
 }
 
-func GetClient(ctx context.Context, instance string) (*Client, error) {
-	loger := zeusctx.ExtractLogger(ctx)
+func GetClient(instance string) (*Client, error) {
 	v, ok := httpclientInstance[instance]
 	if !ok {
-		loger.Error("unknown instance: " + instance)
+		log.Printf("unknown instance: " + instance)
 		return nil, errors.ECodeHttpClient.ParseErr("unknown instance: " + instance)
 	}
 	return v, nil
+}
+
+func (c *Client) GetHttpClient(instance string) (zhttpclient.Client, error) {
+	clent, err := GetClient(instance)
+	return clent, err
+}
+
+func DefaultClient() *Client {
+	client := Client{
+		client: &http.Client{
+			Transport: &defaultSetting.Transport,
+			Timeout:   defaultSetting.Timeout,
+		},
+		settings: defaultSetting,
+		retrier:  NewNoRetrier(),
+	}
+	return &client
 }
 
 func newClient(cfg *config.HttpClientConf) *Client {

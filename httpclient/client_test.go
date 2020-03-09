@@ -31,7 +31,7 @@ func TestClient_Get(t *testing.T) {
 
 	err := ReloadHttpClientConf(cfg)
 	ctx := context.Background()
-	client, err := GetClient(ctx, "test0")
+	client, err := GetClient("test0")
 	if err != nil {
 		fmt.Println(err.Error())
 		return

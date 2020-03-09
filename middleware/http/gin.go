@@ -138,7 +138,9 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		if ng.GetContainer().GetMongo() != nil {
 			ctx = zeusctx.MongoToContext(ctx, ng.GetContainer().GetMongo())
 		}
-
+		if ng.GetContainer().GetHttpClient() != nil {
+			ctx = zeusctx.HttpclientToContext(ctx, ng.GetContainer().GetHttpClient())
+		}
 		c.Set(ZEUS_CTX, ctx)
 		l.Debugln("access start", c.Request.URL.Path)
 		c.Next()
