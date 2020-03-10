@@ -1,6 +1,7 @@
 package zcontainer
 
 import (
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
 	"net/http"
 
 	"github.com/micro/go-micro"
@@ -29,4 +30,5 @@ type Container interface {
 	SetGoMicroService(s micro.Service)
 	GetGoMicroService() micro.Service
 	GetMongo() zmongo.Mongo
+	GetHttpClient() zhttpclient.HttpClient
 }

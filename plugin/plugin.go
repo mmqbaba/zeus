@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
 	"log"
 	"net/http"
 
@@ -36,6 +37,8 @@ type Container struct {
 	httpHandler http.Handler
 	// gomicro grpc
 	gomicroService micro.Service
+	// httpclient
+	httpClient zhttpclient.HttpClient
 
 	// dbPool          *sql.DB
 	// transport       *http.Transport
@@ -281,4 +284,9 @@ func (c *Container) initHttpClient(conf map[string]config.HttpClientConf) {
 		v.TraceOnlyLogErr = flag
 	}
 	httpclient.ReloadHttpClientConf(conf)
+	c.httpClient = httpclient.DefaultClient()
+}
+
+func (c *Container) GetHttpClient() zhttpclient.HttpClient {
+	return c.httpClient
 }
