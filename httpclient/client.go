@@ -11,10 +11,12 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
 	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 )
@@ -22,22 +24,12 @@ import (
 const (
 	defaultRetryCount  = 0
 	defaultHTTPTimeout = 30 * 1000 * time.Millisecond
-	defaultUsageAgent  = "zeus-httpclient v0.0.1"
 )
 
 var httpclientInstance = make(map[string]*Client)
 
-var defaultSetting = httpClientSettings{
-	Transport:       http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: false}},
-	UserAgent:       defaultUsageAgent,
-	Timeout:         defaultHTTPTimeout,
-	RetryCount:      defaultRetryCount,
-	TraceOnlyLogErr: true,
-}
-
 type httpClientSettings struct {
 	Transport       http.Transport
-	UserAgent       string
 	RetryCount      uint32
 	Timeout         time.Duration
 	Host            string
@@ -62,24 +54,48 @@ func ReloadHttpClientConf(conf map[string]config.HttpClientConf) error {
 	return nil
 }
 
-func GetClient(ctx context.Context, instance string) (*Client, error) {
-	loger := zeusctx.ExtractLogger(ctx)
+func GetClient(instance string) (*Client, error) {
 	v, ok := httpclientInstance[instance]
 	if !ok {
-		loger.Error("unknown instance: " + instance)
+		log.Printf("unknown instance: " + instance)
 		return nil, errors.ECodeHttpClient.ParseErr("unknown instance: " + instance)
 	}
 	return v, nil
 }
 
+func (c *Client) GetHttpClient(instance string) (zhttpclient.Client, error) {
+	clent, err := GetClient(instance)
+	return clent, err
+}
+
+func DefaultClient() *Client {
+	settings := httpClientSettings{
+		Transport:       http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: false}},
+		Timeout:         defaultHTTPTimeout,
+		RetryCount:      defaultRetryCount,
+		TraceOnlyLogErr: true,
+	}
+
+	client := Client{
+		client: &http.Client{
+			Transport: &settings.Transport,
+			Timeout:   settings.Timeout,
+		},
+		settings: settings,
+		retrier:  NewNoRetrier(),
+	}
+	return &client
+}
+
 func newClient(cfg *config.HttpClientConf) *Client {
-	settings := defaultSetting
+	settings := httpClientSettings{
+		Transport:       http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: false}},
+		Timeout:         defaultHTTPTimeout,
+		RetryCount:      defaultRetryCount,
+		TraceOnlyLogErr: true,
+	}
 
 	settings.TraceOnlyLogErr = cfg.TraceOnlyLogErr
-
-	if !utils.IsEmptyString(cfg.UserAgent) {
-		settings.UserAgent = cfg.UserAgent
-	}
 
 	if utils.IsEmptyString(cfg.HostName) {
 		panic("host_name不能为空...")
@@ -117,7 +133,15 @@ func newClient(cfg *config.HttpClientConf) *Client {
 		transport.TLSClientConfig = &tls.Config{RootCAs: pool}
 	}
 	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: cfg.InsecureSkipVerify}
-	settings.Transport = transport
+
+	settings.Transport = http.Transport{
+		TLSClientConfig:     transport.TLSClientConfig,
+		DisableKeepAlives:   cfg.DisableKeepAlives,
+		MaxIdleConns:        transport.MaxIdleConns,
+		MaxIdleConnsPerHost: transport.MaxIdleConnsPerHost,
+		MaxConnsPerHost:     transport.MaxConnsPerHost,
+		IdleConnTimeout:     transport.IdleConnTimeout,
+	}
 
 	retrier := NewNoRetrier()
 	if cfg.RetryCount > 0 {

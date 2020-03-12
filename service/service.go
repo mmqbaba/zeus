@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"path"
 	"runtime"
 	"strconv"
@@ -50,6 +51,8 @@ var swaggerDir string
 func init() {
 	log.SetPrefix("[zeus] ")
 	log.SetFlags(3)
+	// 此处使用os.Stdout覆盖回来
+	log.SetOutput(os.Stdout)
 
 	os := runtime.GOOS
 	if os == "linux" || os == "darwin" {
