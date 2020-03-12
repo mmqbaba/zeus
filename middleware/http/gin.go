@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/golang/protobuf/jsonpb"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/opentracing/opentracing-go"
@@ -19,8 +20,13 @@ import (
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
 	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
+	zeusvalidator "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/middleware/http/validator"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
+
+func init() {
+	// binding.Validator = zeusvalidator.New()
+}
 
 const ZEUS_CTX = "zeusctx"
 const ZEUS_HTTP_TAG_RAW_RSP = "zeus_http_tag_raw_rsp"
@@ -51,6 +57,17 @@ var ErrorResponse ErrorResponseHandler = defaultErrorResponse
 
 type SuccessResponseHandler func(c *gin.Context, rsp interface{})
 type ErrorResponseHandler func(c *gin.Context, err error)
+
+// SetCustomValidator 设置gin默认的数据校验器
+//
+// v为nil则使用框架定义的校验器
+func SetDefaultValidator(v binding.StructValidator) {
+	if v == nil {
+		binding.Validator = zeusvalidator.New()
+		return
+	}
+	binding.Validator = v
+}
 
 func NotFound(ng engine.Engine) gin.HandlerFunc {
 	return func(c *gin.Context) {
