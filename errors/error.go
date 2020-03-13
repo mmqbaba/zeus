@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
-    "strings"
-    "sync"
+	"strings"
+	"sync"
 
 	"github.com/golang/protobuf/jsonpb"
 	proto "github.com/golang/protobuf/proto"
@@ -59,6 +59,9 @@ func (e Error) Error() string {
 }
 
 func (e Error) toJSONString() string {
+	if e.ErrCode != ECodeSuccessed && len(strings.TrimSpace(e.TracerID)) > 0 {
+		e.ErrMsg = "[" + strings.TrimSpace(e.TracerID) + "]" + e.ErrMsg
+	}
 	if p, ok := e.Data.(proto.Message); ok {
 		bf := bytesBuffPool.Get().(*bytes.Buffer)
 		defer bytesBuffPool.Put(bf)
