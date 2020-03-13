@@ -19,16 +19,16 @@ replace (
 )
 
 require (
-	github.com/coreos/etcd v3.3.13+incompatible
+	github.com/coreos/etcd v3.3.17+incompatible
 	github.com/gin-gonic/gin v1.3.0
 	github.com/golang/protobuf v1.3.2
 	github.com/grpc-ecosystem/grpc-gateway v1.12.0
-	github.com/micro/go-micro v1.7.1-0.20190627135301-d8e998ad85fe
+	github.com/micro/go-micro v1.18.0
 	github.com/mwitkow/go-proto-validators v0.2.0
 	github.com/sirupsen/logrus v1.4.2
 	gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus v0.0.0
-	google.golang.org/genproto v0.0.0-20191028173616-919d9bdd9fe6
-	google.golang.org/grpc v1.25.0
+	google.golang.org/genproto v0.0.0-20191108220845-16a3f7862a1a
+	google.golang.org/grpc v1.25.1
 )
 
 `
