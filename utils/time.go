@@ -51,6 +51,7 @@ func ParseLocalTime(str string) (t time.Time, err error) {
 		}
 	}
 	err = errors.New("Can't parse string as time: " + str)
+	//err = errors.ECodeParseTime.ParseErr("Can't parse string as time: " + str)
 	return
 }
 
@@ -60,8 +61,8 @@ func FormatTime(t time.Time, layout string) string {
 	}
 	patterns := []string{
 		// 年
-		"yyyy", "2006", //完整表示的年份
-		"yy", "06", //2位数字表示的年份
+		"yyyy", "2006", // 完整表示的年份
+		"yy", "06", // 2位数字表示的年份
 		// 月
 		"MM", "01", // 数字表示的月份，有前导零
 		// 日

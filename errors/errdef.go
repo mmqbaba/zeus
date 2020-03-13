@@ -62,6 +62,7 @@ const (
 	ECodeJSONPBMarshal            ErrorCode = 10052
 	ECodeJSONPBUnmarshal          ErrorCode = 10053
 	ECodeHttpClient               ErrorCode = 10054
+	ECodeParseTime                ErrorCode = 10055
 )
 
 // ECodeMsg error message
@@ -121,6 +122,7 @@ var ECodeMsg = map[ErrorCode]string{
 	ECodeJSONPBMarshal:            "marshal jsonpb error",
 	ECodeJSONPBUnmarshal:          "unmarshal jsonpb error",
 	ECodeHttpClient:               "httpclient error",
+	ECodeParseTime:                "parse time error",
 }
 
 // ECodeStatus http status code
@@ -180,4 +182,5 @@ var ECodeStatus = map[ErrorCode]int{
 	ECodeJSONPBMarshal:            http.StatusOK,
 	ECodeJSONPBUnmarshal:          http.StatusOK,
 	ECodeHttpClient:               http.StatusOK,
+	ECodeParseTime:                http.StatusOK,
 }
