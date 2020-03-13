@@ -113,4 +113,6 @@ enum ErrCode {
     ECodeJSONPBUnmarshal = 10053; // unmarshal jsonpb error^http.StatusOK
     // httpclient错误
     ECodeHttpClient = 10054; // httpclient error^http.StatusOK
+    // parse time错误
+    ECodeParseTime = 10055; // parse time error^http.StatusOK
 }
