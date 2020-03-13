@@ -1,4 +1,4 @@
-package timeconv
+package utils
 
 import (
 	"fmt"
