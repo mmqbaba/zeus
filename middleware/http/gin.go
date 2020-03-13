@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
+	"strings"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -245,6 +246,9 @@ func defaultErrorResponse(c *gin.Context, err error) {
 			ff(c, err)
 			return
 		}
+	}
+	if len(strings.TrimSpace(zeusErr.TracerID)) > 0 {
+		zeusErr.ErrMsg = "[" + strings.TrimSpace(zeusErr.TracerID) + "]" + zeusErr.ErrMsg
 	}
 	zeusErr.Write(c.Writer)
 }
