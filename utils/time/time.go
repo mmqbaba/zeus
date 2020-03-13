@@ -1,7 +1,8 @@
-package utils
+package timeconv
 
 import (
-	"errors"
+	errors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 	"strings"
 	"time"
 )
@@ -50,13 +51,12 @@ func ParseLocalTime(str string) (t time.Time, err error) {
 			return
 		}
 	}
-	err = errors.New("Can't parse string as time: " + str)
-	//err = errors.ECodeParseTime.ParseErr("Can't parse string as time: " + str)
+	err = errors.ECodeParseTime.ParseErr("Can't parse string as time: " + str)
 	return
 }
 
 func FormatTime(t time.Time, layout string) string {
-	if IsEmptyString(layout) {
+	if utils.IsEmptyString(layout) {
 		return ""
 	}
 	patterns := []string{
