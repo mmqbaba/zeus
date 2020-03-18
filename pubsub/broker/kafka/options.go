@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"log"
 
 	"github.com/Shopify/sarama"
 	"github.com/micro/go-micro/broker"
@@ -45,6 +46,7 @@ func (h *consumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cl
 	for msg := range claim.Messages() {
 		var m broker.Message
 		if err := h.kopts.Codec.Unmarshal(msg.Value, &m); err != nil {
+			log.Println("[kafka-broker]h.kopts.Codec.Unmarshal err", err)
 			continue
 		}
 		if _, ok := m.Header["Micro-Id"]; !ok {
@@ -53,8 +55,8 @@ func (h *consumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cl
 				"Content-Type": "application/json",
 				"Broker":       "kafka",
 				"Topic":        msg.Topic,
-				// "Micro-Id":     "kafka-broker",
-				// "Micro-Topic":  msg.Topic,
+				"Micro-Id":     "kafka-broker",
+				"Micro-Topic":  msg.Topic, // fix bug go-micro v1.18.0 内部的rpcServer.HandleEvent通过header字段"Micro-Topic"获取topic, 这里需要赋值; 旧版本go-micro v1.7.1-0.20190627135301-d8e998ad85fe 使用rpcServer.createSubHandler处理
 			}
 			m.Body = msg.Value
 		}
@@ -67,6 +69,8 @@ func (h *consumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cl
 			sess: sess,
 		}); err == nil && h.subopts.AutoAck {
 			sess.MarkMessage(msg, "")
+		} else if err != nil {
+			log.Println("[kafka-broker] h.handler(&publication{}) err", err)
 		}
 	}
 	return nil
