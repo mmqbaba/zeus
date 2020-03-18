@@ -248,7 +248,7 @@ func defaultErrorResponse(c *gin.Context, err error) {
 		}
 	}
 	if len(strings.TrimSpace(zeusErr.TracerID)) > 0 {
-		zeusErr.ErrMsg = "[" + strings.TrimSpace(zeusErr.TracerID) + "]" + zeusErr.ErrMsg
+		zeusErr.ErrMsg = "[" + strings.TrimSpace(zeusErr.TracerID) + "] " + zeusErr.ErrMsg
 	}
 	zeusErr.Write(c.Writer)
 }

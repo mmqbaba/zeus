@@ -52,9 +52,9 @@ func New(code ErrorCode, msg, cause string) *Error {
 
 // Error for the error interface
 func (e Error) Error() string {
-    if strings.TrimSpace(e.Cause) == "" {
-        return e.ErrMsg
-    }
+	if strings.TrimSpace(e.Cause) == "" {
+		return e.ErrMsg
+	}
 	return e.ErrMsg + " (cause: " + e.Cause + ")"
 }
 
@@ -96,8 +96,8 @@ func (c ErrorCode) String() string {
 }
 
 // ParseErr 错误转义
-func (c ErrorCode) ParseErr(msg string) *Error {
-	return New(c, msg, "")
+func (c ErrorCode) ParseErr(msg ...string) *Error {
+	return New(c, strings.Join(msg, ", "), "")
 }
 
 func (c ErrorCode) Equal(err error) bool {
