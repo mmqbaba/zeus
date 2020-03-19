@@ -3,6 +3,7 @@ package kafka
 
 import (
 	"context"
+	"log"
 	"sync"
 
 	"github.com/Shopify/sarama"
@@ -10,7 +11,8 @@ import (
 	"github.com/micro/go-micro/broker"
 	"github.com/micro/go-micro/codec/json"
 	"github.com/micro/go-micro/config/cmd"
-	"github.com/micro/go-micro/util/log"
+
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 )
 
 type kBroker struct {
@@ -141,10 +143,20 @@ func (k *kBroker) Options() broker.Options {
 }
 
 func (k *kBroker) Publish(topic string, msg *broker.Message, opts ...broker.PublishOption) error {
-	b, err := k.opts.Codec.Marshal(msg)
-	if err != nil {
-		return err
+	var b []byte
+	var err error
+	zbconfig := k.opts.Context.Value(zbrokerConfigKey{})
+	if c, ok := zbconfig.(*config.Broker); ok && c != nil {
+		if c.PubWithOriginalData {
+			b = msg.Body
+		} else {
+			b, err = k.opts.Codec.Marshal(msg)
+			if err != nil {
+				return err
+			}
+		}
 	}
+
 	_, _, err = k.p.SendMessage(&sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.ByteEncoder(b),
@@ -194,12 +206,12 @@ func (k *kBroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 			select {
 			case err := <-cg.Errors():
 				if err != nil {
-					log.Log("consumer error:", err)
+					log.Println("consumer error:", err)
 				}
 			default:
 				err := cg.Consume(ctx, topics, h)
 				if err != nil {
-					log.Log(err)
+					log.Println(err)
 				}
 				if err == sarama.ErrClosedConsumerGroup {
 					return

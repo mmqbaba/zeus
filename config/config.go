@@ -126,19 +126,20 @@ type Obs struct {
 }
 
 type Broker struct {
-	Hosts           []string     `json:"hosts"`
-	Type            string       `json:"type"`
-	ExchangeName    string       `json:"exchange_name"`    // for rabbitmq
-	ExchangeDurable bool         `json:"exchange_durable"` // for rabbitmq
-	ExchangeKind    string       `json:"exchange_kind"`    // for rabbitmq
-	NeedAuth        bool         `json:"need_auth"`
-	ExternalAuth    bool         `json:"external_auth"`
-	User            string       `json:"user"`
-	Pwd             string       `json:"pwd"`
-	TopicPrefix     string       `json:"topic_prefix"`
-	SubscribeTopics []*TopicInfo `json:"subscribe_topics"` // 服务订阅的主题
-	EnablePub       bool         `json:"enable_pub"`       // 启用pub
-	EnableSub       bool         `json:"enable_sub"`       // 启用sub
+	Hosts               []string     `json:"hosts"`
+	Type                string       `json:"type"`
+	ExchangeName        string       `json:"exchange_name"`    // for rabbitmq
+	ExchangeDurable     bool         `json:"exchange_durable"` // for rabbitmq
+	ExchangeKind        string       `json:"exchange_kind"`    // for rabbitmq
+	NeedAuth            bool         `json:"need_auth"`
+	ExternalAuth        bool         `json:"external_auth"`
+	User                string       `json:"user"`
+	Pwd                 string       `json:"pwd"`
+	TopicPrefix         string       `json:"topic_prefix"`
+	SubscribeTopics     []*TopicInfo `json:"subscribe_topics"`      // 服务订阅的主题
+	EnablePub           bool         `json:"enable_pub"`            // 启用pub
+	EnableSub           bool         `json:"enable_sub"`            // 启用sub
+	PubWithOriginalData bool         `json:"pub_with_originaldata"` // 消息数据以原样结构发布
 }
 
 type TopicInfo struct {

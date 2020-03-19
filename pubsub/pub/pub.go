@@ -37,12 +37,18 @@ func (pc *pubClient) publish(ctx context.Context, header *brokerpb.Header, msg i
 	}
 	pc.wrPublishers.Lock()
 	defer pc.wrPublishers.Unlock()
-	p := micro.NewPublisher(topic, pc.cli)
-	pc.publishers[topic] = p
-	return p.Publish(ctx, msg)
+	if pc.publishers[topic] == nil {
+		p := micro.NewPublisher(topic, pc.cli)
+		pc.publishers[topic] = p
+	}
+	return pc.publishers[topic].Publish(ctx, msg)
 }
 
 // Publish 发布消息
+//
+// header 消息topic等相关信息
+//
+// msg 消息体(struct)
 func Publish(ctx context.Context, header *brokerpb.Header, msg interface{}) error {
 	if defaultPubClient == nil {
 		return errors.New("DefaultPubClient未初始化")

@@ -6,6 +6,8 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/micro/go-micro/broker"
+
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 )
 
 var (
@@ -15,6 +17,7 @@ var (
 
 type brokerConfigKey struct{}
 type clusterConfigKey struct{}
+type zbrokerConfigKey struct{}
 
 func BrokerConfig(c *sarama.Config) broker.Option {
 	return setBrokerOption(brokerConfigKey{}, c)
@@ -22,6 +25,10 @@ func BrokerConfig(c *sarama.Config) broker.Option {
 
 func ClusterConfig(c *sarama.Config) broker.Option {
 	return setBrokerOption(clusterConfigKey{}, c)
+}
+
+func ZBrokerConfig(c *config.Broker) broker.Option {
+	return setBrokerOption(zbrokerConfigKey{}, c)
 }
 
 type subscribeContextKey struct{}

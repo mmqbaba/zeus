@@ -97,7 +97,7 @@ func (c ErrorCode) String() string {
 
 // ParseErr 错误转义
 func (c ErrorCode) ParseErr(msg ...string) *Error {
-	return New(c, strings.Join(msg, ", "), "")
+	return New(c, strings.Join(msg, ". "), "")
 }
 
 func (c ErrorCode) Equal(err error) bool {

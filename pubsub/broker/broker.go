@@ -33,6 +33,7 @@ func New(conf *config.Broker) (b broker.Broker, err error) {
 			broker.Addrs(conf.Hosts...),
 			kafka.BrokerConfig(kconf),
 			kafka.ClusterConfig(kconf),
+			kafka.ZBrokerConfig(conf),
 		)
 		b = mb
 		return
