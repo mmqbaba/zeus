@@ -101,10 +101,12 @@ func (m *Manager) Publish(ctx context.Context, targetInstance string, header *br
 }
 
 // Release 释放broker连接资源
-func (m *Manager) Release() {
+func (m *Manager) Release() (err error) {
 	for k, pc := range m.pubs {
-		if err := pc.cli.Options().Broker.Disconnect(); err != nil {
+		if err = pc.cli.Options().Broker.Disconnect(); err != nil {
 			log.Printf("[Manager.Release] broker: %s, pc.cli.Options().Broker.Disconnect() err: %s\n", k, err)
+			return
 		}
 	}
+	return
 }
