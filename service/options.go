@@ -125,8 +125,8 @@ func WithSwaggerJSONFileName(s string) Option {
 
 // ParseCommandLine ...
 func ParseCommandLine() (options Options, err error) {
-	flag.IntVar(&options.Port, "port", 9090, "Port to listen on")
-	flag.IntVar(&options.ApiPort, "apiPort", 8081, "Port to provide api on")
+	flag.IntVar(&options.Port, "port", 0, "Port to listen on")               // 0-使用随机端口
+	flag.IntVar(&options.ApiPort, "apiPort", 8081, "Port to provide api on") // 0-使用随机端口
 
 	// flag.StringVar(&options.Interface, "interface", "", "Interface to bind to")
 	flag.StringVar(&options.ApiInterface, "apiInterface", "", "Interface to for API to bind to")
