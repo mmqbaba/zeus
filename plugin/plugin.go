@@ -1,11 +1,13 @@
 package plugin
 
 import (
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
 	"log"
 	"net/http"
 
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
+
+	"github.com/google/gops/agent"
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/client"
 	"github.com/opentracing/opentracing-go"
@@ -59,6 +61,7 @@ func (c *Container) Init(appcfg *config.AppConf) {
 	c.initTifClient(appcfg)
 	c.initMysql(appcfg.MysqlSource)
 	c.initHttpClient(appcfg.HttpClient)
+	c.initGoPS(&appcfg.GoPS)
 	log.Println("[Container.Init] finish")
 	c.appcfg = *appcfg
 }
@@ -80,6 +83,9 @@ func (c *Container) Reload(appcfg *config.AppConf) {
 	c.initTifClient(appcfg)
 	c.initMysql(appcfg.MysqlSource)
 	c.initHttpClient(appcfg.HttpClient)
+	if c.appcfg.GoPS != appcfg.GoPS {
+		c.reloadGoPS(&appcfg.GoPS)
+	}
 	log.Println("[Container.Reload] finish")
 	c.appcfg = *appcfg
 }
@@ -289,4 +295,23 @@ func (c *Container) initHttpClient(conf map[string]config.HttpClientConf) {
 
 func (c *Container) GetHttpClient() zhttpclient.HttpClient {
 	return c.httpClient
+}
+
+func (c *Container) initGoPS(conf *config.GoPS) {
+	// 启动进程监控
+	if conf.Enable {
+		log.Println("run gops agent")
+		if err := agent.Listen(agent.Options{
+			Addr:            conf.Addr,
+			ConfigDir:       conf.ConfigDir,
+			ShutdownCleanup: conf.ShutdownCleanup,
+		}); err != nil {
+			log.Println("run gops agent err:", err)
+		}
+	}
+}
+
+func (c *Container) reloadGoPS(conf *config.GoPS) {
+	agent.Close()
+	c.initGoPS(conf)
 }

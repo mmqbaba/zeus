@@ -37,6 +37,7 @@ type AppConf struct {
 	CurrentBusIdSpIdMap map[string]string         `json:"current_busid_spid_map,omitempty"`
 	GoMicro             GoMicro                   `json:"go_micro"`
 	HttpClient          map[string]HttpClientConf `json:"http_client"`
+	GoPS                GoPS                      `json:"gops"`
 	UpdateTime          time.Time                 `json:"-"`
 }
 
@@ -158,4 +159,11 @@ type GoMicro struct {
 	RegistryAddrs      []string `json:"registry_addrs"`       // etcd/consul address
 	RegistryAuthUser   string   `json:"registry_authuser"`
 	RegistryAuthPwd    string   `json:"registry_authpwd"`
+}
+
+type GoPS struct {
+	Addr            string `json:"addr"`
+	ConfigDir       string `json:"config_dir"`
+	ShutdownCleanup bool   `json:"shutdown_cleanup"`
+	Enable          bool   `json:"enable"`
 }
