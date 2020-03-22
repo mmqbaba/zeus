@@ -134,10 +134,14 @@ func newRotateFileOutput(logConf *config.LogConf, level logrus.Level) (rl *rotat
 		duration = 24 * time.Hour
 		filename = filepath.Join(logConf.LogDir, "%Y%m%d"+"."+strings.ToLower(level.String())+".log")
 	}
+	var maxage time.Duration = -1
+	if logConf.MaxAge >= 0 {
+		maxage = time.Duration(logConf.MaxAge) * time.Second
+	}
 	logf, err := rotatelogs.New(
 		filename,
 		rotatelogs.WithRotationTime(duration),
-		rotatelogs.WithMaxAge(-1), //默认每7天清除下日志文件，需要设置为rotatelogs.WithMaxAge(-1)才不会清除日志
+		rotatelogs.WithMaxAge(maxage), //默认每7天清除下日志文件，需要设置为rotatelogs.WithMaxAge(-1)才不会清除日志
 	)
 	if err != nil {
 		fmt.Printf("failed to create rotatelogs: %s", err)

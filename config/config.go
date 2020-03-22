@@ -97,6 +97,7 @@ type LogConf struct {
 	Format              string `json:"format"`
 	RotationTime        string `json:"rotation_time"`
 	LogDir              string `json:"log_dir"`
+	MaxAge              int64  `json:"max_age"` // 单位秒
 	DisableReportCaller bool   `json:"disable_report_caller"`
 }
 
