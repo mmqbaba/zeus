@@ -21,6 +21,9 @@ type Options struct {
 	Port int
 	// Interface string
 
+	// 对外部提供访问的地址(注册到服务发现中心)，格式[ip:port]
+	Advertise string
+
 	Log       string
 	LogFormat string
 	LogLevel  string
@@ -130,6 +133,8 @@ func ParseCommandLine() (options Options, err error) {
 
 	// flag.StringVar(&options.Interface, "interface", "", "Interface to bind to")
 	flag.StringVar(&options.ApiInterface, "apiInterface", "", "Interface to for API to bind to")
+
+	flag.StringVar(&options.Advertise, "serverAdvertise", "", "Server advertise [ip:port]. example: 192.168.1.103:8989")
 
 	flag.StringVar(&options.Log, "log", "", "logging to use (console, file, redis, kafka, syslog or logstash)")
 	flag.StringVar(&options.LogFormat, "logFormat", "", "log fromat to use (text, json)")

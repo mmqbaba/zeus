@@ -6,7 +6,6 @@ import (
 	"log"
 	"time"
 
-	// grpcserver "github.com/micro/go-grpc/server"
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/registry"
 	"github.com/micro/go-micro/server"
@@ -29,9 +28,7 @@ func NewService(ctx context.Context, conf config.GoMicro, opts ...micro.Option) 
 		reg = registry.DefaultRegistry
 	}
 
-	// grpcS := grpcserver.NewServer(
-	// 	server.Advertise(conf.Advertise),
-	// )
+	// TODO: Advertise配置不能使用公共的etcd配置，会导致bug，需修复。应该通过获取运行所在的机器的网卡ip赋值（环境变量或启动的cli命令行参数）
 	grpcS := grpc.NewServer(
 		server.Advertise(conf.Advertise),
 	)

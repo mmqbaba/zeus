@@ -281,6 +281,9 @@ func (s *Service) initServer() (err error) {
 	}
 	microConf.ServerPort = serverPort // 最终值为0，使用随机端口
 
+	// 注意：Advertise不要使用etcd里的公共配置
+	microConf.Advertise = s.options.Advertise
+
 	serviceName := microConf.ServiceName
 	if utils.IsEmptyString(serviceName) {
 		serviceName = s.options.ServiceName
