@@ -1,9 +1,11 @@
 package zipkin
 
 import (
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	"log"
 	"os"
+
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+
 	//"github.com/micro/go-micro/metadata"
 	"github.com/opentracing/opentracing-go"
 	zipkin "github.com/openzipkin/zipkin-go-opentracing"
@@ -12,7 +14,11 @@ import (
 
 func InitTracer(cfg *config.Trace) error {
 	zipkinURL := cfg.TraceUrl
-	hostPort, _ := os.Hostname()
+	hostPort, err := os.Hostname()
+	if err != nil {
+		log.Println("InitTracer hostPort, err := os.Hostname(), err:", err)
+	}
+	log.Println("InitTracer hostPort, err := os.Hostname(), hostPort:", hostPort)
 	serviceName := cfg.ServiceName
 	rate := cfg.Rate
 	sampler := cfg.Sampler
@@ -41,6 +47,7 @@ func InitTracer(cfg *config.Trace) error {
 	case "mod":
 		samplerOpt = zipkin.WithSampler(zipkin.ModuloSampler(mod))
 	}
+	log.Println("InitTracer if hostPort was a domainname then zipkin.NewRecorder resolver lookupip addr for hostPort:", hostPort)
 	tracer, err := zipkin.NewTracer(
 		zipkin.NewRecorder(collector, false, hostPort, serviceName),
 		//zipkin.ClientServerSameSpan(false),
