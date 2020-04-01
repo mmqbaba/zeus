@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -91,6 +92,7 @@ func (w bodyLogWriter) Write(b []byte) (int, error) {
 func Access(ng engine.Engine) gin.HandlerFunc {
 	zeusEngine = ng
 	return func(c *gin.Context) {
+		taccessstart := time.Now()
 		logger := ng.GetContainer().GetLogger()
 		ctx := c.Request.Context()
 		ctx = zeusctx.GinCtxToContext(ctx, c)
@@ -162,6 +164,13 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		c.Set(ZEUS_CTX, ctx)
 		l.Debugln("access start", c.Request.URL.Path)
 		c.Next()
+		l.WithFields(logrus.Fields{
+			"accessType": "http",
+			"method":     c.Request.Method,
+			"url":        c.Request.RequestURI,
+			"duration":   time.Since(taccessstart).String(),
+			"status":     c.Writer.Status(),
+		}).Infoln("access end")
 		l.Debugln("access end", c.Request.URL.Path)
 	}
 }

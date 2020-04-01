@@ -10,7 +10,7 @@ import (
 type Hook struct {
 	levels    []logrus.Level
 	formatter logrus.Formatter
-	output        map[logrus.Level]*rotatelogs.RotateLogs
+	output    map[logrus.Level]*rotatelogs.RotateLogs
 }
 
 func NewRotateFileHook(levels []logrus.Level, formatter logrus.Formatter, output map[logrus.Level]*rotatelogs.RotateLogs) (*Hook, error) {
