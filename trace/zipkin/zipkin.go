@@ -14,6 +14,7 @@ import (
 
 func InitTracer(cfg *config.Trace) error {
 	zipkinURL := cfg.TraceUrl
+	// TODO: 优化。zipkin hostPort考虑使用外部配置传入（运行的程序的[ip:port]）（命令行或环境变量或获取运行物理机ip）
 	hostPort, err := os.Hostname()
 	if err != nil {
 		log.Println("InitTracer hostPort, err := os.Hostname(), err:", err)
