@@ -48,11 +48,12 @@ func NewContainer(ctx context.Context, categoryName string) zcontainer.Container
 
 // RegistryProvidor 注册容器提供者，用于扩展containerprovidor
 func RegistryProvidor(name string, providor NewContainerFn) {
-	if len(strings.TrimSpace(name)) == 0 {
-		panic(fmt.Errorf("name can not be empty"))
+	if len(strings.TrimSpace(name)) == 0 || providor == nil {
+		panic(fmt.Errorf("name was empty or providor was nil"))
 	}
 	_, ok := containerProvidors[name]
 	if ok {
 		panic(fmt.Errorf("the container providor:%s was already existed", name))
 	}
+	containerProvidors[name] = providor
 }
