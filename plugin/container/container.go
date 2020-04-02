@@ -41,7 +41,7 @@ func NewContainer(ctx context.Context, categoryName string) zcontainer.Container
 	}
 	p, ok := containerProvidors[name]
 	if !ok || p == nil {
-		panic(fmt.Errorf("unsupport container category: %s", name))
+		panic(fmt.Errorf("unsupport containerprovidor categoryName: %s", name))
 	}
 	return p(ctx)
 }
