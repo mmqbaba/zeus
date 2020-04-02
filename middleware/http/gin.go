@@ -92,7 +92,7 @@ func (w bodyLogWriter) Write(b []byte) (int, error) {
 func Access(ng engine.Engine) gin.HandlerFunc {
 	zeusEngine = ng
 	return func(c *gin.Context) {
-		taccessstart := time.Now()
+		accessstart := time.Now()
 		logger := ng.GetContainer().GetLogger()
 		ctx := c.Request.Context()
 		ctx = zeusctx.GinCtxToContext(ctx, c)
@@ -149,7 +149,8 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			span.Finish()
 		}()
 		////// zipkin finish
-		l = l.WithFields(logrus.Fields{"tracerid": span.Context().(zipkintracer.SpanContext).TraceID.ToHex()})
+		tracerid := span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
+		l = l.WithFields(logrus.Fields{"tracerid": tracerid})
 		ctx = zeusctx.LoggerToContext(spnctx, l)
 		ctx = zeusctx.GMClientToContext(ctx, ng.GetContainer().GetGoMicroClient())
 		if ng.GetContainer().GetRedisCli() != nil {
@@ -164,14 +165,20 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		c.Set(ZEUS_CTX, ctx)
 		l.Debugln("access start", c.Request.URL.Path)
 		c.Next()
-		l.WithFields(logrus.Fields{
-			"accessType": "http",
-			"method":     c.Request.Method,
-			"url":        c.Request.RequestURI,
-			"duration":   time.Since(taccessstart).String(),
-			"status":     c.Writer.Status(),
-		}).Infoln("access end")
 		l.Debugln("access end", c.Request.URL.Path)
+		if cfg.Get().AccessLog.EnableRecorded {
+			aclog := ng.GetContainer().GetAccessLogger()
+			// TODO: 访问日志需要使用单独的logger进行记录
+			aclog.WithFields(logrus.Fields{
+				"url":        c.Request.RequestURI,
+				"method":     c.Request.Method,
+				"status":     c.Writer.Status(),
+				"duration":   time.Since(accessstart).String(),
+				"accessType": "http",
+				"tag":        "accesslog",
+				"tracerid":   tracerid,
+			}).Infoln("access finished")
+		}
 	}
 }
 

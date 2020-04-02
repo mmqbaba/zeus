@@ -1,8 +1,9 @@
 package zcontainer
 
 import (
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
 	"net/http"
+
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
 
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/client"
@@ -22,6 +23,7 @@ type Container interface {
 	SetGoMicroClient(cli client.Client)
 	GetGoMicroClient() client.Client
 	GetLogger() *logrus.Logger
+	GetAccessLogger() *logrus.Logger
 	GetTracer() *tracing.TracerWrap
 	SetServiceID(id string)
 	GetServiceID() string

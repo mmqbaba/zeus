@@ -34,6 +34,7 @@ type Container struct {
 	mongo         zmongo.Mongo
 	gomicroClient client.Client
 	logger        *logrus.Logger
+	accessLogger  *logrus.Logger
 	tracer        *tracing.TracerWrap
 	// http
 	httpHandler http.Handler
@@ -56,6 +57,7 @@ func (c *Container) Init(appcfg *config.AppConf) {
 	log.Println("[Container.Init] start")
 	c.initRedis(&appcfg.Redis)
 	c.initLogger(&appcfg.LogConf)
+	c.initAccessLogger(&appcfg.AccessLog)
 	c.initTracer(&appcfg.Trace)
 	c.initMongo(&appcfg.MongoDB)
 	c.initTifClient(appcfg)
@@ -73,6 +75,9 @@ func (c *Container) Reload(appcfg *config.AppConf) {
 	}
 	if c.appcfg.LogConf != appcfg.LogConf {
 		c.reloadLogger(&appcfg.LogConf)
+	}
+	if c.appcfg.AccessLog.Conf != appcfg.AccessLog.Conf {
+		c.reloadAccessLogger(&appcfg.AccessLog)
 	}
 	if c.appcfg.Trace != appcfg.Trace {
 		c.reloadTracer(&appcfg.Trace)
@@ -140,6 +145,24 @@ func (c *Container) reloadLogger(cfg *config.LogConf) {
 
 func (c *Container) GetLogger() *logrus.Logger {
 	return c.logger
+}
+
+// access logger
+func (c *Container) initAccessLogger(cfg *config.AccessLog) {
+	l, err := zeuslog.New(&cfg.Conf)
+	if err != nil {
+		log.Println("initAccessLogger err:", err)
+		return
+	}
+	c.accessLogger = l.Logger
+}
+
+func (c *Container) reloadAccessLogger(cfg *config.AccessLog) {
+	c.initAccessLogger(cfg)
+}
+
+func (c *Container) GetAccessLogger() *logrus.Logger {
+	return c.accessLogger
 }
 
 // func (c *Container) SetDBPool(p *sql.DB) {

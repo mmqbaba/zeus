@@ -22,6 +22,7 @@ type Entry struct {
 // AppConf 应用的具体配置
 type AppConf struct {
 	LogConf             LogConf                   `json:"log_conf" toml:"log_conf" yaml:"log_conf"`
+	AccessLog           AccessLog                 `json:"accesslog" toml:"accesslog" yaml:"accesslog"`
 	Redis               Redis                     `json:"redis"`
 	MongoDB             MongoDB                   `json:"mongodb"`
 	MongoDBSource       map[string]MongoDB        `json:"mongodb_source"`
@@ -100,6 +101,11 @@ type LogConf struct {
 	LogDir              string `json:"log_dir"`
 	MaxAge              int64  `json:"max_age"` // 单位秒
 	DisableReportCaller bool   `json:"disable_report_caller"`
+}
+
+type AccessLog struct {
+	Conf           LogConf `json:"conf"`
+	EnableRecorded bool    `json:"enable_recorded"` // 记录访问日志
 }
 
 type HttpClientConf struct {
