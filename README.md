@@ -1,6 +1,4 @@
-# zeus
-
-公共库
+# zeus公共库
 
 # 代码生成工具 tools/bin/gen-zeus
 
