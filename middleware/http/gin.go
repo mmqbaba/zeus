@@ -91,6 +91,7 @@ func (w bodyLogWriter) Write(b []byte) (int, error) {
 
 func Access(ng engine.Engine) gin.HandlerFunc {
 	zeusEngine = ng
+	aclog := ng.GetContainer().GetAccessLogger()
 	return func(c *gin.Context) {
 		accessstart := time.Now()
 		tracerid := ""
@@ -107,7 +108,6 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		}
 		defer func() {
 			if cfg.Get().AccessLog.EnableRecorded {
-				aclog := ng.GetContainer().GetAccessLogger()
 				// TODO: 访问日志需要使用单独的logger进行记录
 				aclog.WithFields(logrus.Fields{
 					"url":        c.Request.RequestURI,
