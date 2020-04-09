@@ -4,7 +4,6 @@
 *.exe~
 *.log
 *.logger.Log
-go.sum
 ~$
 !tools/bin/*.exe
 *.out
