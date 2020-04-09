@@ -93,6 +93,7 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 	zeusEngine = ng
 	return func(c *gin.Context) {
 		accessstart := time.Now()
+		tracerid := ""
 		logger := ng.GetContainer().GetLogger()
 		ctx := c.Request.Context()
 		ctx = zeusctx.GinCtxToContext(ctx, c)
@@ -101,17 +102,35 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		cfg, err := ng.GetConfiger()
 		if err != nil {
 			l.Error(err)
+			ErrorResponse(c, err)
 			return
 		}
+		defer func() {
+			if cfg.Get().AccessLog.EnableRecorded {
+				aclog := ng.GetContainer().GetAccessLogger()
+				// TODO: 访问日志需要使用单独的logger进行记录
+				aclog.WithFields(logrus.Fields{
+					"url":        c.Request.RequestURI,
+					"method":     c.Request.Method,
+					"status":     c.Writer.Status(),
+					"duration":   time.Since(accessstart).String(),
+					"accessType": "http",
+					"tag":        "accesslog",
+					"tracerid":   tracerid,
+				}).Infoln("access finished")
+			}
+		}()
 		name := c.Request.URL.Path
 		tracer := ng.GetContainer().GetTracer()
 		if tracer == nil {
 			l.Error("tracer is nil")
+			ErrorResponse(c, zeuserrors.ECodeInternal.ParseErr("tracer is nil"))
 			return
 		}
 		spnctx, span, err := tracer.StartSpanFromContext(ctx, name)
 		if err != nil {
 			l.Error(err)
+			ErrorResponse(c, err)
 			return
 		}
 
@@ -149,7 +168,7 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			span.Finish()
 		}()
 		////// zipkin finish
-		tracerid := span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
+		tracerid = span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
 		l = l.WithFields(logrus.Fields{"tracerid": tracerid})
 		ctx = zeusctx.LoggerToContext(spnctx, l)
 		ctx = zeusctx.GMClientToContext(ctx, ng.GetContainer().GetGoMicroClient())
@@ -166,19 +185,19 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		l.Debugln("access start", c.Request.URL.Path)
 		c.Next()
 		l.Debugln("access end", c.Request.URL.Path)
-		if cfg.Get().AccessLog.EnableRecorded {
-			aclog := ng.GetContainer().GetAccessLogger()
-			// TODO: 访问日志需要使用单独的logger进行记录
-			aclog.WithFields(logrus.Fields{
-				"url":        c.Request.RequestURI,
-				"method":     c.Request.Method,
-				"status":     c.Writer.Status(),
-				"duration":   time.Since(accessstart).String(),
-				"accessType": "http",
-				"tag":        "accesslog",
-				"tracerid":   tracerid,
-			}).Infoln("access finished")
-		}
+		// if cfg.Get().AccessLog.EnableRecorded {
+		// 	aclog := ng.GetContainer().GetAccessLogger()
+		// 	// TODO: 访问日志需要使用单独的logger进行记录
+		// 	aclog.WithFields(logrus.Fields{
+		// 		"url":        c.Request.RequestURI,
+		// 		"method":     c.Request.Method,
+		// 		"status":     c.Writer.Status(),
+		// 		"duration":   time.Since(accessstart).String(),
+		// 		"accessType": "http",
+		// 		"tag":        "accesslog",
+		// 		"tracerid":   tracerid,
+		// 	}).Infoln("access finished")
+		// }
 	}
 }
 
