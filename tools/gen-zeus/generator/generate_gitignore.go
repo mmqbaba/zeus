@@ -13,7 +13,6 @@ func GenerateGitignore(PD *Generator, rootdir string) (err error) {
 *.exe~
 *.log
 *.logger.Log
-go.sum
 ~$
 %s_server
 
