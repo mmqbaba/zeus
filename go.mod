@@ -6,7 +6,6 @@ replace (
 	github.com/golang/lint => golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3
 	github.com/hashicorp/consul => github.com/hashicorp/consul v1.5.1
 	github.com/testcontainers/testcontainer-go => github.com/testcontainers/testcontainers-go v0.0.4
-	github.com/ugorji/go => github.com/ugorji/go v1.1.4
 )
 
 require (
@@ -16,7 +15,7 @@ require (
 	github.com/elazarl/go-bindata-assetfs v1.0.0
 	github.com/emicklei/proto v1.8.0
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
-	github.com/gin-gonic/gin v1.4.0
+	github.com/gin-gonic/gin v1.5.0
 	github.com/go-playground/validator/v10 v10.2.0
 	github.com/go-redis/redis v6.15.6+incompatible
 	github.com/go-sql-driver/mysql v1.4.1
