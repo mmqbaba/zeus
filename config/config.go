@@ -85,12 +85,16 @@ type MysqlDB struct {
 }
 
 type EBus struct {
-	Hosts     []string               `json:"hosts"`
-	Services  map[string]interface{} `json:"services"`
-	PaasId    string                 `json:"paas_id"`
-	PaasToken string                 `json:"paas_token"`
-	SpId      string                 `json:"sp_id"`
-	PathMap   map[string]string      `json:"path_map"`
+	MaxIdleConns        int                    `json:"max_idle_conns"`
+	MaxIdleConnsPerHost int                    `json:"max_idle_conns_per_host"`
+	MaxConnsPerHost     int                    `json:"max_conns_per_host"`
+	IdleConnTimeout     time.Duration          `json:"idle_conn_timeout"` // second
+	Hosts               []string               `json:"hosts"`
+	Services            map[string]interface{} `json:"services"`
+	PaasId              string                 `json:"paas_id"`
+	PaasToken           string                 `json:"paas_token"`
+	SpId                string                 `json:"sp_id"`
+	PathMap             map[string]string      `json:"path_map"`
 }
 
 type LogConf struct {

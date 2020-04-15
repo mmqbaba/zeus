@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"math/rand"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -24,9 +25,42 @@ import (
 )
 
 var appconf *config.AppConf
+var hclient *http.Client
 
 func InitClient(conf *config.AppConf) {
 	appconf = conf
+	transport := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+	if conf.EBus.IdleConnTimeout != 0 {
+		transport.IdleConnTimeout = conf.EBus.IdleConnTimeout * time.Second
+	}
+	if conf.EBus.MaxConnsPerHost != 0 {
+		transport.MaxConnsPerHost = conf.EBus.MaxConnsPerHost
+	}
+	if conf.EBus.MaxIdleConns != 0 {
+		transport.MaxIdleConns = conf.EBus.MaxIdleConns
+	}
+	if conf.EBus.MaxIdleConnsPerHost != 0 {
+		transport.MaxIdleConnsPerHost = conf.EBus.MaxIdleConnsPerHost
+	}
+	tc := &http.Client{
+		Transport: transport,
+	}
+	if hclient != nil {
+		hclient.CloseIdleConnections()
+	}
+	hclient = tc
 }
 
 type IdentificationInfo struct {
@@ -101,7 +135,7 @@ func Request(ctx context.Context, method, url, postData string, headers map[stri
 	if len(contentType) == 0 {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	client := &http.Client{}
+	client := hclient
 	httpRsp, err := client.Do(req)
 	if err != nil {
 		logger.Errorf("client.do err:%+v", err)
@@ -163,7 +197,7 @@ func TifRequest(ctx context.Context, method, url, postData string, info *Identif
 	if len(contentType) == 0 {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	client := &http.Client{}
+	client := hclient
 	httpRsp, err := client.Do(req)
 	if err != nil {
 		logger.Errorf("client.do err:%+v", err)
