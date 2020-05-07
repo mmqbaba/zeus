@@ -114,7 +114,7 @@ type AccessLog struct {
 
 type HttpClientConf struct {
 	InstanceName          string        `json:"instancename"`
-	HostName              string        `json:"host_name"`
+	HostName              []string      `json:"host_name"`
 	RetryCount            uint32        `json:"retry_count"`
 	BackoffInterval       time.Duration `json:"backoff_interval"`
 	MaximumJitterInterval time.Duration `json:"maximum_jitter_interval"`

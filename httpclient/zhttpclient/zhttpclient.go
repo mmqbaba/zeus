@@ -3,7 +3,6 @@ package zhttpclient
 import (
 	"context"
 	"io"
-	"net/http"
 )
 
 type HttpClient interface {
@@ -11,9 +10,9 @@ type HttpClient interface {
 }
 
 type Client interface {
-	Get(ctx context.Context, url string, headers http.Header) ([]byte, error)
-	Post(ctx context.Context, url string, body io.Reader, headers http.Header) ([]byte, error)
-	Put(ctx context.Context, url string, body io.Reader, headers http.Header) ([]byte, error)
-	Patch(ctx context.Context, url string, body io.Reader, headers http.Header) ([]byte, error)
-	Delete(ctx context.Context, url string, headers http.Header) ([]byte, error)
+	Get(ctx context.Context, url string, headers map[string]string) ([]byte, error)
+	Post(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error)
+	Put(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error)
+	Patch(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error)
+	Delete(ctx context.Context, url string, headers map[string]string) ([]byte, error)
 }

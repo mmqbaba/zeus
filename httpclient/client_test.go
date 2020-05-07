@@ -13,7 +13,7 @@ func TestClient_Get(t *testing.T) {
 	cfg := map[string]conf.HttpClientConf{
 		"test0": conf.HttpClientConf{
 			InstanceName:          "test0",
-			HostName:              "http://ip-api.com",
+			HostName:              []string{"http://ip-api.com", "http://ip-api2.com", "http://ip-api3.com"},
 			RetryCount:            2,
 			BackoffInterval:       0,
 			MaximumJitterInterval: 2000,
@@ -44,7 +44,7 @@ func TestClient_Get(t *testing.T) {
 	type args struct {
 		ctx     context.Context
 		url     string
-		headers http.Header
+		headers map[string]string
 	}
 	tests := []struct {
 		name    string
@@ -63,7 +63,7 @@ func TestClient_Get(t *testing.T) {
 			args{
 				ctx,
 				"/json/?lang=zh-CN",
-				http.Header{},
+				map[string]string{"Content-Type": "application/json"},
 			},
 			[]byte{},
 			false,
@@ -78,7 +78,7 @@ func TestClient_Get(t *testing.T) {
 			args{
 				ctx,
 				"/json/?lang=zh-CN",
-				http.Header{},
+				map[string]string{"Content-Type": "application/json"},
 			},
 			[]byte{},
 			false,
@@ -93,7 +93,52 @@ func TestClient_Get(t *testing.T) {
 			args{
 				ctx,
 				"/json/?lang=zh-CN",
-				http.Header{},
+				nil,
+			},
+			[]byte{},
+			false,
+		},
+		{
+			"test-get-3",
+			fields{
+				client.client,
+				client.settings,
+				client.retrier,
+			},
+			args{
+				ctx,
+				"/json/?lang=zh-CN",
+				nil,
+			},
+			[]byte{},
+			false,
+		},
+		{
+			"test-get-4",
+			fields{
+				client.client,
+				client.settings,
+				client.retrier,
+			},
+			args{
+				ctx,
+				"/json/?lang=zh-CN",
+				nil,
+			},
+			[]byte{},
+			false,
+		},
+		{
+			"test-get-5",
+			fields{
+				client.client,
+				client.settings,
+				client.retrier,
+			},
+			args{
+				ctx,
+				"/json/?lang=zh-CN",
+				nil,
 			},
 			[]byte{},
 			false,

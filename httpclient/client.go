@@ -17,6 +17,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"time"
 )
@@ -32,7 +33,7 @@ type httpClientSettings struct {
 	Transport       http.Transport
 	RetryCount      uint32
 	Timeout         time.Duration
-	Host            string
+	Hosts           []string
 	TraceOnlyLogErr bool
 }
 
@@ -97,10 +98,10 @@ func newClient(cfg *config.HttpClientConf) *Client {
 
 	settings.TraceOnlyLogErr = cfg.TraceOnlyLogErr
 
-	if utils.IsEmptyString(cfg.HostName) {
+	if len(cfg.HostName) == 0 {
 		panic("host_name不能为空...")
 	}
-	settings.Host = cfg.HostName
+	settings.Hosts = cfg.HostName
 
 	if cfg.RetryCount != 0 {
 		settings.RetryCount = cfg.RetryCount
@@ -159,61 +160,63 @@ func newClient(cfg *config.HttpClientConf) *Client {
 	return &client
 }
 
-func (c *Client) Get(ctx context.Context, url string, headers http.Header) ([]byte, error) {
-	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%v%v", c.settings.Host, url), nil)
+func (c *Client) Get(ctx context.Context, url string, headers map[string]string) ([]byte, error) {
+	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%v%v", c.getRandomHost(), url), nil)
 	if err != nil {
 		return nil, errors.ECodeHttpClient.ParseErr("GET - request creation failed")
 	}
-	request.Header = headers
 
-	return c.do(ctx, request)
+	return c.do(ctx, request, headers)
 }
 
-func (c *Client) Post(ctx context.Context, url string, body io.Reader, headers http.Header) ([]byte, error) {
-	request, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%v%v", c.settings.Host, url), body)
+func (c *Client) Post(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error) {
+	request, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%v%v", c.getRandomHost(), url), body)
 	if err != nil {
 		return nil, errors.ECodeHttpClient.ParseErr("POST - request creation failed")
 	}
 
-	request.Header = headers
-
-	return c.do(ctx, request)
+	return c.do(ctx, request, headers)
 }
 
-func (c *Client) Put(ctx context.Context, url string, body io.Reader, headers http.Header) ([]byte, error) {
-	request, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%v%v", c.settings.Host, url), body)
+func (c *Client) Put(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error) {
+	request, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%v%v", c.getRandomHost(), url), body)
 	if err != nil {
 		return nil, errors.ECodeHttpClient.ParseErr("PUT - request creation failed")
 	}
 
-	request.Header = headers
-
-	return c.do(ctx, request)
+	return c.do(ctx, request, headers)
 }
 
-func (c *Client) Patch(ctx context.Context, url string, body io.Reader, headers http.Header) ([]byte, error) {
-	request, err := http.NewRequest(http.MethodPatch, fmt.Sprintf("%v%v", c.settings.Host, url), body)
+func (c *Client) Patch(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error) {
+	request, err := http.NewRequest(http.MethodPatch, fmt.Sprintf("%v%v", c.getRandomHost(), url), body)
 	if err != nil {
 		return nil, errors.ECodeHttpClient.ParseErr("PATCH - request creation failed")
 	}
 
-	request.Header = headers
-
-	return c.do(ctx, request)
+	return c.do(ctx, request, headers)
 }
 
-func (c *Client) Delete(ctx context.Context, url string, headers http.Header) ([]byte, error) {
-	request, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("%v%v", c.settings.Host, url), nil)
+func (c *Client) Delete(ctx context.Context, url string, headers map[string]string) ([]byte, error) {
+	request, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("%v%v", c.getRandomHost(), url), nil)
 	if err != nil {
 		return nil, errors.ECodeHttpClient.ParseErr("DELETE - request creation failed")
 	}
 
-	request.Header = headers
-
-	return c.do(ctx, request)
+	return c.do(ctx, request, headers)
 }
 
-func (c *Client) do(ctx context.Context, request *http.Request) (rsp []byte, err error) {
+func (c *Client) getRandomHost() string {
+	return c.settings.Hosts[rand.Intn(len(c.settings.Hosts))]
+}
+
+func (c *Client) do(ctx context.Context, request *http.Request, headers map[string]string) (rsp []byte, err error) {
+
+	if len(headers) > 0 {
+		for k, v := range headers {
+			request.Header.Add(k, v)
+		}
+	}
+
 	//request.Close = true
 	loger := zeusctx.ExtractLogger(ctx)
 	tracer := tracing.NewTracerWrap(opentracing.GlobalTracer())
