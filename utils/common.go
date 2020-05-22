@@ -275,7 +275,7 @@ func IsBlank(value reflect.Value) bool {
 
 //mysql fields transfer tool
 
-func GetFields(model interface{}) (ret []string) {
+func GetFieldsForSql(model interface{}) (ret []string) {
 	tmp := make([]string, 0)
 	getType := reflect.TypeOf(model)
 	for i := 0; i < getType.NumField(); i++ {
@@ -290,7 +290,7 @@ func GetFields(model interface{}) (ret []string) {
 	return
 }
 
-func GetFieldMap(model interface{}) (ret map[string]string) {
+func GetFieldMapForSql(model interface{}) (ret map[string]string) {
 	tmp := make(map[string]string)
 	getType := reflect.TypeOf(model)
 	for i := 0; i < getType.NumField(); i++ {
@@ -305,12 +305,12 @@ func GetFieldMap(model interface{}) (ret map[string]string) {
 	return
 }
 
-func FromModels(models []interface{}) (keys []string, vals []interface{}, holder []string) {
+func FromModelsForSql(models []interface{}) (keys []string, vals []interface{}, holder []string) {
 	if len(models) == 0 {
 		return
 	}
 
-	fieldMap := GetFieldMap(models[0])
+	fieldMap := GetFieldMapForSql(models[0])
 	fields := []string{}
 	fields4DB := []string{}
 	for k, v := range fieldMap {
@@ -339,7 +339,7 @@ func getValue4DB(fields []string, models []interface{}) (vals []interface{}, hol
 	return values4DB, placeHolder
 }
 
-func DBRowParse(model interface{}, row map[string]interface{}) (err error) {
+func DBRowParseForSql(model interface{}, row map[string]interface{}) (err error) {
 	var jsonD []byte
 	if jsonD, err = json.Marshal(row); err != nil {
 		return
@@ -351,7 +351,7 @@ func DBRowParse(model interface{}, row map[string]interface{}) (err error) {
 }
 
 //avoid value is null set db
-func RowFieldValueToString(field string, row map[string]interface{}) string {
+func RowFieldValueToStringForSql(field string, row map[string]interface{}) string {
 	if v, ok := row[field]; ok && v != nil {
 		return v.(string)
 	}
