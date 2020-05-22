@@ -8,6 +8,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -270,4 +271,89 @@ func IsBlank(value reflect.Value) bool {
 		return value.IsNil()
 	}
 	return reflect.DeepEqual(value.Interface(), reflect.Zero(value.Type()).Interface())
+}
+
+//mysql fields transfer tool
+
+func GetFields(model interface{}) (ret []string) {
+	tmp := make([]string, 0)
+	getType := reflect.TypeOf(model)
+	for i := 0; i < getType.NumField(); i++ {
+		f := getType.Field(i)
+		val := f.Tag.Get("json")
+		arr := strings.Split(val, ",")
+		tmp = append(tmp, arr[0])
+	}
+	if len(tmp) > 0 {
+		ret = tmp
+	}
+	return
+}
+
+func GetFieldMap(model interface{}) (ret map[string]string) {
+	tmp := make(map[string]string)
+	getType := reflect.TypeOf(model)
+	for i := 0; i < getType.NumField(); i++ {
+		f := getType.Field(i)
+		val := f.Tag.Get("json")
+		arr := strings.Split(val, ",")
+		tmp[f.Name] = strings.TrimSpace(arr[0])
+	}
+	if len(tmp) > 0 {
+		ret = tmp
+	}
+	return
+}
+
+func FromModels(models []interface{}) (keys []string, vals []interface{}, holder []string) {
+	if len(models) == 0 {
+		return
+	}
+
+	fieldMap := GetFieldMap(models[0])
+	fields := []string{}
+	fields4DB := []string{}
+	for k, v := range fieldMap {
+		fields = append(fields, k)
+		fields4DB = append(fields4DB, v)
+	}
+
+	values4DB, placeHolder := getValue4DB(fields, models)
+
+	return fields4DB, values4DB, placeHolder
+}
+
+func getValue4DB(fields []string, models []interface{}) (vals []interface{}, holder []string) {
+	placeHolder := []string{}
+	values4DB := []interface{}{}
+	for _, item := range models {
+		placeHolderTmp := []string{}
+		getValue := reflect.ValueOf(item)
+		for _, name := range fields {
+			placeHolderTmp = append(placeHolderTmp, "?")
+			val := getValue.FieldByName(name).Interface()
+			values4DB = append(values4DB, val)
+		}
+		placeHolder = append(placeHolder, "("+strings.Join(placeHolderTmp, ",")+")")
+	}
+	return values4DB, placeHolder
+}
+
+func DBRowParse(model interface{}, row map[string]interface{}) (err error) {
+	var jsonD []byte
+	if jsonD, err = json.Marshal(row); err != nil {
+		return
+	}
+	if err = json.Unmarshal(jsonD, model); err != nil {
+		return
+	}
+	return
+}
+
+//avoid value is null set db
+func RowFieldValueToString(field string, row map[string]interface{}) string {
+	if v, ok := row[field]; ok && v != nil {
+		return v.(string)
+	}
+	return ""
 }
