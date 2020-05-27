@@ -223,8 +223,7 @@ func (session *DBSession) query(ctx context.Context, sqlStmt string, args ...int
 	return result, nil
 }
 
-func (session *DBSession) ExecSql(ctx context.Context, sqlStmt string, args ...interface{}) (affected int64,
-	err error) {
+func (session *DBSession) exeSql(ctx context.Context, sqlStmt string, args ...interface{}) (affected int64, rowid int64, err error) {
 	logger := zeusctx.ExtractLogger(ctx)
 	tracer := tracing.NewTracerWrap(opentracing.GlobalTracer())
 	name := "mysql.ExecSql"
@@ -247,7 +246,7 @@ func (session *DBSession) ExecSql(ctx context.Context, sqlStmt string, args ...i
 		errMsg := fmt.Sprintf("invalid statement, session %s,  sql %s,error %s", session.Name, sqlStmt, err)
 		logger.Error(errMsg)
 		span.SetTag("result.error", errors.ECodeMysqlErr.ParseErr(errMsg))
-		return -1, errors.ECodeMysqlErr.ParseErr(errMsg)
+		return -1, -1, errors.ECodeMysqlErr.ParseErr(errMsg)
 	}
 
 	affected, err = res.RowsAffected()
@@ -255,10 +254,33 @@ func (session *DBSession) ExecSql(ctx context.Context, sqlStmt string, args ...i
 		errMsg := fmt.Sprintf("invalid statement, session %s,  sql %s,error %s", session.Name, sqlStmt, err)
 		logger.Error(errMsg)
 		span.SetTag("result.error", errors.ECodeMysqlErr.ParseErr(errMsg))
-		return -1, errors.ECodeMysqlErr.ParseErr(errMsg)
+		return -1, -1, errors.ECodeMysqlErr.ParseErr(errMsg)
 	}
 	span.SetTag("result.affected", affected)
+	rowid, err = res.LastInsertId()
+	if err != nil {
+		errMsg := fmt.Sprintf("invalid statement, session %s,  sql %s,error %s", session.Name, sqlStmt, err)
+		logger.Error(errMsg)
+		span.SetTag("result.error", errors.ECodeMysqlErr.ParseErr(errMsg))
+		return -1, -1, errors.ECodeMysqlErr.ParseErr(errMsg)
+	}
+	span.SetTag("result.lastInsertId", rowid)
+
+	return affected, rowid, nil
+}
+
+func (session *DBSession) ExecSql(ctx context.Context, sqlStmt string, args ...interface{}) (affected int64,
+	err error) {
+	affected, _, err = session.exeSql(ctx, sqlStmt, args...)
+	if err != nil {
+		return affected, err
+	}
 	return affected, nil
+}
+
+func (session *DBSession) ExecSqlWithIncrementIdReturn(ctx context.Context, sqlStmt string, args ...interface{}) (affected int64, rowid int64,
+	err error) {
+	return session.exeSql(ctx, sqlStmt, args...)
 }
 
 func (session *DBSession) Count(ctx context.Context, sqlStmt string, args ...interface{}) (count int,

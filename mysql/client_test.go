@@ -11,14 +11,14 @@ import (
 
 func TestDBSession_QuerySql(t *testing.T) {
 	cfg := map[string]conf.MysqlDB{
-		"e_seal": conf.MysqlDB{
-			DataSourceName: "root:123456@tcp(localhost:3306)/e_seal",
+		"world": conf.MysqlDB{
+			DataSourceName: "root:root@tcp(localhost:3306)/world",
 			MaxIdleConns:   30,
 			MaxOpenConns:   1024,
 		},
 	}
 	ReloadConfig(cfg)
-	session, _ := GetSession(context.Background(), "e_seal")
+	session, _ := GetSession(context.Background(), "world")
 	type args struct {
 		ctx     context.Context
 		sqlStmt string
@@ -37,7 +37,7 @@ func TestDBSession_QuerySql(t *testing.T) {
 			session,
 			args{
 				context.Background(),
-				"select order_id from tb_sign_order",
+				"select * from country where Code='CHN'",
 				nil,
 			},
 			nil,
@@ -55,6 +55,59 @@ func TestDBSession_QuerySql(t *testing.T) {
 			// 	t.Errorf("DBSession.QuerySql() = %v, want %v", gotResult, tt.wantResult)
 			// }
 			t.Logf("%v", gotResult)
+		})
+	}
+
+	tests1 := []struct {
+		name       string
+		session    *DBSession
+		args       args
+		wantResult []map[string]interface{}
+		wantErr    bool
+	}{
+		// TODO: Add test cases.
+		{
+			"insert",
+			session,
+			args{
+				context.Background(),
+				"INSERT INTO `world`.`city`(`Name`, `CountryCode`, `District`) VALUES ('xxxxxxxxx', 'ABW', 'xxxxxxxxxxxx')",
+				nil,
+			},
+			nil,
+			false,
+		},
+		{
+			"update",
+			session,
+			args{
+				context.Background(),
+				"UPDATE `world`.`city` SET `District` = 'xxxxxxxsss' WHERE `Name` = 'xxxxxxxxx'",
+				nil,
+			},
+			nil,
+			false,
+		},
+		{
+			"delete",
+			session,
+			args{
+				context.Background(),
+				"DELETE FROM `world`.`city` WHERE `Name` = 'xxxxxxxxx'",
+				nil,
+			},
+			nil,
+			false,
+		},
+	}
+	for _, tt := range tests1 {
+		t.Run(tt.name, func(t *testing.T) {
+			v1, v2, err := tt.session.ExecSqlWithIncrementIdReturn(tt.args.ctx, tt.args.sqlStmt, tt.args.args...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DBSession.QuerySql() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			t.Logf("%v,%v", v1, v2)
 		})
 	}
 }
