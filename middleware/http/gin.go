@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"reflect"
 	"strings"
@@ -110,13 +111,17 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 				aclog := ng.GetContainer().GetAccessLogger()
 				// TODO: 访问日志需要使用单独的logger进行记录
 				aclog.WithFields(logrus.Fields{
-					"url":        c.Request.RequestURI,
-					"method":     c.Request.Method,
-					"status":     c.Writer.Status(),
-					"duration":   time.Since(accessstart).String(),
-					"accessType": "http",
-					"tag":        "accesslog",
-					"tracerid":   tracerid,
+					"caller":      ng.GetContainer().GetServiceID(),
+					"duration":    time.Since(accessstart).String(),
+					"errcode":     c.Get("errcode"),
+					"errmsg":      c.Get("errmsg"),
+					"instance_id": getHostIP(),
+					"url":         c.Request.RequestURI,
+					"method":      c.Request.Method,
+					"status":      c.Writer.Status(),
+					"accessType":  "http",
+					"tag":         "accesslog",
+					"tracerid":    tracerid,
 				}).Infoln("access finished")
 			}
 		}()
@@ -199,6 +204,19 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		// 	}).Infoln("access finished")
 		// }
 	}
+}
+func getHostIP() (orghost string) {
+	addrs, _ := net.InterfaceAddrs()
+	for _, address := range addrs {
+		// 检查ip地址判断是否回环地址
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				orghost = ipnet.IP.String()
+			}
+
+		}
+	}
+	return
 }
 
 func ExtractZeusCtx(c *gin.Context) context.Context {

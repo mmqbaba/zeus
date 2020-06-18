@@ -4,8 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"reflect"
+	"runtime"
+	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/micro/go-micro/client"
 	gmerrors "github.com/micro/go-micro/errors"
@@ -19,9 +23,22 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
 
+var fm sync.Map
+
 type validator interface {
 	Validate() error
 }
+
+const (
+	// log file.
+	_source = "source"
+	// container ID.
+	_instanceID = "instance_id"
+	// uniq ID from trace.
+	_tid = "traceId"
+	// appsName.
+	_caller = "caller"
+)
 
 func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.HandlerFunc {
 	return func(fn server.HandlerFunc) server.HandlerFunc {
@@ -61,7 +78,12 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			span.SetTag("grpc server receive", string(body))
 			///////// tracer finish
 			tracerID := tracer.GetTraceID(spnctx)
-			l = l.WithFields(logrus.Fields{"tracerid": tracerID})
+			l = l.WithFields(logrus.Fields{
+				_tid:        tracerID,
+				_instanceID: getHostIP,
+				_source:     funcName(2),
+				_caller:     ng.GetContainer().GetServiceID(),
+			})
 			c = zeusctx.LoggerToContext(spnctx, l)
 
 			if v, ok := req.Body().(validator); ok && v != nil {
@@ -216,5 +238,32 @@ type clientWrapTest struct {
 func (l *clientWrapTest) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) (err error) {
 	zeusctx.ExtractLogger(ctx).Debug("clientWrapTest")
 	err = l.Client.Call(ctx, req, rsp, opts...)
+	return
+}
+
+func getHostIP() (orghost string) {
+	addrs, _ := net.InterfaceAddrs()
+	for _, address := range addrs {
+		// 检查ip地址判断是否回环地址
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				orghost = ipnet.IP.String()
+			}
+
+		}
+	}
+	return
+}
+
+// funcName get func name.
+func funcName(skip int) (name string) {
+	if pc, _, lineNo, ok := runtime.Caller(skip); ok {
+		if v, ok := fm.Load(pc); ok {
+			name = v.(string)
+		} else {
+			name = runtime.FuncForPC(pc).Name() + ":" + strconv.FormatInt(int64(lineNo), 10)
+			fm.Store(pc, name)
+		}
+	}
 	return
 }
