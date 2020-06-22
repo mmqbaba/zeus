@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -110,19 +111,32 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			if cfg.Get().AccessLog.EnableRecorded {
 				aclog := ng.GetContainer().GetAccessLogger()
 				// TODO: 访问日志需要使用单独的logger进行记录
-				aclog.WithFields(logrus.Fields{
-					"caller":      ng.GetContainer().GetServiceID(),
-					"duration":    time.Since(accessstart).String(),
-					"errcode":     c.Get("errcode"),
-					"errmsg":      c.Get("errmsg"),
-					"instance_id": getHostIP(),
-					"url":         c.Request.RequestURI,
-					"method":      c.Request.Method,
-					"status":      c.Writer.Status(),
-					"accessType":  "http",
-					"tag":         "accesslog",
-					"tracerid":    tracerid,
-				}).Infoln("access finished")
+				if fmt.Sprintf("%v", c.Writer.Status()) == "200" {
+					errcode, _ := c.Get("errcode")
+					errmsg, _ := c.Get("errmsg")
+					aclog.WithFields(logrus.Fields{
+						"caller":      ng.GetContainer().GetServiceID(),
+						"duration":    time.Since(accessstart).Milliseconds(),
+						"errcode":     errcode,
+						"errmsg":      errmsg,
+						"instance_id": getHostIP(),
+						"url":         c.Request.RequestURI,
+						"method":      c.Request.Method,
+						"status":      c.Writer.Status(),
+						"tracerid":    tracerid,
+					}).Infoln("access finished")
+				} else {
+					aclog.WithFields(logrus.Fields{
+						"caller":      ng.GetContainer().GetServiceID(),
+						"duration":    time.Since(accessstart).Milliseconds(),
+						"instance_id": getHostIP(),
+						"url":         c.Request.RequestURI,
+						"method":      c.Request.Method,
+						"status":      c.Writer.Status(),
+						"tracerid":    tracerid,
+					}).Infoln("access status finished")
+				}
+
 			}
 		}()
 		name := c.Request.URL.Path
