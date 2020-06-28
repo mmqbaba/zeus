@@ -41,6 +41,20 @@ const ZEUS_HTTP_DISABLE_PB_VALIDATE = "zeus_http_disable_pb_validate"
 const ZEUS_HTTP_USE_GINBIND_VALIDATE_FOR_PB = "zeus_http_use_ginbind_validate_for_pb"
 const ZEUS_HTTP_WRAP_HANDLER_CTX = "zeus_http_wrap_handler_ctx"
 
+const (
+	_formatLogTime = "2006-01-02 15:04:05"
+	_caller        = "caller"
+	_duration      = "duration"
+	_errcode       = "errcode"
+	_errmsg        = "errmsg"
+	_instance_id   = "instance_id"
+	_url           = "url"
+	_method        = "method"
+	_status        = "status"
+	_tracerid      = "tracerid"
+	_log_time      = "log_time"
+)
+
 var zeusEngine engine.Engine
 var bytesBuffPool = &sync.Pool{
 	New: func() interface{} {
@@ -115,25 +129,27 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 					errcode, _ := c.Get("errcode")
 					errmsg, _ := c.Get("errmsg")
 					aclog.WithFields(logrus.Fields{
-						"caller":      ng.GetContainer().GetServiceID(),
-						"duration":    time.Since(accessstart).Milliseconds(),
-						"errcode":     errcode,
-						"errmsg":      errmsg,
-						"instance_id": getHostIP(),
-						"url":         c.Request.RequestURI,
-						"method":      c.Request.Method,
-						"status":      c.Writer.Status(),
-						"tracerid":    tracerid,
+						_caller:      ng.GetContainer().GetServiceID(),
+						_duration:    time.Since(accessstart).Milliseconds(),
+						_errcode:     errcode,
+						_errmsg:      errmsg,
+						_instance_id: getHostIP(),
+						_url:         c.Request.RequestURI,
+						_method:      c.Request.Method,
+						_status:      c.Writer.Status(),
+						_tracerid:    tracerid,
+						_log_time:    time.Now().Format(_formatLogTime),
 					}).Infoln("access finished")
 				} else {
 					aclog.WithFields(logrus.Fields{
-						"caller":      ng.GetContainer().GetServiceID(),
-						"duration":    time.Since(accessstart).Milliseconds(),
-						"instance_id": getHostIP(),
-						"url":         c.Request.RequestURI,
-						"method":      c.Request.Method,
-						"status":      c.Writer.Status(),
-						"tracerid":    tracerid,
+						_caller:      ng.GetContainer().GetServiceID(),
+						_duration:    time.Since(accessstart).Milliseconds(),
+						_instance_id: getHostIP(),
+						_url:         c.Request.RequestURI,
+						_method:      c.Request.Method,
+						_status:      c.Writer.Status(),
+						_tracerid:    tracerid,
+						_log_time:    time.Now().Format(_formatLogTime),
 					}).Infoln("access status finished")
 				}
 
@@ -188,7 +204,10 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		}()
 		////// zipkin finish
 		tracerid = span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
-		l = l.WithFields(logrus.Fields{"tracerid": tracerid})
+		l = l.WithFields(logrus.Fields{
+			_tracerid: tracerid,
+			_log_time: time.Now().Format(_formatLogTime),
+		})
 		ctx = zeusctx.LoggerToContext(spnctx, l)
 		ctx = zeusctx.GMClientToContext(ctx, ng.GetContainer().GetGoMicroClient())
 		if ng.GetContainer().GetRedisCli() != nil {
