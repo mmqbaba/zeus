@@ -232,6 +232,74 @@ func TifRequest(ctx context.Context, method, url, postData string, info *Identif
 	return rspBody, status, nil
 }
 
+func TifRequestWithIdentification(ctx context.Context, method, url, postData string, info *IdentificationInfo, headers map[string]string) (rspBody []byte, status int, err error) {
+	logger := zeusctx.ExtractLogger(ctx)
+	tracer := tracing.NewTracerWrap(opentracing.GlobalTracer())
+	name := url
+	ctx, span, _ := tracer.StartSpanFromContext(ctx, name)
+	ext.SpanKindConsumer.Set(span)
+	span.SetTag("tif request.method", method)
+	span.SetTag("tif request.body", postData)
+	defer func() {
+		if appconf.Trace.OnlyLogErr && err == nil {
+			return
+		}
+		span.Finish()
+	}()
+	var postBody io.Reader
+	if len(postData) > 0 {
+		postBody = strings.NewReader(postData)
+	}
+	req, err := SetUpTifSignature(ctx, method, url, postBody, info)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if len(headers) > 0 {
+		for k, v := range headers {
+			req.Header.Add(k, v)
+		}
+	}
+
+	contentType := req.Header.Get("Content-Type")
+	if len(contentType) == 0 {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	client := hclient
+	httpRsp, err := client.Do(req)
+	if err != nil {
+		logger.Errorf("client.do err:%+v", err)
+		return nil, status, errors.ECodeBadRequest.ParseErr("")
+	}
+
+	if httpRsp == nil {
+		logger.Error("httpRsp is nil")
+		return nil, status, errors.ECodeBadRequest.ParseErr("")
+	}
+
+	defer func() {
+		if httpRsp.Body != nil {
+			httpRsp.Body.Close()
+		}
+	}()
+
+	status = httpRsp.StatusCode
+	rspBody, err = ioutil.ReadAll(httpRsp.Body)
+	span.SetTag("tif response.status", status)
+	span.SetTag("tif response.body", string(rspBody))
+	span.SetTag("tif response.error", err)
+	if err != nil {
+		logger.Errorf("ReadAll error:%+v", err)
+		return nil, status, errors.ECodeBadRequest.ParseErr("")
+	}
+	if status/100 != 2 {
+		logger.Errorf("http request fail, status:%d, body:%s", status, rspBody)
+		return nil, status, errors.ECodeBadRequest.ParseErr("")
+	}
+
+	return rspBody, status, nil
+}
+
 func SetUpTifSignature(ctx context.Context, method, path string, body io.Reader, info *IdentificationInfo) (*http.Request, error) {
 	logger := zeusctx.ExtractLogger(ctx)
 	host := appconf.EBus.Hosts[rand.Intn(len(appconf.EBus.Hosts))]
