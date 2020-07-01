@@ -246,7 +246,12 @@ func SetUpTifSignature(ctx context.Context, method, path string, body io.Reader,
 	}
 	now := time.Now()
 	nonce := tifNonce(now)
-	sign := tifSign(paasToken, now.Unix(), nonce)
+	var sign string
+	if info != nil && !utils.IsEmptyString(info.Uid) {
+		sign = tifIdentificationSign(appconf.EBus.SgToken, now.Unix(), nonce, info)
+	} else {
+		sign = tifSign(paasToken, now.Unix(), nonce)
+	}
 
 	httpReq.Header.Set("x-tif-paasid", paasId)
 	httpReq.Header.Set("x-tif-signature", sign)
