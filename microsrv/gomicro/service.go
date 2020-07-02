@@ -41,6 +41,13 @@ func NewService(ctx context.Context, conf config.GoMicro, opts ...micro.Option) 
 		micro.RegisterTTL(15 * time.Second),
 		micro.RegisterInterval(10 * time.Second),
 		micro.AfterStop(func() error {
+			regs, err := reg.GetService(conf.ServiceName)
+			if err != nil || regs[0] == nil {
+				log.Println("[gomicro] afterstop stop (%s) server error (%+v) ", conf.ServiceName, err)
+			}
+			if err := reg.Deregister(regs[0]); err != nil {
+				log.Println("[gomicro] Deregister server failed ", regs[0].Nodes)
+			}
 			log.Println("[gomicro] afterstop")
 			return nil
 		}),
