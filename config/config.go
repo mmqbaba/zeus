@@ -93,6 +93,7 @@ type EBus struct {
 	Services            map[string]interface{} `json:"services"`
 	PaasId              string                 `json:"paas_id"`
 	PaasToken           string                 `json:"paas_token"`
+	SgToken             string                 `json:"sg_token"`
 	SpId                string                 `json:"sp_id"`
 	PathMap             map[string]string      `json:"path_map"`
 }
