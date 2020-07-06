@@ -80,7 +80,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			tracerID := tracer.GetTraceID(spnctx)
 			l = l.WithFields(logrus.Fields{
 				_tid:        tracerID,
-				_instanceID: getHostIP,
+				_instanceID: getHostIP(),
 				_source:     funcName(2),
 				_caller:     ng.GetContainer().GetServiceID(),
 			})
