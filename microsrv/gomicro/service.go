@@ -43,13 +43,13 @@ func NewService(ctx context.Context, conf config.GoMicro, opts ...micro.Option) 
 		micro.AfterStop(func() error {
 			regs, err := reg.GetService(conf.ServiceName)
 			if err != nil || regs == nil || regs[0] == nil {
-				log.Println("[gomicro] afterstop stop ", conf.ServiceName)
+				log.Println("[gomicro] afterstop stop ServiceName is null", conf.ServiceName)
 				return nil
 			}
 			if err := reg.Deregister(regs[0]); err != nil {
 				log.Println("[gomicro] Deregister server failed ", regs[0].Nodes)
 			}
-			log.Println("[gomicro] afterstop")
+			log.Println("[gomicro] afterstop ", conf.ServiceName)
 			return nil
 		}),
 		// micro.Flags(

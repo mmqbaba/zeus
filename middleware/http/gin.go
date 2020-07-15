@@ -219,6 +219,9 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		if ng.GetContainer().GetHttpClient() != nil {
 			ctx = zeusctx.HttpclientToContext(ctx, ng.GetContainer().GetHttpClient())
 		}
+		if ng.GetContainer().GetMysql() != nil {
+			ctx = zeusctx.MysqlToContext(ctx, ng.GetContainer().GetMysql())
+		}
 		c.Set(ZEUS_CTX, ctx)
 		l.Debugln("access start", c.Request.URL.Path)
 		c.Next()
