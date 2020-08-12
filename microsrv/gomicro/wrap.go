@@ -21,6 +21,7 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
 	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+    "github.com/micro/go-micro/metadata"
 )
 
 var fm sync.Map
@@ -121,7 +122,18 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 					if !strings.HasPrefix(status, tracerID+"@") {
 						status = tracerID + "@" + zeusErr.Cause
 					}
-					err = &gmerrors.Error{Id: serviceID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: status}
+                    gmErr = &gmerrors.Error{Id: serviceID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: status}
+
+                    // 防止go-micro grpc 将小于errcode小于0的错误转换成 internal error
+                    // 对于非zeus grpc调用，不做处理（grpc-gateway调用，直接返回负数，否http访问会得不到正确的错误码）
+                    if isZeusRpc(ctx) {
+                        if gmErr.Code < 0 {
+                            gmErr.Code = -gmErr.Code
+                            gmErr.Detail = "-@" + gmErr.Detail
+                        }
+                    }
+					err = gmErr
+
 					return
 				}
 				if errors.As(err, &gmErr) {
@@ -205,6 +217,9 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 	span.SetTag("grpc client call", string(body))
 	///////// tracer finish
 
+	//zeus rpc 调用标识
+    ctx = zeusFlagToContext(ctx)
+
 	err = l.Client.Call(ctx, req, rsp, opts...)
 	if err != nil {
 		// gomicro错误解包为zeus错误
@@ -213,6 +228,12 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 			if gmErr != nil {
 				span.SetTag("grpc client receive error", gmErr)
 
+				// 根据Detail 判断错误码是否负数，将其还原
+				strs := strings.SplitN(gmErr.Detail, "@",2)
+				if len(strs) == 2 && strs[0] == "-" {
+                    gmErr.Code = -gmErr.Code
+                    gmErr.Detail= strs[1]
+                }
 				zeusErr := zeuserrors.New(zeuserrors.ErrorCode(gmErr.Code), gmErr.Detail, gmErr.Status)
 				zeusErr.ServiceID = gmErr.Id
 				if utils.IsEmptyString(zeusErr.ServiceID) && l.ng != nil {
@@ -266,4 +287,24 @@ func funcName(skip int) (name string) {
 		}
 	}
 	return
+}
+
+func zeusFlagToContext(ctx context.Context) context.Context {
+    if md, ok := metadata.FromContext(ctx); ok {
+        md["zeus-rpc-flag"] = ""
+        //map修改直接生效，不需要重设
+        //ctx = metadata.NewContext(ctx, md)
+    } else {
+        ctx = metadata.NewContext(ctx, metadata.Metadata{"zeus-rpc-flag":""})
+    }
+    return ctx
+}
+
+func isZeusRpc(ctx context.Context) bool {
+    if md, ok := metadata.FromContext(ctx); ok {
+        if _, ok := md["zeus-rpc-flag"]; ok {
+            return true
+        }
+    }
+    return false
 }
