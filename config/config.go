@@ -21,13 +21,13 @@ type Entry struct {
 
 // AppConf 应用的具体配置
 type AppConf struct {
-	LogConf             LogConf                   `json:"log_conf" toml:"log_conf" yaml:"log_conf"`
-	AccessLog           AccessLog                 `json:"accesslog" toml:"accesslog" yaml:"accesslog"`
-	Redis               Redis                     `json:"redis"`
-	Mysql               MysqlDB                   `json:"mysql"`
-	MongoDB             MongoDB                   `json:"mongodb"`
-	MongoDBSource       map[string]MongoDB        `json:"mongodb_source"`
-	MysqlSource         map[string]MysqlDB        `json:"mysql_source"`
+	LogConf       LogConf            `json:"log_conf" toml:"log_conf" yaml:"log_conf"`
+	AccessLog     AccessLog          `json:"accesslog" toml:"accesslog" yaml:"accesslog"`
+	Redis         Redis              `json:"redis"`
+	Mysql         Mysql              `json:"mysql"`
+	MongoDB       MongoDB            `json:"mongodb"`
+	MongoDBSource map[string]MongoDB `json:"mongodb_source"`
+	//MysqlSource         map[string]MysqlDB        `json:"mysql_source"`
 	RedisSource         map[string]Redis          `json:"redis_source"`
 	BrokerSource        map[string]Broker         `json:"broker_source"`
 	EBus                EBus                      `json:"ebus"`

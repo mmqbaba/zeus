@@ -3,6 +3,7 @@ package mysqlclient
 import (
 	"fmt"
 	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	conf "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	"log"
 	"sync"

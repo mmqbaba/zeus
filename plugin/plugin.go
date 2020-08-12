@@ -63,7 +63,7 @@ func (c *Container) Init(appcfg *config.AppConf) {
 	c.initTracer(&appcfg.Trace)
 	c.initMongo(&appcfg.MongoDB)
 	c.initTifClient(appcfg)
-	c.initMysql(appcfg.Mysql)
+	c.initMysql(&appcfg.Mysql)
 	c.initHttpClient(appcfg.HttpClient)
 	c.initGoPS(&appcfg.GoPS)
 	log.Println("[Container.Init] finish")
@@ -361,4 +361,9 @@ func (c *Container) initGoPS(conf *config.GoPS) {
 func (c *Container) reloadGoPS(conf *config.GoPS) {
 	agent.Close()
 	c.initGoPS(conf)
+}
+
+//GetMysql
+func (c *Container) GetMysql() zmysql.Mysql {
+	return c.mysql
 }
