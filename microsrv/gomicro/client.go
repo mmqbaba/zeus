@@ -26,6 +26,8 @@ func NewClient(ctx context.Context, conf config.GoMicro, opts ...client.Option) 
 	}
 	o := []client.Option{
 		client.Registry(reg),
+		client.PoolSize(conf.ClientPoolSize),
+		client.PoolTTL(100 * time.Second),
 		client.RequestTimeout(30 * time.Second),
 		grpc.MaxRecvMsgSize(1024 * 1024 * 10),
 		grpc.MaxSendMsgSize(1024 * 1024 * 10),

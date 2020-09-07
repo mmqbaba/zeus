@@ -171,6 +171,7 @@ type GoMicro struct {
 	RegistryAddrs      []string `json:"registry_addrs"`       // etcd/consul address
 	RegistryAuthUser   string   `json:"registry_authuser"`
 	RegistryAuthPwd    string   `json:"registry_authpwd"`
+	ClientPoolSize     int      `json:"client_pool_size"`
 }
 
 type GoPS struct {
