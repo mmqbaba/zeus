@@ -111,6 +111,7 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		accessstart := time.Now()
 		tracerid := ""
 		logger := ng.GetContainer().GetLogger()
+		prom := ng.GetContainer().GetPrometheus().GetInnerCli()
 		ctx := c.Request.Context()
 		ctx = zeusctx.GinCtxToContext(ctx, c)
 		l := logger.WithFields(logrus.Fields{"tag": "gin"})
@@ -134,18 +135,19 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 						_errcode:     errcode,
 						_errmsg:      errmsg,
 						_instance_id: getHostIP(),
-						_url:         c.Request.RequestURI,
+						_url:         c.Request.URL.Path,
 						_method:      c.Request.Method,
 						_status:      c.Writer.Status(),
 						_tracerid:    tracerid,
 						_log_time:    time.Now().Format(_formatLogTime),
 					}).Infoln("access finished")
+					prom.HTTPServer.Incr(tracerid, c.Request.URL.Path, errcode.(string))
 				} else {
 					aclog.WithFields(logrus.Fields{
 						_caller:      ng.GetContainer().GetServiceID(),
 						_duration:    time.Since(accessstart).Milliseconds(),
 						_instance_id: getHostIP(),
-						_url:         c.Request.RequestURI,
+						_url:         c.Request.URL.Path,
 						_method:      c.Request.Method,
 						_status:      c.Writer.Status(),
 						_tracerid:    tracerid,
@@ -154,6 +156,7 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 				}
 
 			}
+			prom.HTTPServer.Timing(tracerid, int64(time.Since(accessstart)/time.Millisecond), c.Request.URL.Path)
 		}()
 		name := c.Request.URL.Path
 		tracer := ng.GetContainer().GetTracer()
@@ -219,9 +222,13 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		if ng.GetContainer().GetHttpClient() != nil {
 			ctx = zeusctx.HttpclientToContext(ctx, ng.GetContainer().GetHttpClient())
 		}
-		if ng.GetContainer().GetMysql() != nil {
-			ctx = zeusctx.MysqlToContext(ctx, ng.GetContainer().GetMysql())
+		if ng.GetContainer().GetMysqlCli() != nil {
+			ctx = zeusctx.MysqlToContext(ctx, ng.GetContainer().GetMysqlCli().GetCli())
 		}
+		if ng.GetContainer().GetPrometheus() != nil {
+			ctx = zeusctx.PrometheusToContext(ctx, ng.GetContainer().GetPrometheus().GetPubCli())
+		}
+
 		c.Set(ZEUS_CTX, ctx)
 		l.Debugln("access start", c.Request.URL.Path)
 		c.Next()

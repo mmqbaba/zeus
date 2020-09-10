@@ -29,6 +29,7 @@ type AppConf struct {
 	MongoDBSource map[string]MongoDB `json:"mongodb_source"`
 	//MysqlSource         map[string]MysqlDB        `json:"mysql_source"`
 	RedisSource         map[string]Redis          `json:"redis_source"`
+	Prometheus          Prometheus                `json:"prometheus"`
 	BrokerSource        map[string]Broker         `json:"broker_source"`
 	EBus                EBus                      `json:"ebus"`
 	Ext                 map[string]interface{}    `json:"ext"`
@@ -88,6 +89,11 @@ type Mysql struct {
 	MaxIdleConns    int           `json:"max_idle_conns"`
 	MaxOpenConns    int           `json:"max_oepn_conns"`
 	Enable          bool          `json:"enable"` // 启用组件
+}
+
+type Prometheus struct {
+	PullHost string `json:"pullhost"`
+	Enable   bool   `json:"enable"`
 }
 
 type EBus struct {

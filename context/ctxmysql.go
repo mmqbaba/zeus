@@ -3,13 +3,13 @@ package zcontext
 import (
 	"context"
 	"errors"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mysql/zmysql"
+	"github.com/jinzhu/gorm"
 )
 
 type ctxMysqlMarker struct{}
 
 type ctxMysql struct {
-	cli zmysql.Mysql
+	cli *gorm.DB
 }
 
 var (
@@ -17,7 +17,7 @@ var (
 )
 
 // ExtractMysql takes the mysql from ctx.
-func ExtractMysql(ctx context.Context) (c zmysql.Mysql, err error) {
+func ExtractMysql(ctx context.Context) (c *gorm.DB, err error) {
 	r, ok := ctx.Value(ctxMysqlKey).(*ctxMysql)
 	if !ok || r == nil {
 		return nil, errors.New("ctxMysql was not set or nil")
@@ -25,14 +25,13 @@ func ExtractMysql(ctx context.Context) (c zmysql.Mysql, err error) {
 	if r.cli == nil {
 		return nil, errors.New("ctxMysql.cli was not set or nil")
 	}
-
 	c = r.cli
 	return
 }
 
 // MysqlToContext adds the mysql to the context for extraction later.
 // Returning the new context that has been created.
-func MysqlToContext(ctx context.Context, c zmysql.Mysql) context.Context {
+func MysqlToContext(ctx context.Context, c *gorm.DB) context.Context {
 	r := &ctxMysql{
 		cli: c,
 	}
