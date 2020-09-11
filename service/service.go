@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"io/ioutil"
 	"log"
 	"net"
@@ -309,6 +310,15 @@ func (s *Service) initServer() (err error) {
 			// if err := http.ListenAndServe(addr, gw); err != nil {
 			// 	log.Fatal(err)
 			// }
+			//http api for prometheus server pull data
+			http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+				h := promhttp.Handler()
+				h.ServeHTTP(w, r)
+			})
+			if err := http.ListenAndServe(s.container.GetPrometheus().GetListenHost(), nil); err != nil {
+				log.Fatal(err)
+			}
+			log.Printf("prometheus http apiserver listen on %s\n", s.container.GetPrometheus().GetListenHost())
 			srv := &http.Server{
 				Handler: gw,
 			}

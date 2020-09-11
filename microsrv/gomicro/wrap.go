@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/micro/go-micro/client"
 	gmerrors "github.com/micro/go-micro/errors"
@@ -45,6 +46,9 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
 			logger := ng.GetContainer().GetLogger()
+			prom := ng.GetContainer().GetPrometheus().GetInnerCli()
+			var errcode string
+			now := time.Now()
 			l := logger.WithFields(logrus.Fields{"tag": "gomicro-serverlogwrap"})
 			c := zeusctx.GMClientToContext(ctx, ng.GetContainer().GetGoMicroClient())
 			///////// tracer begin
@@ -113,6 +117,14 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			if ng.GetContainer().GetPrometheus() != nil {
 				c = zeusctx.PrometheusToContext(c, ng.GetContainer().GetPrometheus().GetPubCli())
 			}
+
+			defer func() {
+				prom.RPCServer.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
+				if errcode != "" {
+					prom.RPCClient.Incr(name, ng.GetContainer().GetServiceID(), errcode)
+				}
+
+			}()
 			err = fn(c, req, rsp)
 			if err != nil && !utils.IsBlank(reflect.ValueOf(err)) {
 				span.SetTag("grpc server answer error", err)
@@ -138,6 +150,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 							gmErr.Detail = "-@" + gmErr.Detail
 						}
 					}
+					errcode = strconv.Itoa(int(zeusErr.ErrCode))
 					err = gmErr
 
 					return
@@ -187,14 +200,25 @@ type clientLogWrap struct {
 }
 
 func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) (err error) {
+	var now = time.Now()
+	var errcode string
 	logger := zeusctx.ExtractLogger(ctx)
-
 	ng := l.ng
+	prom := ng.GetContainer().GetPrometheus().GetInnerCli()
+
 	///////// tracer begin
 	name := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
+	defer func() {
+		prom.RPCClient.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
+		if errcode != "" {
+			prom.RPCClient.Incr(name, ng.GetContainer().GetServiceID(), errcode)
+		}
+
+	}()
 	cfg, err := ng.GetConfiger()
 	if err != nil {
 		logger.Error(err)
+		errcode = string(zeuserrors.ECodeSystem)
 		err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: "ng.GetConfiger"}
 		return
 	}
@@ -203,12 +227,14 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 	if tracer == nil {
 		err = fmt.Errorf("tracer is nil")
 		logger.Error(err)
+		errcode = string(zeuserrors.ECodeSystem)
 		err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
 		return
 	}
 	spnctx, span, err := tracer.StartSpanFromContext(ctx, name)
 	if err != nil {
 		logger.Error(err)
+		errcode = string(zeuserrors.ECodeSystem)
 		err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
 		return
 	}
@@ -225,7 +251,6 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 
 	//zeus rpc 调用标识
 	ctx = zeusFlagToContext(ctx)
-
 	err = l.Client.Call(ctx, req, rsp, opts...)
 	if err != nil {
 		// gomicro错误解包为zeus错误
@@ -233,7 +258,7 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 		if errors.As(err, &gmErr) {
 			if gmErr != nil {
 				span.SetTag("grpc client receive error", gmErr)
-
+				errcode = strconv.Itoa(int(gmErr.Code))
 				// 根据Detail 判断错误码是否负数，将其还原
 				strs := strings.SplitN(gmErr.Detail, "@", 2)
 				if len(strs) == 2 && strs[0] == "-" {
