@@ -34,5 +34,5 @@ type Container interface {
 	GetGoMicroService() micro.Service
 	GetMongo() zmongo.Mongo
 	GetHttpClient() zhttpclient.HttpClient
-	GetMysql() zmysql.Mysql
+	GetMysqlCli() zmysql.Mysql
 }

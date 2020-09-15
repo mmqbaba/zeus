@@ -145,7 +145,7 @@ func (c *Container) reloadMysql(cfg *config.Mysql) {
 	}
 }
 
-func (c *Container) GetMyslCli() zmysql.Mysql {
+func (c *Container) GetMysqlCli() zmysql.Mysql {
 	return c.mysql
 }
 
