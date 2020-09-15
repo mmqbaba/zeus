@@ -121,7 +121,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			defer func() {
 				prom.RPCServer.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
 				if errcode != "" {
-					prom.RPCClient.Incr(name, ng.GetContainer().GetServiceID(), errcode)
+					prom.RPCServer.Incr(name, ng.GetContainer().GetServiceID(), errcode)
 				}
 
 			}()

@@ -40,10 +40,10 @@ type Prom struct {
 func InitClient(cfg *config.Prometheus) *PromClient {
 	prom := &PromClient{
 		innerClient: &InnerClient{
-			RPCClient:  New().WithTimer("go_rpc_client", []string{"user", "method"}).WithState("go_rpc_client_state", []string{"method", "name"}).WithCounter("go_rpc_client_code", []string{"method", "code"}),
-			HTTPClient: New().WithTimer("go_http_client", []string{"method"}).WithState("go_http_client_state", []string{"method", "name"}).WithCounter("go_http_client_code", []string{"method", "code"}),
-			HTTPServer: New().WithTimer("go_http_server", []string{"user", "method"}).WithCounter("go_http_server_code", []string{"user", "method", "code"}),
-			RPCServer:  New().WithTimer("go_rpc_server", []string{"user", "method"}).WithCounter("go_rpc_server_code", []string{"user", "method", "code"}),
+			RPCClient:  New().WithTimer("zeus_rpc_client", []string{"user", "method"}).WithState("go_rpc_client_state", []string{"method", "name"}).WithCounter("go_rpc_client_code", []string{"method", "code"}),
+			HTTPClient: New().WithTimer("zeus_http_client", []string{"method"}).WithState("go_http_client_state", []string{"method", "name"}).WithCounter("go_http_client_code", []string{"method", "code"}),
+			HTTPServer: New().WithTimer("zeus_http_server", []string{"user", "method"}).WithCounter("go_http_server_code", []string{"user", "method", "code"}),
+			RPCServer:  New().WithTimer("zeus_rpc_server", []string{"user", "method"}).WithCounter("go_rpc_server_code", []string{"user", "method", "code"}),
 		},
 		pHost: cfg.PullHost,
 	}
@@ -53,7 +53,7 @@ func InitClient(cfg *config.Prometheus) *PromClient {
 
 func newPrometheusClient(inner *InnerClient) *PubClient {
 	promPubClient := &PubClient{
-		LibClient:         New().WithTimer("go_lib_client", []string{"method"}).WithState("go_lib_client_state", []string{"method", "name"}).WithCounter("go_lib_client_code", []string{"method", "code"}),
+		LibClient:         New().WithTimer("go_lib_client", []string{"method", "sql"}).WithState("go_lib_client_state", []string{"method", "name"}).WithCounter("go_lib_client_code", []string{"method", "code"}),
 		BusinessErrCount:  New().WithCounter("go_business_err_count", []string{"name"}).WithState("go_business_err_state", []string{"name"}),
 		BusinessInfoCount: New().WithCounter("go_business_info_count", []string{"name"}).WithState("go_business_info_state", []string{"name"}),
 		CacheHit:          New().WithCounter("go_cache_hit", []string{"name"}),
