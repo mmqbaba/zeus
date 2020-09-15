@@ -40,10 +40,10 @@ type Prom struct {
 func InitClient(cfg *config.Prometheus) *PromClient {
 	prom := &PromClient{
 		innerClient: &InnerClient{
-			RPCClient:  New().WithTimer("zeus_rpc_client", []string{"user", "method"}).WithState("go_rpc_client_state", []string{"method", "name"}).WithCounter("go_rpc_client_code", []string{"method", "code"}),
-			HTTPClient: New().WithTimer("zeus_http_client", []string{"method"}).WithState("go_http_client_state", []string{"method", "name"}).WithCounter("go_http_client_code", []string{"method", "code"}),
-			HTTPServer: New().WithTimer("zeus_http_server", []string{"user", "method"}).WithCounter("go_http_server_code", []string{"user", "method", "code"}),
-			RPCServer:  New().WithTimer("zeus_rpc_server", []string{"user", "method"}).WithCounter("go_rpc_server_code", []string{"user", "method", "code"}),
+			RPCClient:  New().WithTimer("zeus_rpc_client", []string{"user", "method"}).WithState("zeus_rpc_client_state", []string{"method", "name"}).WithCounter("zeus_rpc_client_code", []string{"method", "code"}),
+			HTTPClient: New().WithTimer("zeus_http_client", []string{"method"}).WithState("zeus_http_client_state", []string{"method", "name"}).WithCounter("zeus_http_client_code", []string{"method", "code"}),
+			HTTPServer: New().WithTimer("zeus_http_server", []string{"user", "method"}).WithCounter("zeus_http_server_code", []string{"user", "method", "code"}),
+			RPCServer:  New().WithTimer("zeus_rpc_server", []string{"user", "method"}).WithCounter("zeus_rpc_server_code", []string{"user", "method", "code"}),
 		},
 		pHost: cfg.PullHost,
 	}
