@@ -42,6 +42,7 @@ type AppConf struct {
 	HttpClient          map[string]HttpClientConf `json:"http_client"`
 	GoPS                GoPS                      `json:"gops"`
 	UpdateTime          time.Time                 `json:"-"`
+	PProf               PProf                     `json:"pprof"`
 }
 
 type DebugSwitch struct {
@@ -94,6 +95,12 @@ type Mysql struct {
 type Prometheus struct {
 	PullHost string `json:"pullhost"`
 	Enable   bool   `json:"enable"`
+}
+
+// pprof config
+type PProf struct {
+    HostURI    string     `json:"host_uri"`
+    Enable     bool    `json:"enable"`
 }
 
 type EBus struct {

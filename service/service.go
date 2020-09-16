@@ -6,7 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"io/ioutil"
+    "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pprof"
+    "io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -313,6 +314,12 @@ func (s *Service) initServer() (err error) {
 			}
 			log.Printf("prometheus http apiserver listen on %s\n", s.container.GetPrometheus().GetListenHost())
 		}()
+
+		// 启用go性能分析工具
+        pprofConfig := configer.Get().PProf
+        if pprofConfig.Enable  {
+            pprof.StartPerf(pprofConfig)
+        }
 
 		go func() {
 			addr := fmt.Sprintf("%s:%d", s.options.ApiInterface, s.options.ApiPort)
