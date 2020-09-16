@@ -19,6 +19,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -210,7 +211,8 @@ func (c *Client) getRandomHost() string {
 }
 
 func (c *Client) do(ctx context.Context, request *http.Request, headers map[string]string) (rsp []byte, err error) {
-
+	var now = time.Now()
+	var code string
 	if len(headers) > 0 {
 		for k, v := range headers {
 			request.Header.Add(k, v)
@@ -220,6 +222,15 @@ func (c *Client) do(ctx context.Context, request *http.Request, headers map[stri
 	//request.Close = true
 	loger := zeusctx.ExtractLogger(ctx)
 	tracer := tracing.NewTracerWrap(opentracing.GlobalTracer())
+	pubProm, err := zeusctx.ExtractPrometheus(ctx)
+	if pubProm != nil && err == nil {
+		defer func() {
+			pubProm.HTTPClient.Timing(request.URL.Path, int64(time.Since(now)/time.Millisecond))
+			if code != "" {
+				pubProm.HTTPClient.Incr(request.URL.Path, code)
+			}
+		}()
+	}
 	name := request.URL.RawPath
 	ctx, span, _ := tracer.StartSpanFromContext(ctx, name)
 	ext.SpanKindConsumer.Set(span)
@@ -273,12 +284,8 @@ func (c *Client) do(ctx context.Context, request *http.Request, headers map[stri
 	if response == nil {
 		return nil, err
 	}
-
-	defer func() {
-		if response.Body != nil {
-			response.Body.Close()
-		}
-	}()
+	code = strconv.Itoa(response.StatusCode)
+	defer response.Body.Close()
 
 	rspBody, err := ioutil.ReadAll(response.Body)
 	span.SetTag("httpclient response.status", response.StatusCode)

@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mysql/zmysql"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/prometheus/zprometheus"
 	"log"
 	"net/http"
 
@@ -18,6 +20,7 @@ import (
 	zeusmongo "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo/zmongo"
 	zeusmysql "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mysql"
+	zeusprometheus "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/prometheus"
 	zeusredis "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis/zredis"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/sequence"
@@ -32,6 +35,7 @@ type Container struct {
 	appcfg        config.AppConf
 	redis         zredis.Redis
 	mongo         zmongo.Mongo
+	mysql         zmysql.Mysql
 	gomicroClient client.Client
 	logger        *logrus.Logger
 	accessLogger  *logrus.Logger
@@ -42,7 +46,7 @@ type Container struct {
 	gomicroService micro.Service
 	// httpclient
 	httpClient zhttpclient.HttpClient
-
+	prometheus zprometheus.Prometheus
 	// dbPool          *sql.DB
 	// transport       *http.Transport
 	// svc             XUtil
@@ -61,9 +65,10 @@ func (c *Container) Init(appcfg *config.AppConf) {
 	c.initTracer(&appcfg.Trace)
 	c.initMongo(&appcfg.MongoDB)
 	c.initTifClient(appcfg)
-	c.initMysql(appcfg.MysqlSource)
+	c.initMysql(&appcfg.Mysql)
 	c.initHttpClient(appcfg.HttpClient)
 	c.initGoPS(&appcfg.GoPS)
+	c.initPrometheus(&appcfg.Prometheus)
 	log.Println("[Container.Init] finish")
 	c.appcfg = *appcfg
 }
@@ -85,8 +90,10 @@ func (c *Container) Reload(appcfg *config.AppConf) {
 	if c.appcfg.MongoDB != appcfg.MongoDB {
 		c.reloadMongo(&appcfg.MongoDB)
 	}
+	if c.appcfg.Mysql != appcfg.Mysql {
+		c.reloadMysql(&appcfg.Mysql)
+	}
 	c.initTifClient(appcfg)
-	c.initMysql(appcfg.MysqlSource)
 	c.initHttpClient(appcfg.HttpClient)
 	if c.appcfg.GoPS != appcfg.GoPS {
 		c.reloadGoPS(&appcfg.GoPS)
@@ -118,6 +125,41 @@ func (c *Container) reloadRedis(cfg *config.Redis) {
 
 func (c *Container) GetRedisCli() zredis.Redis {
 	return c.redis
+}
+
+// Mysql
+func (c *Container) initMysql(cfg *config.Mysql) {
+	if cfg.Enable {
+		c.mysql = zeusmysql.InitClient(cfg)
+	}
+}
+
+func (c *Container) reloadMysql(cfg *config.Mysql) {
+	if cfg.Enable {
+		if c.mysql != nil {
+			c.mysql.Reload(cfg)
+		} else {
+			c.mysql = zeusmysql.InitClient(cfg)
+		}
+	} else if c.mysql != nil {
+		// 释放
+		// c.mysql.Release()
+		c.mysql = nil
+	}
+}
+
+func (c *Container) GetMysqlCli() zmysql.Mysql {
+	return c.mysql
+}
+
+//Prometheus
+func (c *Container) initPrometheus(cfg *config.Prometheus) {
+	if cfg.Enable {
+		c.prometheus = zeusprometheus.InitClient(cfg)
+	}
+}
+func (c *Container) GetPrometheus() zprometheus.Prometheus {
+	return c.prometheus
 }
 
 // GoMicroClient
@@ -301,11 +343,6 @@ func (c *Container) initTifClient(appconf *config.AppConf) {
 	tifclient.InitClient(appconf)
 }
 
-// mysql
-func (c *Container) initMysql(conf map[string]config.MysqlDB) {
-	zeusmysql.ReloadConfig(conf)
-}
-
 // httpclient
 func (c *Container) initHttpClient(conf map[string]config.HttpClientConf) {
 	flag := c.appcfg.Trace.OnlyLogErr
@@ -337,4 +374,9 @@ func (c *Container) initGoPS(conf *config.GoPS) {
 func (c *Container) reloadGoPS(conf *config.GoPS) {
 	agent.Close()
 	c.initGoPS(conf)
+}
+
+//GetMysql
+func (c *Container) GetMysql() zmysql.Mysql {
+	return c.mysql
 }
