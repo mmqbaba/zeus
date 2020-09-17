@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"reflect"
@@ -122,34 +121,34 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			return
 		}
 		defer func() {
-			errcode, _ := c.Get("errcode")
-			errmsg, _ := c.Get("errmsg")
 			if cfg.Get().AccessLog.EnableRecorded {
 				aclog := ng.GetContainer().GetAccessLogger()
 				// TODO: 访问日志需要使用单独的logger进行记录
 				if fmt.Sprintf("%v", c.Writer.Status()) == "200" {
+					errcode, _ := c.Get("errcode")
+					errmsg, _ := c.Get("errmsg")
 					aclog.WithFields(logrus.Fields{
-						_caller:      ng.GetContainer().GetServiceID(),
-						_duration:    time.Since(accessstart).Milliseconds(),
-						_errcode:     errcode,
-						_errmsg:      errmsg,
-						_instance_id: getHostIP(),
-						_url:         c.Request.URL.Path,
-						_method:      c.Request.Method,
-						_status:      c.Writer.Status(),
-						_tracerid:    tracerid,
-						_log_time:    time.Now().Format(_formatLogTime),
+						_caller:   ng.GetContainer().GetServiceID(),
+						_duration: time.Since(accessstart).Milliseconds(),
+						_errcode:  errcode,
+						_errmsg:   errmsg,
+						//_instance_id: getHostIP(),
+						_url:      c.Request.URL.Path,
+						_method:   c.Request.Method,
+						_status:   c.Writer.Status(),
+						_tracerid: tracerid,
+						_log_time: time.Now().Format(_formatLogTime),
 					}).Infoln("access finished")
 				} else {
 					aclog.WithFields(logrus.Fields{
-						_caller:      ng.GetContainer().GetServiceID(),
-						_duration:    time.Since(accessstart).Milliseconds(),
-						_instance_id: getHostIP(),
-						_url:         c.Request.URL.Path,
-						_method:      c.Request.Method,
-						_status:      c.Writer.Status(),
-						_tracerid:    tracerid,
-						_log_time:    time.Now().Format(_formatLogTime),
+						_caller:   ng.GetContainer().GetServiceID(),
+						_duration: time.Since(accessstart).Milliseconds(),
+						//_instance_id: getHostIP(),
+						_url:      c.Request.URL.Path,
+						_method:   c.Request.Method,
+						_status:   c.Writer.Status(),
+						_tracerid: tracerid,
+						_log_time: time.Now().Format(_formatLogTime),
 					}).Infoln("access status finished")
 				}
 
@@ -161,7 +160,7 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			}
 		}()
 		name := c.Request.URL.Path
-		tracer := ng.GetContainer().GetTracer()
+		/*tracer := ng.GetContainer().GetTracer()
 		if tracer == nil {
 			l.Error("tracer is nil")
 			ErrorResponse(c, zeuserrors.ECodeInternal.ParseErr("tracer is nil"))
@@ -208,6 +207,9 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			span.Finish()
 		}()
 		////// zipkin finish
+		*/
+		tracer := ng.GetContainer().GetTracer()
+		spnctx, span, err := tracer.StartSpanFromContext(ctx, name)
 		tracerid = span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
 		l = l.WithFields(logrus.Fields{
 			_tracerid: tracerid,
@@ -232,9 +234,9 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		}
 
 		c.Set(ZEUS_CTX, ctx)
-		l.Debugln("access start", c.Request.URL.Path)
+		//l.Debugln("access start", c.Request.URL.Path)
 		c.Next()
-		l.Debugln("access end", c.Request.URL.Path)
+		//l.Debugln("access end", c.Request.URL.Path)
 		// if cfg.Get().AccessLog.EnableRecorded {
 		// 	aclog := ng.GetContainer().GetAccessLogger()
 		// 	// TODO: 访问日志需要使用单独的logger进行记录
