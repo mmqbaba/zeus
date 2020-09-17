@@ -1,6 +1,7 @@
 package zcontainer
 
 import (
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mysql/zmysql"
 	"net/http"
 
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
@@ -33,4 +34,5 @@ type Container interface {
 	GetGoMicroService() micro.Service
 	GetMongo() zmongo.Mongo
 	GetHttpClient() zhttpclient.HttpClient
+	GetMysql() zmysql.Mysql
 }

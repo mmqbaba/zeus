@@ -219,6 +219,9 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		if ng.GetContainer().GetHttpClient() != nil {
 			ctx = zeusctx.HttpclientToContext(ctx, ng.GetContainer().GetHttpClient())
 		}
+		if ng.GetContainer().GetMysql() != nil {
+			ctx = zeusctx.MysqlToContext(ctx, ng.GetContainer().GetMysql())
+		}
 		c.Set(ZEUS_CTX, ctx)
 		l.Debugln("access start", c.Request.URL.Path)
 		c.Next()
@@ -367,7 +370,6 @@ func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 
 		reqV := reflect.New(reqT)
 		rspV := reflect.New(rspT)
-
 		req := reqV.Interface()
 		// 针对proto.Message进行反序列化和校验
 		if pb, ok := req.(proto.Message); ok {
@@ -433,6 +435,7 @@ func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 			}
 		}
 		ctx := c.Request.Context()
+		ctx = zeusctx.GinCtxToContext(ctx, c)
 		if cc, ok := c.Value(ZEUS_CTX).(context.Context); ok && cc != nil {
 			ctx = cc
 		}
