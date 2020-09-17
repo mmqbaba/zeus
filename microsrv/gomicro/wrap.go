@@ -122,6 +122,8 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 				prom.RPCServer.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
 				if errcode != "" {
 					prom.RPCServer.Incr(name, ng.GetContainer().GetServiceID(), errcode)
+				} else {
+					prom.RPCServer.Incr(name, ng.GetContainer().GetServiceID(), strconv.Itoa(0))
 				}
 
 			}()
@@ -211,7 +213,9 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 	defer func() {
 		prom.RPCClient.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
 		if errcode != "" {
-			prom.RPCClient.Incr(name, ng.GetContainer().GetServiceID(), errcode)
+			prom.RPCClient.Incr(name, errcode)
+		} else {
+			prom.RPCClient.Incr(name, strconv.Itoa(0))
 		}
 
 	}()

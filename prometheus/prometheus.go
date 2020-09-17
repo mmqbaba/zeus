@@ -53,9 +53,9 @@ func InitClient(cfg *config.Prometheus) *PromClient {
 
 func newPrometheusClient(inner *InnerClient) *PubClient {
 	promPubClient := &PubClient{
-		LibClient:         New().WithTimer("go_lib_client", []string{"method", "sql"}).WithState("go_lib_client_state", []string{"method", "name"}).WithCounter("go_lib_client_code", []string{"method", "code"}),
+		LibClient:         New().WithTimer("go_lib_client", []string{"method", "execute"}).WithState("go_lib_client_state", []string{"method", "name"}).WithCounter("go_lib_client_code", []string{"method", "code"}),
 		BusinessErrCount:  New().WithCounter("go_business_err_count", []string{"name"}).WithState("go_business_err_state", []string{"name"}),
-		BusinessInfoCount: New().WithCounter("go_business_info_count", []string{"name"}).WithState("go_business_info_state", []string{"name"}),
+		BusinessInfoCount: New().WithCounter("go_business_info_count", []string{"name", "user"}).WithState("go_business_info_state", []string{"name", "user"}),
 		CacheHit:          New().WithCounter("go_cache_hit", []string{"name"}),
 		CacheMiss:         New().WithCounter("go_cache_miss", []string{"name"}),
 		HTTPClient:        inner.HTTPClient,

@@ -111,7 +111,6 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		accessstart := time.Now()
 		tracerid := ""
 		logger := ng.GetContainer().GetLogger()
-		prom := ng.GetContainer().GetPrometheus().GetInnerCli()
 		ctx := c.Request.Context()
 		ctx = zeusctx.GinCtxToContext(ctx, c)
 		l := logger.WithFields(logrus.Fields{"tag": "gin"})
@@ -123,12 +122,12 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			return
 		}
 		defer func() {
+			errcode, _ := c.Get("errcode")
+			errmsg, _ := c.Get("errmsg")
 			if cfg.Get().AccessLog.EnableRecorded {
 				aclog := ng.GetContainer().GetAccessLogger()
 				// TODO: 访问日志需要使用单独的logger进行记录
 				if fmt.Sprintf("%v", c.Writer.Status()) == "200" {
-					errcode, _ := c.Get("errcode")
-					errmsg, _ := c.Get("errmsg")
 					aclog.WithFields(logrus.Fields{
 						_caller:      ng.GetContainer().GetServiceID(),
 						_duration:    time.Since(accessstart).Milliseconds(),
@@ -141,7 +140,6 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 						_tracerid:    tracerid,
 						_log_time:    time.Now().Format(_formatLogTime),
 					}).Infoln("access finished")
-					prom.HTTPServer.Incr(tracerid, c.Request.URL.Path, errcode.(string))
 				} else {
 					aclog.WithFields(logrus.Fields{
 						_caller:      ng.GetContainer().GetServiceID(),
@@ -156,7 +154,11 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 				}
 
 			}
-			prom.HTTPServer.Timing(tracerid, int64(time.Since(accessstart)/time.Millisecond), c.Request.URL.Path)
+			if cfg.Get().Prometheus.Enable {
+				prom := ng.GetContainer().GetPrometheus().GetInnerCli()
+				prom.HTTPServer.Incr(tracerid, c.Request.URL.Path, errcode.(string))
+				prom.HTTPServer.Timing(tracerid, int64(time.Since(accessstart)/time.Millisecond), c.Request.URL.Path)
+			}
 		}()
 		name := c.Request.URL.Path
 		tracer := ng.GetContainer().GetTracer()
