@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/micro/go-micro/client"
 	gmerrors "github.com/micro/go-micro/errors"
@@ -17,11 +18,11 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/sirupsen/logrus"
 
+	"github.com/micro/go-micro/metadata"
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
 	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
-    "github.com/micro/go-micro/metadata"
 )
 
 var fm sync.Map
@@ -45,6 +46,9 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
 			logger := ng.GetContainer().GetLogger()
+			prom := ng.GetContainer().GetPrometheus().GetInnerCli()
+			var errcode string
+			now := time.Now()
 			l := logger.WithFields(logrus.Fields{"tag": "gomicro-serverlogwrap"})
 			c := zeusctx.GMClientToContext(ctx, ng.GetContainer().GetGoMicroClient())
 			///////// tracer begin
@@ -107,6 +111,22 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			if ng.GetContainer().GetHttpClient() != nil {
 				c = zeusctx.HttpclientToContext(c, ng.GetContainer().GetHttpClient())
 			}
+			if ng.GetContainer().GetMysqlCli() != nil {
+				c = zeusctx.MysqlToContext(c, ng.GetContainer().GetMysqlCli().GetCli())
+			}
+			if ng.GetContainer().GetPrometheus() != nil {
+				c = zeusctx.PrometheusToContext(c, ng.GetContainer().GetPrometheus().GetPubCli())
+			}
+
+			defer func() {
+				prom.RPCServer.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
+				if errcode != "" {
+					prom.RPCServer.Incr(name, ng.GetContainer().GetServiceID(), errcode)
+				} else {
+					prom.RPCServer.Incr(name, ng.GetContainer().GetServiceID(), strconv.Itoa(0))
+				}
+
+			}()
 			err = fn(c, req, rsp)
 			if err != nil && !utils.IsBlank(reflect.ValueOf(err)) {
 				span.SetTag("grpc server answer error", err)
@@ -122,16 +142,17 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 					if !strings.HasPrefix(status, tracerID+"@") {
 						status = tracerID + "@" + zeusErr.Cause
 					}
-                    gmErr = &gmerrors.Error{Id: serviceID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: status}
+					gmErr = &gmerrors.Error{Id: serviceID, Code: int32(zeusErr.ErrCode), Detail: zeusErr.ErrMsg, Status: status}
 
-                    // 防止go-micro grpc 将小于errcode小于0的错误转换成 internal error
-                    // 对于非zeus grpc调用，不做处理（grpc-gateway调用，直接返回负数，否http访问会得不到正确的错误码）
-                    if isZeusRpc(ctx) {
-                        if gmErr.Code < 0 {
-                            gmErr.Code = -gmErr.Code
-                            gmErr.Detail = "-@" + gmErr.Detail
-                        }
-                    }
+					// 防止go-micro grpc 将小于errcode小于0的错误转换成 internal error
+					// 对于非zeus grpc调用，不做处理（grpc-gateway调用，直接返回负数，否http访问会得不到正确的错误码）
+					if isZeusRpc(ctx) {
+						if gmErr.Code < 0 {
+							gmErr.Code = -gmErr.Code
+							gmErr.Detail = "-@" + gmErr.Detail
+						}
+					}
+					errcode = strconv.Itoa(int(zeusErr.ErrCode))
 					err = gmErr
 
 					return
@@ -181,14 +202,27 @@ type clientLogWrap struct {
 }
 
 func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) (err error) {
+	var now = time.Now()
+	var errcode string
 	logger := zeusctx.ExtractLogger(ctx)
-
 	ng := l.ng
+	prom := ng.GetContainer().GetPrometheus().GetInnerCli()
+
 	///////// tracer begin
 	name := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
+	defer func() {
+		prom.RPCClient.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
+		if errcode != "" {
+			prom.RPCClient.Incr(name, errcode)
+		} else {
+			prom.RPCClient.Incr(name, strconv.Itoa(0))
+		}
+
+	}()
 	cfg, err := ng.GetConfiger()
 	if err != nil {
 		logger.Error(err)
+		errcode = string(zeuserrors.ECodeSystem)
 		err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: "ng.GetConfiger"}
 		return
 	}
@@ -197,12 +231,14 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 	if tracer == nil {
 		err = fmt.Errorf("tracer is nil")
 		logger.Error(err)
+		errcode = string(zeuserrors.ECodeSystem)
 		err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
 		return
 	}
 	spnctx, span, err := tracer.StartSpanFromContext(ctx, name)
 	if err != nil {
 		logger.Error(err)
+		errcode = string(zeuserrors.ECodeSystem)
 		err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: err.Error(), Status: ""}
 		return
 	}
@@ -218,8 +254,7 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 	///////// tracer finish
 
 	//zeus rpc 调用标识
-    ctx = zeusFlagToContext(ctx)
-
+	ctx = zeusFlagToContext(ctx)
 	err = l.Client.Call(ctx, req, rsp, opts...)
 	if err != nil {
 		// gomicro错误解包为zeus错误
@@ -227,13 +262,13 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 		if errors.As(err, &gmErr) {
 			if gmErr != nil {
 				span.SetTag("grpc client receive error", gmErr)
-
+				errcode = strconv.Itoa(int(gmErr.Code))
 				// 根据Detail 判断错误码是否负数，将其还原
-				strs := strings.SplitN(gmErr.Detail, "@",2)
+				strs := strings.SplitN(gmErr.Detail, "@", 2)
 				if len(strs) == 2 && strs[0] == "-" {
-                    gmErr.Code = -gmErr.Code
-                    gmErr.Detail= strs[1]
-                }
+					gmErr.Code = -gmErr.Code
+					gmErr.Detail = strs[1]
+				}
 				zeusErr := zeuserrors.New(zeuserrors.ErrorCode(gmErr.Code), gmErr.Detail, gmErr.Status)
 				zeusErr.ServiceID = gmErr.Id
 				if utils.IsEmptyString(zeusErr.ServiceID) && l.ng != nil {
@@ -290,21 +325,21 @@ func funcName(skip int) (name string) {
 }
 
 func zeusFlagToContext(ctx context.Context) context.Context {
-    if md, ok := metadata.FromContext(ctx); ok {
-        md["zeus-rpc-flag"] = ""
-        //map修改直接生效，不需要重设
-        //ctx = metadata.NewContext(ctx, md)
-    } else {
-        ctx = metadata.NewContext(ctx, metadata.Metadata{"zeus-rpc-flag":""})
-    }
-    return ctx
+	if md, ok := metadata.FromContext(ctx); ok {
+		md["zeus-rpc-flag"] = ""
+		//map修改直接生效，不需要重设
+		//ctx = metadata.NewContext(ctx, md)
+	} else {
+		ctx = metadata.NewContext(ctx, metadata.Metadata{"zeus-rpc-flag": ""})
+	}
+	return ctx
 }
 
 func isZeusRpc(ctx context.Context) bool {
-    if md, ok := metadata.FromContext(ctx); ok {
-        if _, ok := md["zeus-rpc-flag"]; ok {
-            return true
-        }
-    }
-    return false
+	if md, ok := metadata.FromContext(ctx); ok {
+		if _, ok := md["zeus-rpc-flag"]; ok {
+			return true
+		}
+	}
+	return false
 }

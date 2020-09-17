@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mysql/zmysql"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/prometheus/zprometheus"
 	"log"
 	"net/http"
 
@@ -19,6 +20,7 @@ import (
 	zeusmongo "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo/zmongo"
 	zeusmysql "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mysql"
+	zeusprometheus "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/prometheus"
 	zeusredis "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis/zredis"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/sequence"
@@ -44,7 +46,7 @@ type Container struct {
 	gomicroService micro.Service
 	// httpclient
 	httpClient zhttpclient.HttpClient
-
+	prometheus zprometheus.Prometheus
 	// dbPool          *sql.DB
 	// transport       *http.Transport
 	// svc             XUtil
@@ -66,6 +68,7 @@ func (c *Container) Init(appcfg *config.AppConf) {
 	c.initMysql(&appcfg.Mysql)
 	c.initHttpClient(appcfg.HttpClient)
 	c.initGoPS(&appcfg.GoPS)
+	c.initPrometheus(&appcfg.Prometheus)
 	log.Println("[Container.Init] finish")
 	c.appcfg = *appcfg
 }
@@ -145,8 +148,18 @@ func (c *Container) reloadMysql(cfg *config.Mysql) {
 	}
 }
 
-func (c *Container) GetMyslCli() zmysql.Mysql {
+func (c *Container) GetMysqlCli() zmysql.Mysql {
 	return c.mysql
+}
+
+//Prometheus
+func (c *Container) initPrometheus(cfg *config.Prometheus) {
+	if cfg.Enable {
+		c.prometheus = zeusprometheus.InitClient(cfg)
+	}
+}
+func (c *Container) GetPrometheus() zprometheus.Prometheus {
+	return c.prometheus
 }
 
 // GoMicroClient

@@ -122,19 +122,19 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			return
 		}
 		defer func() {
+			errcode, _ := c.Get("errcode")
+			errmsg, _ := c.Get("errmsg")
 			if cfg.Get().AccessLog.EnableRecorded {
 				aclog := ng.GetContainer().GetAccessLogger()
 				// TODO: 访问日志需要使用单独的logger进行记录
 				if fmt.Sprintf("%v", c.Writer.Status()) == "200" {
-					errcode, _ := c.Get("errcode")
-					errmsg, _ := c.Get("errmsg")
 					aclog.WithFields(logrus.Fields{
 						_caller:      ng.GetContainer().GetServiceID(),
 						_duration:    time.Since(accessstart).Milliseconds(),
 						_errcode:     errcode,
 						_errmsg:      errmsg,
 						_instance_id: getHostIP(),
-						_url:         c.Request.RequestURI,
+						_url:         c.Request.URL.Path,
 						_method:      c.Request.Method,
 						_status:      c.Writer.Status(),
 						_tracerid:    tracerid,
@@ -145,7 +145,7 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 						_caller:      ng.GetContainer().GetServiceID(),
 						_duration:    time.Since(accessstart).Milliseconds(),
 						_instance_id: getHostIP(),
-						_url:         c.Request.RequestURI,
+						_url:         c.Request.URL.Path,
 						_method:      c.Request.Method,
 						_status:      c.Writer.Status(),
 						_tracerid:    tracerid,
@@ -153,6 +153,11 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 					}).Infoln("access status finished")
 				}
 
+			}
+			if cfg.Get().Prometheus.Enable {
+				prom := ng.GetContainer().GetPrometheus().GetInnerCli()
+				prom.HTTPServer.Incr(tracerid, c.Request.URL.Path, errcode.(string))
+				prom.HTTPServer.Timing(tracerid, int64(time.Since(accessstart)/time.Millisecond), c.Request.URL.Path)
 			}
 		}()
 		name := c.Request.URL.Path
@@ -219,9 +224,13 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		if ng.GetContainer().GetHttpClient() != nil {
 			ctx = zeusctx.HttpclientToContext(ctx, ng.GetContainer().GetHttpClient())
 		}
-		if ng.GetContainer().GetMysql() != nil {
-			ctx = zeusctx.MysqlToContext(ctx, ng.GetContainer().GetMysql())
+		if ng.GetContainer().GetMysqlCli() != nil {
+			ctx = zeusctx.MysqlToContext(ctx, ng.GetContainer().GetMysqlCli().GetCli())
 		}
+		if ng.GetContainer().GetPrometheus() != nil {
+			ctx = zeusctx.PrometheusToContext(ctx, ng.GetContainer().GetPrometheus().GetPubCli())
+		}
+
 		c.Set(ZEUS_CTX, ctx)
 		l.Debugln("access start", c.Request.URL.Path)
 		c.Next()
