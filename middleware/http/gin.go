@@ -121,12 +121,12 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			return
 		}
 		defer func() {
+			errcode, _ := c.Get("errcode")
+			errmsg, _ := c.Get("errmsg")
 			if cfg.Get().AccessLog.EnableRecorded {
 				aclog := ng.GetContainer().GetAccessLogger()
 				// TODO: 访问日志需要使用单独的logger进行记录
 				if fmt.Sprintf("%v", c.Writer.Status()) == "200" {
-					errcode, _ := c.Get("errcode")
-					errmsg, _ := c.Get("errmsg")
 					aclog.WithFields(logrus.Fields{
 						_caller:   ng.GetContainer().GetServiceID(),
 						_duration: time.Since(accessstart).Milliseconds(),
