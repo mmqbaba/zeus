@@ -304,17 +304,6 @@ func (s *Service) initServer() (err error) {
 		s.container.SetHTTPHandler(gw)
 
 		go func() {
-			http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-				h := promhttp.Handler()
-				h.ServeHTTP(w, r)
-			})
-			if err := http.ListenAndServe(s.container.GetPrometheus().GetListenHost(), nil); err != nil {
-				log.Fatal(err)
-			}
-			log.Printf("prometheus http apiserver listen on %s\n", s.container.GetPrometheus().GetListenHost())
-		}()
-
-		go func() {
 			addr := fmt.Sprintf("%s:%d", s.options.ApiInterface, s.options.ApiPort)
 			// log.Printf("http apiserver listen on %s", addr)
 			// Start HTTP server (and proxy calls to gRPC server endpoint, serve http, serve swagger)
@@ -518,6 +507,8 @@ func (s *Service) newHTTPGateway(opt gwOption) (h http.Handler, err error) {
 	serveSwaggerUI("/swagger-ui/", r, opt.swaggerJSONFile)
 	log.Println("[zeus] [s.newHTTPGateway] swaggerRegister success.")
 
+	r.PathPrefix("/metrics").HandlerFunc(servePrometheus)
+	log.Println("[zeus] [s.newHTTPGateway] servePrometheus success.")
 	// http handler
 	if s.options.HttpHandlerRegisterFn != nil {
 		var handler http.Handler
@@ -599,6 +590,11 @@ func (s *Service) newHTTPGateway(opt gwOption) (h http.Handler, err error) {
 
 	h = r
 	return
+}
+
+func servePrometheus(w http.ResponseWriter, r *http.Request) {
+	h := promhttp.Handler()
+	h.ServeHTTP(w, r)
 }
 
 func serveSwaggerFile(w http.ResponseWriter, r *http.Request) {
