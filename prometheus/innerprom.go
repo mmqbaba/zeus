@@ -3,7 +3,6 @@ package prom
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"log"
 )
 
 // PromClient struct zeus prometheus client & pub Business prometheus client
@@ -13,19 +12,9 @@ type PromClient struct {
 	pHost       string
 }
 
-// PubClient Business prometheus client
-type PubClient struct {
-	BusinessErrCount  *Prom
-	BusinessInfoCount *Prom
-	CacheHit          *Prom
-	CacheMiss         *Prom
-	LibClient         *Prom
-	HTTPClient        *Prom
-}
-
 type InnerClient struct {
-	RPCClient  *Prom
-	HTTPClient *Prom
+	RPCClient *Prom
+	//HTTPClient *Prom
 	HTTPServer *Prom
 	RPCServer  *Prom
 }
@@ -40,28 +29,14 @@ type Prom struct {
 func InitClient(cfg *config.Prometheus) *PromClient {
 	prom := &PromClient{
 		innerClient: &InnerClient{
-			RPCClient:  New().WithTimer("zeus_rpc_client", []string{"user", "method"}).WithState("zeus_rpc_client_state", []string{"method", "name"}).WithCounter("zeus_rpc_client_code", []string{"method", "code"}),
-			HTTPClient: New().WithTimer("zeus_http_client", []string{"method"}).WithState("zeus_http_client_state", []string{"method", "name"}).WithCounter("zeus_http_client_code", []string{"method", "code"}),
-			HTTPServer: New().WithTimer("zeus_http_server", []string{"user", "method"}).WithCounter("zeus_http_server_code", []string{"user", "method", "code"}),
-			RPCServer:  New().WithTimer("zeus_rpc_server", []string{"user", "method"}).WithCounter("zeus_rpc_server_code", []string{"user", "method", "code"}),
+			RPCClient:  newInner().withTimer("zeus_rpc_client", []string{"user", "method"}).withState("zeus_rpc_client_state", []string{"method", "name"}).withCounter("zeus_rpc_client_code", []string{"method", "code"}),
+			HTTPServer: newInner().withTimer("zeus_http_server", []string{"user", "method"}).withCounter("zeus_http_server_code", []string{"user", "method", "code"}),
+			RPCServer:  newInner().withTimer("zeus_rpc_server", []string{"user", "method"}).withCounter("zeus_rpc_server_code", []string{"user", "method", "code"}),
 		},
 		pHost: cfg.PullHost,
 	}
-	prom.pubClient = newPrometheusClient(prom.innerClient)
+	prom.pubClient = newPrometheusClient()
 	return prom
-}
-
-func newPrometheusClient(inner *InnerClient) *PubClient {
-	promPubClient := &PubClient{
-		LibClient:         New().WithTimer("go_lib_client", []string{"method", "execute"}).WithState("go_lib_client_state", []string{"method", "name"}).WithCounter("go_lib_client_code", []string{"method", "code"}),
-		BusinessErrCount:  New().WithCounter("go_business_err_count", []string{"name"}).WithState("go_business_err_state", []string{"name"}),
-		BusinessInfoCount: New().WithCounter("go_business_info_count", []string{"name", "user"}).WithState("go_business_info_state", []string{"name", "user"}),
-		CacheHit:          New().WithCounter("go_cache_hit", []string{"name"}),
-		CacheMiss:         New().WithCounter("go_cache_miss", []string{"name"}),
-		HTTPClient:        inner.HTTPClient,
-	}
-	log.Printf("[prometheus.newPrometheusClient] success \n")
-	return promPubClient
 }
 
 func (prom *PromClient) GetPubCli() *PubClient {
@@ -77,12 +52,12 @@ func (prom *PromClient) GetListenHost() string {
 }
 
 // New creates a Prom instance.
-func New() *Prom {
+func newInner() *Prom {
 	return &Prom{}
 }
 
 // WithTimer with summary timer
-func (p *Prom) WithTimer(name string, labels []string) *Prom {
+func (p *Prom) withTimer(name string, labels []string) *Prom {
 	if p == nil || p.timer != nil {
 		return p
 	}
@@ -96,7 +71,7 @@ func (p *Prom) WithTimer(name string, labels []string) *Prom {
 }
 
 // WithCounter sets counter.
-func (p *Prom) WithCounter(name string, labels []string) *Prom {
+func (p *Prom) withCounter(name string, labels []string) *Prom {
 	if p == nil || p.counter != nil {
 		return p
 	}
@@ -110,7 +85,7 @@ func (p *Prom) WithCounter(name string, labels []string) *Prom {
 }
 
 // WithState sets state.
-func (p *Prom) WithState(name string, labels []string) *Prom {
+func (p *Prom) withState(name string, labels []string) *Prom {
 	if p == nil || p.state != nil {
 		return p
 	}
