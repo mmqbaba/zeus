@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -111,6 +112,7 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		accessstart := time.Now()
 		tracerid := ""
 		logger := ng.GetContainer().GetLogger()
+		prom := ng.GetContainer().GetPrometheus().GetInnerCli()
 		ctx := c.Request.Context()
 		ctx = zeusctx.GinCtxToContext(ctx, c)
 		l := logger.WithFields(logrus.Fields{"tag": "gin"})
@@ -121,68 +123,29 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			ErrorResponse(c, err)
 			return
 		}
-		defer func() {
-			errcode, _ := c.Get("errcode")
-			errmsg, _ := c.Get("errmsg")
-			if cfg.Get().AccessLog.EnableRecorded {
-				aclog := ng.GetContainer().GetAccessLogger()
-				// TODO: 访问日志需要使用单独的logger进行记录
-				if fmt.Sprintf("%v", c.Writer.Status()) == "200" {
-					aclog.WithFields(logrus.Fields{
-						_caller:      ng.GetContainer().GetServiceID(),
-						_duration:    time.Since(accessstart).Milliseconds(),
-						_errcode:     errcode,
-						_errmsg:      errmsg,
-						_instance_id: getHostIP(),
-						_url:         c.Request.URL.Path,
-						_method:      c.Request.Method,
-						_status:      c.Writer.Status(),
-						_tracerid:    tracerid,
-						_log_time:    time.Now().Format(_formatLogTime),
-					}).Infoln("access finished")
-				} else {
-					aclog.WithFields(logrus.Fields{
-						_caller:      ng.GetContainer().GetServiceID(),
-						_duration:    time.Since(accessstart).Milliseconds(),
-						_instance_id: getHostIP(),
-						_url:         c.Request.URL.Path,
-						_method:      c.Request.Method,
-						_status:      c.Writer.Status(),
-						_tracerid:    tracerid,
-						_log_time:    time.Now().Format(_formatLogTime),
-					}).Infoln("access status finished")
-				}
-
-			}
-			if cfg.Get().Prometheus.Enable {
-				prom := ng.GetContainer().GetPrometheus().GetInnerCli()
-				prom.HTTPServer.Incr(tracerid, c.Request.URL.Path, errcode.(string))
-				prom.HTTPServer.Timing(tracerid, int64(time.Since(accessstart)/time.Millisecond), c.Request.URL.Path)
-			}
-		}()
 		name := c.Request.URL.Path
-		tracer := ng.GetContainer().GetTracer()
-		if tracer == nil {
-			l.Error("tracer is nil")
-			ErrorResponse(c, zeuserrors.ECodeInternal.ParseErr("tracer is nil"))
-			return
-		}
-		spnctx, span, err := tracer.StartSpanFromContext(ctx, name)
-		if err != nil {
-			l.Error(err)
-			ErrorResponse(c, err)
-			return
-		}
+		/*tracer := ng.GetContainer().GetTracer()
+		  if tracer == nil {
+		      l.Error("tracer is nil")
+		      ErrorResponse(c, zeuserrors.ECodeInternal.ParseErr("tracer is nil"))
+		      return
+		  }
+		  spnctx, span, err := tracer.StartSpanFromContext(ctx, name)
+		  if err != nil {
+		      l.Error(err)
+		      ErrorResponse(c, err)
+		      return
+		  }
 
-		header, _ := utils.Marshal(c.Request.Header)
-		span.SetTag("http request.header", string(header))
-		span.SetTag("http request.method", c.Request.Method)
-		span.SetTag("http request.url", c.Request.URL.String())
-
+		  header, _ := utils.Marshal(c.Request.Header)
+		  span.SetTag("http request.header", string(header))
+		  span.SetTag("http request.method", c.Request.Method)
+		  span.SetTag("http request.url", c.Request.URL.String())
+		*/
 		if c.Request.Body != nil {
 			bodyBytes, err := ioutil.ReadAll(c.Request.Body)
 			if err == nil {
-				span.SetTag("http request.body", string(bodyBytes))
+				//span.SetTag("http request.body", string(bodyBytes))
 				// Restore the io.ReadCloser to its original state
 				c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 			}
@@ -194,20 +157,58 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		if cfg.Get().Trace.OnlyLogErr {
 			c.Writer = blw
 		}
-
+		baseRsp := struct {
+			Errcode int32  `json:"errcode"`
+			ErrMsg  string `json:"errmsg"`
+		}{}
 		// before request
 		defer func() {
 			if blw.body.Len() > 0 && blw.body.Bytes()[0] == '{' {
-				baseRsp := struct {
-					Errcode int32 `json:"errcode"`
-				}{}
-				if err1 := utils.Unmarshal(blw.body.Bytes(), &baseRsp); err1 == nil && baseRsp.Errcode == 0 {
+
+				if err1 := utils.Unmarshal(blw.body.Bytes(), &baseRsp); err1 != nil {
 					return
 				}
 			}
-			span.Finish()
+			if cfg.Get().AccessLog.EnableRecorded {
+				aclog := ng.GetContainer().GetAccessLogger()
+				// TODO: 访问日志需要使用单独的logger进行记录
+				if fmt.Sprintf("%v", c.Writer.Status()) == "200" {
+					aclog.WithFields(logrus.Fields{
+						_caller:   ng.GetContainer().GetServiceID(),
+						_duration: time.Since(accessstart).Milliseconds(),
+						_errcode:  baseRsp.Errcode,
+						_errmsg:   baseRsp.ErrMsg,
+						//_instance_id: getHostIP(),
+						_url:      c.Request.URL.Path,
+						_method:   c.Request.Method,
+						_status:   c.Writer.Status(),
+						_tracerid: tracerid,
+						_log_time: time.Now().Format(_formatLogTime),
+					}).Infoln("access finished")
+				} else {
+					aclog.WithFields(logrus.Fields{
+						_caller:   ng.GetContainer().GetServiceID(),
+						_duration: time.Since(accessstart).Milliseconds(),
+						//_instance_id: getHostIP(),
+						_url:      c.Request.URL.Path,
+						_method:   c.Request.Method,
+						_status:   c.Writer.Status(),
+						_tracerid: tracerid,
+						_log_time: time.Now().Format(_formatLogTime),
+					}).Infoln("access status finished")
+				}
+			}
+			if cfg.Get().Prometheus.Enable {
+				prom.HTTPServer.Incr(tracerid, c.Request.URL.Path, strconv.Itoa(int(baseRsp.Errcode)))
+				prom.HTTPServer.Timing(tracerid, int64(time.Since(accessstart)/time.Millisecond), c.Request.URL.Path)
+				prom.HTTPServer.StateIncr(c.Request.URL.Path)
+			}
+			//span.Finish()
 		}()
 		////// zipkin finish
+
+		tracer := ng.GetContainer().GetTracer()
+		spnctx, span, err := tracer.StartSpanFromContext(ctx, name)
 		tracerid = span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
 		l = l.WithFields(logrus.Fields{
 			_tracerid: tracerid,
@@ -232,9 +233,9 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		}
 
 		c.Set(ZEUS_CTX, ctx)
-		l.Debugln("access start", c.Request.URL.Path)
+		//l.Debugln("access start", c.Request.URL.Path)
 		c.Next()
-		l.Debugln("access end", c.Request.URL.Path)
+		//l.Debugln("access end", c.Request.URL.Path)
 		// if cfg.Get().AccessLog.EnableRecorded {
 		// 	aclog := ng.GetContainer().GetAccessLogger()
 		// 	// TODO: 访问日志需要使用单独的logger进行记录

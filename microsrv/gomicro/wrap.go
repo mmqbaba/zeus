@@ -119,13 +119,15 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			}
 
 			defer func() {
-				prom.RPCServer.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
-				if errcode != "" {
-					prom.RPCServer.Incr(name, ng.GetContainer().GetServiceID(), errcode)
-				} else {
-					prom.RPCServer.Incr(name, ng.GetContainer().GetServiceID(), strconv.Itoa(0))
+				if cfg.Get().Prometheus.Enable {
+					prom.RPCServer.Timing(tracerID, int64(time.Since(now)/time.Millisecond), name, ng.GetContainer().GetServiceID())
+					if errcode != "" {
+						prom.RPCServer.Incr(name, ng.GetContainer().GetServiceID(), errcode)
+					} else {
+						prom.RPCServer.Incr(name, ng.GetContainer().GetServiceID(), strconv.Itoa(0))
+					}
+					prom.RPCServer.StateIncr(ng.GetContainer().GetServiceID())
 				}
-
 			}()
 			err = fn(c, req, rsp)
 			if err != nil && !utils.IsBlank(reflect.ValueOf(err)) {
@@ -210,15 +212,7 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 
 	///////// tracer begin
 	name := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
-	defer func() {
-		prom.RPCClient.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
-		if errcode != "" {
-			prom.RPCClient.Incr(name, errcode)
-		} else {
-			prom.RPCClient.Incr(name, strconv.Itoa(0))
-		}
 
-	}()
 	cfg, err := ng.GetConfiger()
 	if err != nil {
 		logger.Error(err)
@@ -282,6 +276,18 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 			err = nil
 		}
 	}
+	defer func() {
+		if cfg.Get().Prometheus.Enable {
+			prom.RPCClient.Timing(tracer.GetTraceID(spnctx), int64(time.Since(now)/time.Millisecond), name, ng.GetContainer().GetServiceID())
+			if errcode != "" {
+				prom.RPCClient.Incr(tracer.GetTraceID(spnctx), name, ng.GetContainer().GetServiceID(), errcode)
+			} else {
+				prom.RPCClient.Incr(tracer.GetTraceID(spnctx), name, ng.GetContainer().GetServiceID(), strconv.Itoa(0))
+			}
+			//mark rpc tracing
+			prom.RPCClient.StateIncr(tracer.GetTraceID(spnctx), name, ng.GetContainer().GetServiceID())
+		}
+	}()
 	rspRaw, _ := utils.Marshal(rsp)
 	span.SetTag("grpc client receive", string(rspRaw))
 	return
