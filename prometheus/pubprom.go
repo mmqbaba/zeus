@@ -25,13 +25,13 @@ type PubClient struct {
 
 func newPrometheusClient() *PubClient {
 	promPubClient := &PubClient{
-		DbClient:          newInner().withTimer("zeus_db_client_timer", []string{"sql", "affected_row"}).withState("zeus_db_client_state", []string{"sql", "msg"}).withCounter("zeus_db_client_counter", []string{"sql", "options"}),
-		CacheClient:       newInner().withTimer("zeus_cache_client", []string{"options", "key"}).withState("zeus_cache_state", []string{"options", "key", "msg"}).withCounter("go_lib_client_code", []string{"options", "key"}),
+		DbClient:          newInner().withTimer("zeus_db_client_duration", []string{"sql", "affected_row"}).withState("zeus_db_client_state", []string{"sql", "msg"}).withCounter("zeus_db_client_counter", []string{"sql", "options"}),
+		CacheClient:       newInner().withTimer("zeus_cache_client_duration", []string{"options", "key"}).withState("zeus_cache_state", []string{"options", "key", "msg"}).withCounter("go_lib_client_code", []string{"options", "key"}),
 		BusinessErrCount:  New(),
 		BusinessInfoCount: New(),
 		CacheHit:          New(),
 		CacheMiss:         New(),
-		HTTPClient:        newInner().withTimer("zeus_http_client", []string{"method"}).withState("zeus_http_client_state", []string{"method", "name"}).withCounter("zeus_http_client_code", []string{"method", "code"}),
+		HTTPClient:        newInner().withTimer("zeus_http_client_duration", []string{"trace_id", "url"}).withState("zeus_http_client_state", []string{"url"}).withCounter("zeus_http_client_code", []string{"trace_id", "url", "err_code", "state_code"}),
 	}
 	log.Printf("[prometheus.newPrometheusClient] success \n")
 	return promPubClient

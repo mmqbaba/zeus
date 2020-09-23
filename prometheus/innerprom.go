@@ -29,9 +29,9 @@ type Prom struct {
 func InitClient(cfg *config.Prometheus) *PromClient {
 	prom := &PromClient{
 		innerClient: &InnerClient{
-			RPCClient:  newInner().withTimer("zeus_rpc_client", []string{"user", "method"}).withState("zeus_rpc_client_state", []string{"method", "name"}).withCounter("zeus_rpc_client_code", []string{"method", "code"}),
-			HTTPServer: newInner().withTimer("zeus_http_server", []string{"user", "method"}).withCounter("zeus_http_server_code", []string{"user", "method", "code"}),
-			RPCServer:  newInner().withTimer("zeus_rpc_server", []string{"user", "method"}).withCounter("zeus_rpc_server_code", []string{"user", "method", "code"}),
+			RPCClient:  newInner().withTimer("zeus_rpc_client_duration", []string{"trace_id", "client_node", "server_name"}).withCounter("zeus_rpc_client_code", []string{"trace_id", "client_node", "server_name", "err_code"}).withState("zeus_rpc_client_state", []string{"client_node", "server_name"}),
+			HTTPServer: newInner().withTimer("zeus_http_server_duration", []string{"trace_id", "url"}).withCounter("zeus_http_server_code", []string{"trace_id", "url", "err_code"}).withState("zeus_http_server_state", []string{"url"}),
+			RPCServer:  newInner().withTimer("zeus_rpc_server_duration", []string{"trace_id", "server_node", "server_name"}).withCounter("zeus_rpc_server_code", []string{"trace_id", "server_name", "err_code"}).withState("zeus_rpc_server_state", []string{"server_name"}),
 		},
 		pHost: cfg.PullHost,
 	}
@@ -112,12 +112,20 @@ func (p *Prom) Incr(name string, extra ...string) {
 	if p.counter != nil {
 		p.counter.WithLabelValues(label...).Inc()
 	}
+	/*if p.state != nil {
+		p.state.WithLabelValues(label...).Inc()
+	}*/
+}
+
+// Incr increments one stat gauge without sampling
+func (p *Prom) StateIncr(name string, extra ...string) {
+	label := append([]string{name}, extra...)
 	if p.state != nil {
 		p.state.WithLabelValues(label...).Inc()
 	}
 }
 
-// Decr decrements one stat counter without sampling
+// Decr decrements one stat gauge without sampling
 func (p *Prom) Decr(name string, extra ...string) {
 	if p.state != nil {
 		label := append([]string{name}, extra...)
