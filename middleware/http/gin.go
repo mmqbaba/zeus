@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -124,24 +123,19 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			return
 		}
 		name := c.Request.URL.Path
-		/*tracer := ng.GetContainer().GetTracer()
-		  if tracer == nil {
-		      l.Error("tracer is nil")
-		      ErrorResponse(c, zeuserrors.ECodeInternal.ParseErr("tracer is nil"))
-		      return
-		  }
-		  spnctx, span, err := tracer.StartSpanFromContext(ctx, name)
-		  if err != nil {
-		      l.Error(err)
-		      ErrorResponse(c, err)
-		      return
-		  }
-
-		  header, _ := utils.Marshal(c.Request.Header)
-		  span.SetTag("http request.header", string(header))
-		  span.SetTag("http request.method", c.Request.Method)
-		  span.SetTag("http request.url", c.Request.URL.String())
-		*/
+		tracer := ng.GetContainer().GetTracer()
+		if tracer == nil {
+			l.Error("tracer is nil")
+			ErrorResponse(c, zeuserrors.ECodeInternal.ParseErr("tracer is nil"))
+			return
+		}
+		spnctx, span, err := tracer.StartSpanFromContext(ctx, name)
+		if err != nil {
+			l.Error(err)
+			ErrorResponse(c, err)
+			return
+		}
+		//header, _ := utils.Marshal(c.Request.Header)
 		if c.Request.Body != nil {
 			bodyBytes, err := ioutil.ReadAll(c.Request.Body)
 			if err == nil {
@@ -151,7 +145,6 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			}
 		}
 		bf := bytesBuffPool.Get().(*bytes.Buffer)
-		defer bytesBuffPool.Put(bf)
 		bf.Reset()
 		blw := &bodyLogWriter{body: bf, ResponseWriter: c.Writer}
 		if cfg.Get().Trace.OnlyLogErr {
@@ -161,7 +154,12 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			Errcode int32  `json:"errcode"`
 			ErrMsg  string `json:"errmsg"`
 		}{}
-		// before request
+
+		tracerid = span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
+		l = l.WithFields(logrus.Fields{
+			_tracerid: tracerid,
+			_log_time: time.Now().Format(_formatLogTime),
+		})
 		defer func() {
 			if blw.body.Len() > 0 && blw.body.Bytes()[0] == '{' {
 
@@ -202,17 +200,8 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 				prom.HTTPServer.Incr(tracerid, c.Request.URL.Path, strconv.Itoa(int(baseRsp.Errcode)))
 				prom.HTTPServer.Timing(tracerid, int64(time.Since(accessstart)/time.Millisecond), c.Request.URL.Path)
 			}
-			//span.Finish()
+			bytesBuffPool.Put(bf)
 		}()
-		////// zipkin finish
-
-		tracer := ng.GetContainer().GetTracer()
-		spnctx, span, err := tracer.StartSpanFromContext(ctx, name)
-		tracerid = span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
-		l = l.WithFields(logrus.Fields{
-			_tracerid: tracerid,
-			_log_time: time.Now().Format(_formatLogTime),
-		})
 		ctx = zeusctx.LoggerToContext(spnctx, l)
 		ctx = zeusctx.GMClientToContext(ctx, ng.GetContainer().GetGoMicroClient())
 		if ng.GetContainer().GetRedisCli() != nil {
@@ -230,38 +219,11 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		if ng.GetContainer().GetPrometheus() != nil {
 			ctx = zeusctx.PrometheusToContext(ctx, ng.GetContainer().GetPrometheus().GetPubCli())
 		}
-
 		c.Set(ZEUS_CTX, ctx)
-		//l.Debugln("access start", c.Request.URL.Path)
 		c.Next()
-		//l.Debugln("access end", c.Request.URL.Path)
-		// if cfg.Get().AccessLog.EnableRecorded {
-		// 	aclog := ng.GetContainer().GetAccessLogger()
-		// 	// TODO: 访问日志需要使用单独的logger进行记录
-		// 	aclog.WithFields(logrus.Fields{
-		// 		"url":        c.Request.RequestURI,
-		// 		"method":     c.Request.Method,
-		// 		"status":     c.Writer.Status(),
-		// 		"duration":   time.Since(accessstart).String(),
-		// 		"accessType": "http",
-		// 		"tag":        "accesslog",
-		// 		"tracerid":   tracerid,
-		// 	}).Infoln("access finished")
-		// }
-	}
-}
-func getHostIP() (orghost string) {
-	addrs, _ := net.InterfaceAddrs()
-	for _, address := range addrs {
-		// 检查ip地址判断是否回环地址
-		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-				orghost = ipnet.IP.String()
-			}
+		// before request
 
-		}
 	}
-	return
 }
 
 func ExtractZeusCtx(c *gin.Context) context.Context {
