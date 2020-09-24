@@ -409,8 +409,9 @@ func GenerateGinHandle(handleFunc interface{}) func(c *gin.Context) {
 					err := jsonPBUmarshaler.Unmarshal(c.Request.Body, pb)
 					if err != nil {
 						ExtractLogger(c).Debug(err)
-						ErrorResponse(c, zeuserrors.ECodeJSONPBUnmarshal.ParseErr(err.Error()))
-						return
+						//兼容旧接口的post params 入参格式
+						/*ErrorResponse(c, zeuserrors.ECodeJSONPBUnmarshal.ParseErr(err.Error()))
+						return*/
 					}
 				} else if c.Request.Method == http.MethodGet || c.Request.Method == http.MethodDelete {
 					if err := c.ShouldBindQuery(req); err != nil {
