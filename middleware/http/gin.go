@@ -145,6 +145,7 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			}
 		}
 		bf := bytesBuffPool.Get().(*bytes.Buffer)
+		defer bytesBuffPool.Put(bf)
 		bf.Reset()
 		blw := &bodyLogWriter{body: bf, ResponseWriter: c.Writer}
 		if cfg.Get().Trace.OnlyLogErr {
@@ -154,15 +155,8 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			Errcode int32  `json:"errcode"`
 			ErrMsg  string `json:"errmsg"`
 		}{}
-
-		tracerid = span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
-		l = l.WithFields(logrus.Fields{
-			_tracerid: tracerid,
-			_log_time: time.Now().Format(_formatLogTime),
-		})
 		defer func() {
 			if blw.body.Len() > 0 && blw.body.Bytes()[0] == '{' {
-
 				if err1 := utils.Unmarshal(blw.body.Bytes(), &baseRsp); err1 != nil {
 					return
 				}
@@ -200,8 +194,12 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 				prom.HTTPServer.Incr(tracerid, c.Request.URL.Path, strconv.Itoa(int(baseRsp.Errcode)))
 				prom.HTTPServer.Timing(tracerid, int64(time.Since(accessstart)/time.Millisecond), c.Request.URL.Path)
 			}
-			bytesBuffPool.Put(bf)
 		}()
+		tracerid = span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
+		l = l.WithFields(logrus.Fields{
+			_tracerid: tracerid,
+			_log_time: time.Now().Format(_formatLogTime),
+		})
 		ctx = zeusctx.LoggerToContext(spnctx, l)
 		ctx = zeusctx.GMClientToContext(ctx, ng.GetContainer().GetGoMicroClient())
 		if ng.GetContainer().GetRedisCli() != nil {
