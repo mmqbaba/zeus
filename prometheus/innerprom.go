@@ -47,10 +47,6 @@ func (prom *PromClient) GetInnerCli() *InnerClient {
 	return prom.innerClient
 }
 
-func (prom *PromClient) GetListenHost() string {
-	return prom.pHost
-}
-
 // New creates a Prom instance.
 func newInner() *Prom {
 	return &Prom{}

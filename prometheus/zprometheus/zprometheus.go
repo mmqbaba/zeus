@@ -7,5 +7,4 @@ import (
 type Prometheus interface {
 	GetPubCli() *prom.PubClient
 	GetInnerCli() *prom.InnerClient
-	GetListenHost() string
 }

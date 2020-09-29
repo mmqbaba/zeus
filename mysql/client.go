@@ -46,30 +46,6 @@ func InitClient(sqlconf *conf.Mysql) *Client {
 	return rds
 }
 
-/*func New(sqlconf *conf.Mysql) DataSource {
-	ds := DataSource{
-	    Host:           sqlconf.Host,
-	    User:           sqlconf.User,
-	    Pwd:            sqlconf.Pwd,
-		DataSourceName: sqlconf.DataSourceName,
-		CharSet:        sqlconf.CharSet,
-		ParseTime:      sqlconf.ParseTime,
-		ConnMaxLifetime:sqlconf.ConnMaxLifetime,
-		MaxIdleConns:   sqlconf.MaxIdleConns,
-		MaxOpenConns:   sqlconf.MaxOpenConns,
-	}
-	if ds.MaxIdleConns == 0 {
-		ds.MaxIdleConns = 32
-	}
-	if ds.MaxOpenConns == 0 {
-		ds.MaxOpenConns = 1024
-	}
-    if ds.ConnMaxLifetime == 0 {
-        ds.ConnMaxLifetime = 120
-    }
-	return ds
-}*/
-
 func (dbs *Client) GetCli() *gorm.DB {
 	return dbs.client
 }
