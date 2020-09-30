@@ -5,12 +5,23 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	conf "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	zeusprometheus "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/prometheus"
 	"log"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
 
-const driverName = "mysql"
+var prometheus *zeusprometheus.Prom
+
+const (
+	driverName   = "mysql"
+	createOption = "create"
+	updateOption = "update"
+	delOption    = "delete"
+	findOption   = "find"
+)
 
 type DataSource struct {
 	Host            string
@@ -40,14 +51,70 @@ func (dbs *Client) Reload(cfg *conf.Mysql) {
 	dbs.client = newMysqlClient(cfg)
 }
 
+func InitClientWithProm(sqlconf *conf.Mysql, promClient *zeusprometheus.Prom) *Client {
+	prometheus = promClient
+	mysql := new(Client)
+	mysql.client = newMysqlClient(sqlconf)
+	return mysql
+}
+
 func InitClient(sqlconf *conf.Mysql) *Client {
-	rds := new(Client)
-	rds.client = newMysqlClient(sqlconf)
-	return rds
+	mysql := new(Client)
+	mysql.client = newMysqlClient(sqlconf)
+	return mysql
 }
 
 func (dbs *Client) GetCli() *gorm.DB {
 	return dbs.client
+}
+
+func (dbs *Client) ZCreate(value interface{}) *gorm.DB {
+	sqlStartTime := time.Now()
+	_db := dbs.client.Create(value)
+	sql := strings.Join([]string{createOption, value.(string)}, ":")
+	prometheus.Timing(sql, int64(time.Since(sqlStartTime)/time.Millisecond), strconv.Itoa(int(_db.RowsAffected)))
+	prometheus.Incr(sql, _db.Error.Error())
+	prometheus.StateIncr(sql, createOption)
+	return _db
+}
+
+func (dbs *Client) ZUpdate(attrs ...interface{}) *gorm.DB {
+	sqlStartTime := time.Now()
+	_db := dbs.client.Update(attrs)
+	sql := updateOption
+	for _, attr := range attrs {
+		sql = strings.Join([]string{updateOption, attr.(string)}, ":")
+	}
+	prometheus.Timing(sql, int64(time.Since(sqlStartTime)/time.Millisecond), strconv.Itoa(int(_db.RowsAffected)))
+	prometheus.Incr(sql, _db.Error.Error())
+	prometheus.StateIncr(sql, updateOption)
+	return _db
+}
+
+func (dbs *Client) ZDelete(value interface{}, where ...interface{}) *gorm.DB {
+	sqlStartTime := time.Now()
+	_db := dbs.client.Delete(value, where)
+	sql := strings.Join([]string{delOption, value.(string)}, ":")
+	for _, w := range where {
+		sql = strings.Join([]string{sql, w.(string)}, ":")
+	}
+	prometheus.Timing(sql, int64(time.Since(sqlStartTime)/time.Millisecond), strconv.Itoa(int(_db.RowsAffected)))
+	prometheus.Incr(sql, _db.Error.Error())
+	prometheus.StateIncr(sql, delOption)
+	return _db
+}
+
+func (dbs *Client) ZFind(out interface{}, where ...interface{}) *gorm.DB {
+	sqlStartTime := time.Now()
+	_db := dbs.client.Find(out, where)
+	sql := strings.Join([]string{findOption, out.(string)}, ":")
+	for _, w := range where {
+		sql = strings.Join([]string{sql, w.(string)}, ":")
+	}
+	prometheus.Timing(sql, int64(time.Since(sqlStartTime)/time.Millisecond), strconv.Itoa(int(_db.RowsAffected)))
+	prometheus.Incr(sql, _db.Error.Error())
+	prometheus.StateIncr(sql, findOption)
+	return _db
 }
 
 func newMysqlClient(cfg *conf.Mysql) *gorm.DB {
