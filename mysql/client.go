@@ -13,7 +13,10 @@ import (
 	"time"
 )
 
-var prometheus *zeusprometheus.Prom
+var (
+	prometheus   *zeusprometheus.Prom
+	interceptors []Interceptor
+)
 
 const (
 	driverName   = "mysql"
@@ -21,6 +24,7 @@ const (
 	updateOption = "update"
 	delOption    = "delete"
 	findOption   = "find"
+	TypeGorm     = "gorm"
 )
 
 type DataSource struct {
@@ -118,26 +122,17 @@ func (dbs *Client) ZFind(out interface{}, where ...interface{}) *gorm.DB {
 }
 
 func newMysqlClient(cfg *conf.Mysql) *gorm.DB {
-	url := "%v:%v@(%v)/%v?charset=%v&parseTime=%v&loc=Local"
-	//user:password@/dbname?charset=utf8&parseTime=True&loc=Local
-	host := cfg.Host
-	userName := cfg.User
-	passWord := cfg.Pwd
-	dbName := cfg.DataSourceName
-	charSet := cfg.CharSet
-	parseTime := cfg.ParseTime
-	url = fmt.Sprintf(url, userName, passWord, host, dbName, charSet, parseTime)
-	_db, err := gorm.Open(driverName, url)
-
-	if err != nil {
-		println("mysql gorm init err(%+v) ", err)
-		panic(fmt.Sprintf("mysql gorm init  failed:%s", err.Error()))
+	if prometheus != nil {
+		interceptors = make([]Interceptor, 0)
+		interceptors = append(interceptors, metricInterceptor)
 	}
-	//全局禁用表名复数
-	_db.SingularTable(true) //如果设置为true,`User`的默认表名为`user`,使用`TableName`设置的表名不受影响
-	_db.DB().SetMaxOpenConns(cfg.MaxOpenConns)
-	_db.DB().SetMaxIdleConns(cfg.MaxIdleConns)
-	_db.DB().SetConnMaxLifetime(cfg.ConnMaxLifetime)
+	_db, err := open(cfg)
+	if err != nil {
+		prometheus.Incr(TypeGorm, cfg.DataSourceName+".ping", cfg.Host, "open err")
+		fmt.Printf("")
+		log.Printf("mysql open err (%+v) , table_(%s)", err.Error(), cfg.DataSourceName+"."+".ping")
+		return _db
+	}
 
 	// 监听修复BadConnections
 	go func() {
@@ -149,4 +144,66 @@ func newMysqlClient(cfg *conf.Mysql) *gorm.DB {
 		}
 	}()
 	return _db
+}
+
+// open ... with interceptors
+func open(cfg *conf.Mysql) (*gorm.DB, error) {
+	url := "%v:%v@(%v)/%v?charset=%v&parseTime=%v&loc=Local"
+	//user:password@/dbname?charset=utf8&parseTime=True&loc=Local
+	host := cfg.Host
+	userName := cfg.User
+	passWord := cfg.Pwd
+	dbName := cfg.DataSourceName
+	charSet := cfg.CharSet
+	parseTime := cfg.ParseTime
+	url = fmt.Sprintf(url, userName, passWord, host, dbName, charSet, parseTime)
+	_db, err := gorm.Open(driverName, url)
+	if err != nil {
+		println("mysql gorm init err(%+v) ", err)
+		panic(fmt.Sprintf("mysql gorm init  failed:%s", err.Error()))
+	}
+
+	_db.LogMode(cfg.Debug)
+
+	//全局禁用表名复数
+	_db.SingularTable(true) //如果设置为true,`User`的默认表名为`user`,使用`TableName`设置的表名不受影响
+	_db.DB().SetMaxOpenConns(cfg.MaxOpenConns)
+	_db.DB().SetMaxIdleConns(cfg.MaxIdleConns)
+	_db.DB().SetConnMaxLifetime(cfg.ConnMaxLifetime)
+
+	replace := func(processor func() *gorm.CallbackProcessor, callbackName string, interceptors ...Interceptor) {
+		old := processor().Get(callbackName)
+		var handler = old
+		for _, inte := range interceptors {
+			handler = inte(cfg, prometheus)(handler)
+		}
+		processor().Replace(callbackName, handler)
+	}
+
+	replace(
+		_db.Callback().Delete,
+		"gorm:delete",
+		interceptors...,
+	)
+	replace(
+		_db.Callback().Update,
+		"gorm:update",
+		interceptors...,
+	)
+	replace(
+		_db.Callback().Create,
+		"gorm:create",
+		interceptors...,
+	)
+	replace(
+		_db.Callback().Query,
+		"gorm:query",
+		interceptors...,
+	)
+	replace(
+		_db.Callback().RowQuery,
+		"gorm:row_query",
+		interceptors...,
+	)
+	return _db, err
 }

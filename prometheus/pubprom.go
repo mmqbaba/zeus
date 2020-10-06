@@ -26,7 +26,7 @@ type PubClient struct {
 
 func newPrometheusClient() *PubClient {
 	promPubClient := &PubClient{
-		DbClient:          NewInner().withTimer("zeus_db_client_duration", []string{"sql", "affected_row"}).withCounter("zeus_db_client_code", []string{"sql", "msg"}).withState("zeus_db_client_state", []string{"sql", "options"}),
+		DbClient:          NewInner().withTimer("zeus_db_client_duration", []string{"type", "method", "sql"}).withCounter("zeus_db_client_code", []string{"type", "method", "address", "code"}).withState("zeus_db_client_state", []string{"sql", "options"}),
 		CacheClient:       NewInner().withTimer("zeus_cache_client_duration", []string{"options", "key"}).withCounter("zeus_cache_code", []string{"options", "key", "msg"}).withState("go_lib_client_state", []string{"options", "key"}),
 		BusinessErrCount:  New(),
 		BusinessInfoCount: New(),
