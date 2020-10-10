@@ -1,6 +1,7 @@
 package redisclient
 
 import (
+	zeusprometheus "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/prometheus"
 	"log"
 	"strings"
 	"sync"
@@ -11,9 +12,23 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 )
 
+var prom *zeusprometheus.Prom
+
+const (
+	redisGet = "redis:get"
+	redisSet = "redis:set"
+)
+
 type Client struct {
 	client *redis.Client
 	rw     sync.RWMutex
+}
+
+func InitClientWithProm(cfg *config.Redis, promClient *zeusprometheus.Prom) *Client {
+	prom = promClient
+	rds := new(Client)
+	rds.client = newRedisClient(cfg)
+	return rds
 }
 
 func InitClient(cfg *config.Redis) *Client {
@@ -72,4 +87,22 @@ func (rds *Client) release() {
 		log.Printf("redis close failed: %s\n", err.Error())
 		return
 	}
+}
+
+func (rds *Client) ZGet(key string) *redis.StringCmd {
+	getStartTime := time.Now()
+	result := rds.client.Get(key)
+	prom.Timing(redisGet, int64(time.Since(getStartTime)/time.Millisecond), key)
+	prom.Incr(redisGet, key, result.Err().Error())
+	prom.StateIncr(redisGet, key)
+	return result
+}
+
+func (rds *Client) ZSet(key string, value interface{}, expiration time.Duration) *redis.StatusCmd {
+	getStartTime := time.Now()
+	result := rds.client.Set(key, value, expiration)
+	prom.Timing(redisSet, int64(time.Since(getStartTime)/time.Millisecond), key)
+	prom.Incr(redisSet, key, result.Err().Error())
+	prom.StateIncr(redisSet, key)
+	return result
 }

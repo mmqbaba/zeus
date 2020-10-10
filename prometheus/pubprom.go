@@ -26,13 +26,13 @@ type PubClient struct {
 
 func newPrometheusClient() *PubClient {
 	promPubClient := &PubClient{
-		DbClient:          newInner().withTimer("zeus_db_client_duration", []string{"sql", "affected_row"}).withCounter("zeus_db_client_code", []string{"sql", "msg"}).withState("zeus_db_client_state", []string{"sql", "options"}),
-		CacheClient:       newInner().withTimer("zeus_cache_client_duration", []string{"options", "key"}).withCounter("zeus_cache_code", []string{"options", "key", "msg"}).withState("go_lib_client_state", []string{"options", "key"}),
+		DbClient:          NewInner().withTimer("zeus_db_client_duration", []string{"type", "method", "sql"}).withCounter("zeus_db_client_code", []string{"type", "method", "address", "code"}).withState("zeus_db_client_state", []string{"sql", "options"}),
+		CacheClient:       NewInner().withTimer("zeus_cache_client_duration", []string{"options", "key"}).withCounter("zeus_cache_code", []string{"options", "key", "msg"}).withState("go_lib_client_state", []string{"options", "key"}),
 		BusinessErrCount:  New(),
 		BusinessInfoCount: New(),
 		CacheHit:          New(),
 		CacheMiss:         New(),
-		HTTPClient:        newInner().withTimer("zeus_http_client_duration", []string{"trace_id", "url"}).withCounter("zeus_http_client_code", []string{"trace_id", "url", "err_code", "state_code"}).withState("zeus_http_client_state", []string{"url"}),
+		HTTPClient:        NewInner().withTimer("zeus_http_client_duration", []string{"url"}).withCounter("zeus_http_client_code", []string{"url", "state_code"}).withState("zeus_http_client_state", []string{"url"}),
 	}
 	log.Printf("[prometheus.newPrometheusClient] success \n")
 	return promPubClient
@@ -110,8 +110,8 @@ func (p *Prom) CacheStatus(key string, option string, start time.Time, errMsg st
 	p.StateIncr(option, key)
 }
 
-func (p *Prom) HttpClientStatus(traceid string, url string, start time.Time, errCode string, statusCode string) {
-	p.Timing(traceid, int64(time.Since(start)/time.Millisecond), url)
-	p.Incr(traceid, url, errCode, statusCode)
+func (p *Prom) HttpClientStatus(params string, url string, start time.Time, errCode string, statusCode string) {
+	p.Timing(url, int64(time.Since(start)/time.Millisecond))
+	p.Incr(url, statusCode)
 	p.StateIncr(url)
 }

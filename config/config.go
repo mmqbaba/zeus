@@ -89,6 +89,7 @@ type Mysql struct {
 	MaxIdleConns    int           `json:"max_idle_conns"`
 	MaxOpenConns    int           `json:"max_oepn_conns"`
 	Enable          bool          `json:"enable"` // 启用组件
+	Debug           bool          `json:"debug"`  // 启用mysql日志
 }
 
 type Prometheus struct {

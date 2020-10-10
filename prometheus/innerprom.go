@@ -5,6 +5,8 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 )
 
+var prom *PromClient
+
 // PromClient struct zeus prometheus client & pub Business prometheus client
 type PromClient struct {
 	innerClient *InnerClient
@@ -27,11 +29,11 @@ type Prom struct {
 }
 
 func InitClient(cfg *config.Prometheus) *PromClient {
-	prom := &PromClient{
+	prom = &PromClient{
 		innerClient: &InnerClient{
-			RPCClient:  newInner().withTimer("zeus_rpc_client_duration", []string{"trace_id", "client_node", "server_name"}).withCounter("zeus_rpc_client_code", []string{"trace_id", "client_node", "server_name", "err_code"}).withState("zeus_rpc_client_state", []string{"trace_id", "client_node", "server_name"}),
-			HTTPServer: newInner().withTimer("zeus_http_server_duration", []string{"trace_id", "url"}).withCounter("zeus_http_server_code", []string{"trace_id", "url", "err_code"}).withState("zeus_http_server_state", []string{"url"}),
-			RPCServer:  newInner().withTimer("zeus_rpc_server_duration", []string{"trace_id", "server_node", "server_name"}).withCounter("zeus_rpc_server_code", []string{"trace_id", "server_name", "err_code"}).withState("zeus_rpc_server_state", []string{"server_name"}),
+			RPCClient:  NewInner().withTimer("zeus_rpc_client_duration", []string{"trace_id", "client_node", "server_name"}).withCounter("zeus_rpc_client_code", []string{"trace_id", "client_node", "server_name", "err_code"}).withState("zeus_rpc_client_state", []string{"client_node", "server_name"}),
+			HTTPServer: NewInner().withTimer("zeus_http_server_duration", []string{"trace_id", "url"}).withCounter("zeus_http_server_code", []string{"trace_id", "url", "err_code"}).withState("zeus_http_server_state", []string{"url"}),
+			RPCServer:  NewInner().withTimer("zeus_rpc_server_duration", []string{"trace_id", "server_node", "server_name"}).withCounter("zeus_rpc_server_code", []string{"trace_id", "server_name", "err_code"}).withState("zeus_rpc_server_state", []string{"server_name"}),
 		},
 		pHost: cfg.PullHost,
 	}
@@ -48,7 +50,7 @@ func (prom *PromClient) GetInnerCli() *InnerClient {
 }
 
 // New creates a Prom instance.
-func newInner() *Prom {
+func NewInner() *Prom {
 	return &Prom{}
 }
 

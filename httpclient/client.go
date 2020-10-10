@@ -12,6 +12,7 @@ import (
 	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
+	zeusprometheus "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/prometheus"
 	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 	"io"
@@ -28,7 +29,10 @@ const (
 	defaultHTTPTimeout = 30 * 1000 * time.Millisecond
 )
 
-var httpclientInstance = make(map[string]*Client)
+var (
+	httpclientInstance = make(map[string]*Client)
+	prom               *zeusprometheus.Prom
+)
 
 type httpClientSettings struct {
 	Transport       http.Transport
@@ -44,7 +48,7 @@ type Client struct {
 	retrier  Retriable
 }
 
-func ReloadHttpClientConf(conf map[string]config.HttpClientConf) error {
+func InitHttpClientConf(conf map[string]config.HttpClientConf) {
 	var tmpInstanceMap = make(map[string]*Client)
 	for instanceName, httpClientConf := range conf {
 		if v, ok := httpclientInstance[instanceName]; ok {
@@ -53,7 +57,20 @@ func ReloadHttpClientConf(conf map[string]config.HttpClientConf) error {
 		tmpInstanceMap[instanceName] = newClient(&httpClientConf)
 	}
 	httpclientInstance = tmpInstanceMap
-	return nil
+	return
+}
+
+func InitHttpClientConfWithPorm(conf map[string]config.HttpClientConf, promClient *zeusprometheus.Prom) {
+	prom = promClient
+	var tmpInstanceMap = make(map[string]*Client)
+	for instanceName, httpClientConf := range conf {
+		if v, ok := httpclientInstance[instanceName]; ok {
+			v.client.CloseIdleConnections()
+		}
+		tmpInstanceMap[instanceName] = newClient(&httpClientConf)
+	}
+	httpclientInstance = tmpInstanceMap
+	return
 }
 
 func GetClient(instance string) (*Client, error) {
@@ -161,6 +178,12 @@ func newClient(cfg *config.HttpClientConf) *Client {
 	return &client
 }
 
+func httpClientStatus(url string, start time.Time, statusCode string) {
+	prom.Timing(url, int64(time.Since(start)/time.Millisecond))
+	prom.Incr(url, statusCode)
+	prom.StateIncr(url)
+}
+
 func (c *Client) Get(ctx context.Context, url string, headers map[string]string) ([]byte, error) {
 	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%v%v", c.getRandomHost(), url), nil)
 	if err != nil {
@@ -240,6 +263,9 @@ func (c *Client) do(ctx context.Context, request *http.Request, headers map[stri
 			return
 		}
 		span.Finish()
+		if prom != nil {
+			httpClientStatus(request.URL.Path, now, code)
+		}
 	}()
 
 	var bodyReader *bytes.Reader
@@ -286,7 +312,6 @@ func (c *Client) do(ctx context.Context, request *http.Request, headers map[stri
 	}
 	code = strconv.Itoa(response.StatusCode)
 	defer response.Body.Close()
-
 	rspBody, err := ioutil.ReadAll(response.Body)
 	span.SetTag("httpclient response.status", response.StatusCode)
 	span.SetTag("httpclient response.body", string(rspBody))

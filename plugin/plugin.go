@@ -59,16 +59,23 @@ func NewContainer() *Container {
 
 func (c *Container) Init(appcfg *config.AppConf) {
 	log.Println("[Container.Init] start")
-	c.initRedis(&appcfg.Redis)
+
 	c.initLogger(&appcfg.LogConf)
 	c.initAccessLogger(&appcfg.AccessLog)
 	c.initTracer(&appcfg.Trace)
 	c.initMongo(&appcfg.MongoDB)
 	c.initTifClient(appcfg)
-	c.initMysql(&appcfg.Mysql)
-	c.initHttpClient(appcfg.HttpClient)
-	c.initGoPS(&appcfg.GoPS)
 	c.initPrometheus(&appcfg.Prometheus)
+	if appcfg.Prometheus.Enable {
+		c.initMysqlWithProm(&appcfg.Mysql, c.prometheus.GetPubCli().DbClient)
+		c.initRedisWithProm(&appcfg.Redis, c.prometheus.GetPubCli().CacheClient)
+		c.initHttpClientWithProm(appcfg.HttpClient, c.prometheus.GetPubCli().HTTPClient)
+	} else {
+		c.initMysql(&appcfg.Mysql)
+		c.initRedis(&appcfg.Redis)
+		c.initHttpClient(appcfg.HttpClient)
+	}
+	c.initGoPS(&appcfg.GoPS)
 	log.Println("[Container.Init] finish")
 	c.appcfg = *appcfg
 }
@@ -102,6 +109,16 @@ func (c *Container) Reload(appcfg *config.AppConf) {
 	c.appcfg = *appcfg
 }
 
+// MysqlWithProm
+func (c *Container) initRedisWithProm(cfg *config.Redis, promClient *zeusprometheus.Prom) {
+	if cfg.Enable {
+		c.redis = zeusredis.InitClient(cfg)
+	}
+	if promClient != nil {
+		c.redis = zeusredis.InitClientWithProm(cfg, promClient)
+	}
+}
+
 // Redis
 func (c *Container) initRedis(cfg *config.Redis) {
 	if cfg.Enable {
@@ -127,11 +144,21 @@ func (c *Container) GetRedisCli() zredis.Redis {
 	return c.redis
 }
 
-// Mysql
+// MysqlWithProm
+func (c *Container) initMysqlWithProm(cfg *config.Mysql, promClient *zeusprometheus.Prom) {
+	if cfg.Enable {
+		c.mysql = zeusmysql.InitClient(cfg)
+	}
+	if promClient != nil {
+		c.mysql = zeusmysql.InitClientWithProm(cfg, promClient)
+	}
+}
+
 func (c *Container) initMysql(cfg *config.Mysql) {
 	if cfg.Enable {
 		c.mysql = zeusmysql.InitClient(cfg)
 	}
+
 }
 
 func (c *Container) reloadMysql(cfg *config.Mysql) {
@@ -349,8 +376,19 @@ func (c *Container) initHttpClient(conf map[string]config.HttpClientConf) {
 	for _, v := range conf {
 		v.TraceOnlyLogErr = flag
 	}
-	httpclient.ReloadHttpClientConf(conf)
+	httpclient.InitHttpClientConf(conf)
 	c.httpClient = httpclient.DefaultClient()
+}
+
+//initHttpClientWithProm
+func (c *Container) initHttpClientWithProm(conf map[string]config.HttpClientConf, promClient *zeusprometheus.Prom) {
+	flag := c.appcfg.Trace.OnlyLogErr
+	for _, v := range conf {
+		v.TraceOnlyLogErr = flag
+	}
+	httpclient.InitHttpClientConfWithPorm(conf, promClient)
+	c.httpClient = httpclient.DefaultClient()
+
 }
 
 func (c *Container) GetHttpClient() zhttpclient.HttpClient {
