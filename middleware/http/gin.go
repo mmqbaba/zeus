@@ -111,7 +111,6 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		accessstart := time.Now()
 		tracerid := ""
 		logger := ng.GetContainer().GetLogger()
-		prom := ng.GetContainer().GetPrometheus().GetInnerCli()
 		ctx := c.Request.Context()
 		ctx = zeusctx.GinCtxToContext(ctx, c)
 		l := logger.WithFields(logrus.Fields{"tag": "gin"})
@@ -191,6 +190,7 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 				}
 			}
 			if cfg.Get().Prometheus.Enable {
+				prom := ng.GetContainer().GetPrometheus().GetInnerCli()
 				prom.HTTPServer.Incr(tracerid, c.Request.URL.Path, strconv.Itoa(int(baseRsp.Errcode)))
 				prom.HTTPServer.Timing(tracerid, int64(time.Since(accessstart)/time.Millisecond), c.Request.URL.Path)
 			}

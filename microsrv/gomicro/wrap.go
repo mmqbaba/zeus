@@ -46,7 +46,6 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
 			logger := ng.GetContainer().GetLogger()
-			prom := ng.GetContainer().GetPrometheus().GetInnerCli()
 			var errcode string
 			now := time.Now()
 			l := logger.WithFields(logrus.Fields{"tag": "gomicro-serverlogwrap"})
@@ -120,6 +119,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 
 			defer func() {
 				if cfg.Get().Prometheus.Enable {
+					prom := ng.GetContainer().GetPrometheus().GetInnerCli()
 					prom.RPCServer.Timing(tracerID, int64(time.Since(now)/time.Millisecond), name, ng.GetContainer().GetServiceID())
 					if errcode != "" {
 						prom.RPCServer.Incr(name, ng.GetContainer().GetServiceID(), errcode)
