@@ -1,11 +1,14 @@
 package zredis
 
 import (
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	"github.com/go-redis/redis"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	"time"
 )
 
 type Redis interface {
 	Reload(cfg *config.Redis)
 	GetCli() *redis.Client
+	ZGet(key string) *redis.StringCmd
+	ZSet(key string, value interface{}, expiration time.Duration) *redis.StatusCmd
 }

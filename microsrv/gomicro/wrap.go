@@ -115,6 +115,7 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			}
 			if ng.GetContainer().GetPrometheus() != nil {
 				c = zeusctx.PrometheusToContext(c, ng.GetContainer().GetPrometheus().GetPubCli())
+				c = zeusctx.RedisWithPromToContext(c, ng.GetContainer().GetRedisCli())
 			}
 
 			defer func() {

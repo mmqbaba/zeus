@@ -114,7 +114,7 @@ func (c *Container) initRedisWithProm(cfg *config.Redis, promClient *zeusprometh
 	if cfg.Enable {
 		c.redis = zeusredis.InitClient(cfg)
 	}
-	if promClient != nil {
+	if promClient != nil && cfg.Enable {
 		c.redis = zeusredis.InitClientWithProm(cfg, promClient)
 	}
 }
@@ -149,7 +149,7 @@ func (c *Container) initMysqlWithProm(cfg *config.Mysql, promClient *zeusprometh
 	if cfg.Enable {
 		c.mysql = zeusmysql.InitClient(cfg)
 	}
-	if promClient != nil {
+	if promClient != nil && cfg.Enable {
 		c.mysql = zeusmysql.InitClientWithProm(cfg, promClient)
 	}
 }

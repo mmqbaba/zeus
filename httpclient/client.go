@@ -245,15 +245,15 @@ func (c *Client) do(ctx context.Context, request *http.Request, headers map[stri
 	//request.Close = true
 	loger := zeusctx.ExtractLogger(ctx)
 	tracer := tracing.NewTracerWrap(opentracing.GlobalTracer())
-	pubProm, err := zeusctx.ExtractPrometheus(ctx)
-	if pubProm != nil && err == nil {
-		defer func() {
+	defer func() {
+		pubProm, err := zeusctx.ExtractPrometheus(ctx)
+		if pubProm != nil && err == nil {
 			pubProm.HTTPClient.Timing(request.URL.Path, int64(time.Since(now)/time.Millisecond))
 			if code != "" {
 				pubProm.HTTPClient.Incr(request.URL.Path, code)
 			}
-		}()
-	}
+		}
+	}()
 	name := request.URL.RawPath
 	ctx, span, _ := tracer.StartSpanFromContext(ctx, name)
 	ext.SpanKindConsumer.Set(span)
