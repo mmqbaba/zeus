@@ -11,4 +11,5 @@ type Redis interface {
 	GetCli() *redis.Client
 	ZGet(key string) *redis.StringCmd
 	ZSet(key string, value interface{}, expiration time.Duration) *redis.StatusCmd
+	ZDel(key string) *redis.IntCmd
 }

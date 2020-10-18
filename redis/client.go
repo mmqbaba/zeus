@@ -8,15 +8,16 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
-
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 )
 
 var prom *zeusprometheus.Prom
 
 const (
-	redisGet = "redis:get"
-	redisSet = "redis:set"
+	redisGet   = "redis:get"
+	redisSet   = "redis:set"
+	redisDel   = "redis:del"
+	OPTION_SUC = "success"
 )
 
 type Client struct {
@@ -92,17 +93,39 @@ func (rds *Client) release() {
 func (rds *Client) ZGet(key string) *redis.StringCmd {
 	getStartTime := time.Now()
 	result := rds.client.Get(key)
+	if result.Err() != nil {
+		prom.Incr(redisGet, key, result.Err().Error())
+	} else {
+		prom.Incr(redisGet, key, OPTION_SUC)
+	}
 	prom.Timing(redisGet, int64(time.Since(getStartTime)/time.Millisecond), key)
-	prom.Incr(redisGet, key, result.Err().Error())
 	prom.StateIncr(redisGet, key)
 	return result
 }
 
 func (rds *Client) ZSet(key string, value interface{}, expiration time.Duration) *redis.StatusCmd {
 	getStartTime := time.Now()
+
 	result := rds.client.Set(key, value, expiration)
+	if result.Err() != nil {
+		prom.Incr(redisSet, key, result.Err().Error())
+	} else {
+		prom.Incr(redisSet, key, OPTION_SUC)
+	}
 	prom.Timing(redisSet, int64(time.Since(getStartTime)/time.Millisecond), key)
-	prom.Incr(redisSet, key, result.Err().Error())
 	prom.StateIncr(redisSet, key)
+	return result
+}
+
+func (rds *Client) ZDel(key string) *redis.IntCmd {
+	getStartTime := time.Now()
+	result := rds.client.Del(key)
+	if result.Err() != nil {
+		prom.Incr(redisDel, key, result.Err().Error())
+	} else {
+		prom.Incr(redisDel, key, OPTION_SUC)
+	}
+	prom.Timing(redisDel, int64(time.Since(getStartTime)/time.Millisecond), key)
+	prom.StateIncr(redisDel, key)
 	return result
 }
