@@ -14,10 +14,15 @@ import (
 var prom *zeusprometheus.Prom
 
 const (
-	redisGet   = "redis:get"
-	redisSet   = "redis:set"
-	redisDel   = "redis:del"
-	OPTION_SUC = "success"
+	redisGet    = "redis:get"
+	redisSet    = "redis:set"
+	redisDel    = "redis:del"
+	redisTtl    = "redis:ttl"
+	redisIncr   = "redis:incr"
+	redisSetNx  = "redis:setnx"
+	redisExpire = "redis:expire"
+	redisExist  = "redis:exist"
+	OPTION_SUC  = "success"
 )
 
 type Client struct {
@@ -127,5 +132,83 @@ func (rds *Client) ZDel(key string) *redis.IntCmd {
 	}
 	prom.Timing(redisDel, int64(time.Since(getStartTime)/time.Millisecond), key)
 	prom.StateIncr(redisDel, key)
+	return result
+}
+
+func (rds *Client) ZIncr(key string) *redis.IntCmd {
+	getStartTime := time.Now()
+	result := rds.client.Incr(key)
+	if result.Err() != nil {
+		prom.Incr(redisIncr, key, result.Err().Error())
+	} else {
+		prom.Incr(redisIncr, key, OPTION_SUC)
+	}
+	prom.Timing(redisIncr, int64(time.Since(getStartTime)/time.Millisecond), key)
+	prom.StateIncr(redisIncr, key)
+	return result
+}
+
+func (rds *Client) ZTTL(key string) *redis.DurationCmd {
+	getStartTime := time.Now()
+	result := rds.client.TTL(key)
+	if result.Err() != nil {
+		prom.Incr(redisTtl, key, result.Err().Error())
+	} else {
+		prom.Incr(redisTtl, key, OPTION_SUC)
+	}
+	prom.Timing(redisTtl, int64(time.Since(getStartTime)/time.Millisecond), key)
+	prom.StateIncr(redisTtl, key)
+	return result
+}
+
+func (rds *Client) ZSetRange(key string, offset int64, value string) *redis.IntCmd {
+	getStartTime := time.Now()
+	result := rds.client.SetRange(key, offset, value)
+	if result.Err() != nil {
+		prom.Incr(redisTtl, key, result.Err().Error())
+	} else {
+		prom.Incr(redisTtl, key, OPTION_SUC)
+	}
+	prom.Timing(redisTtl, int64(time.Since(getStartTime)/time.Millisecond), key)
+	prom.StateIncr(redisTtl, key)
+	return result
+}
+
+func (rds *Client) ZSetNX(key string, value interface{}, expiration time.Duration) *redis.BoolCmd {
+	getStartTime := time.Now()
+	result := rds.client.SetNX(key, value, expiration)
+	if result.Err() != nil {
+		prom.Incr(redisSetNx, key, result.Err().Error())
+	} else {
+		prom.Incr(redisSetNx, key, OPTION_SUC)
+	}
+	prom.Timing(redisSetNx, int64(time.Since(getStartTime)/time.Millisecond), key)
+	prom.StateIncr(redisSetNx, key)
+	return result
+}
+
+func (rds *Client) ZExpire(key string, expiration time.Duration) *redis.BoolCmd {
+	getStartTime := time.Now()
+	result := rds.client.Expire(key, expiration)
+	if result.Err() != nil {
+		prom.Incr(redisExpire, key, result.Err().Error())
+	} else {
+		prom.Incr(redisExpire, key, OPTION_SUC)
+	}
+	prom.Timing(redisExpire, int64(time.Since(getStartTime)/time.Millisecond), key)
+	prom.StateIncr(redisExpire, key)
+	return result
+}
+
+func (rds *Client) ZExists(key string) *redis.IntCmd {
+	getStartTime := time.Now()
+	result := rds.client.Exists(key)
+	if result.Err() != nil {
+		prom.Incr(redisExist, key, result.Err().Error())
+	} else {
+		prom.Incr(redisExist, key, OPTION_SUC)
+	}
+	prom.Timing(redisExist, int64(time.Since(getStartTime)/time.Millisecond), key)
+	prom.StateIncr(redisExist, key)
 	return result
 }
