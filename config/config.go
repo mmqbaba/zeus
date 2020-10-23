@@ -69,13 +69,14 @@ type MongoDB struct {
 }
 
 type Redis struct {
-	Host               string `json:"host"`
-	SentinelHost       string `json:"sentinel_host"`
-	SentinelMastername string `json:"sentinel_mastername"`
-	Pwd                string `json:"pwd"`
-	PoolSize           int    `json:"poolsize"`
-	ConnIdleTimeout    int    `json:"conn_idle_timeout"` // 单位秒
-	Enable             bool   `json:"enable"`            // 启用组件
+	Host               string   `json:"host"`
+	ClusterHost        []string `json:"cluster_host"`
+	SentinelHost       string   `json:"sentinel_host"`
+	SentinelMastername string   `json:"sentinel_mastername"`
+	Pwd                string   `json:"pwd"`
+	PoolSize           int      `json:"poolsize"`
+	ConnIdleTimeout    int      `json:"conn_idle_timeout"` // 单位秒
+	Enable             bool     `json:"enable"`            // 启用组件
 }
 
 type Mysql struct {

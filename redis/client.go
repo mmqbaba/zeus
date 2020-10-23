@@ -53,6 +53,13 @@ func newRedisClient(cfg *config.Redis) *redis.Client {
 			PoolSize:      cfg.PoolSize,
 			IdleTimeout:   time.Duration(cfg.ConnIdleTimeout) * time.Second,
 		})
+	} else if len(cfg.ClusterHost) != 0 {
+		redis.NewClusterClient(&redis.ClusterOptions{
+			Addrs:       cfg.ClusterHost,
+			Password:    cfg.Pwd,
+			PoolSize:    cfg.PoolSize,
+			IdleTimeout: time.Duration(cfg.ConnIdleTimeout) * time.Second,
+		})
 	} else {
 		client = redis.NewClient(&redis.Options{
 			Addr:        cfg.Host,
