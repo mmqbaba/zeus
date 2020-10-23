@@ -7,8 +7,7 @@ import (
 	"net"
 	"reflect"
 	"runtime"
-    "runtime/debug"
-    "strconv"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -52,13 +51,13 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			l := logger.WithFields(logrus.Fields{"tag": "gomicro-serverlogwrap"})
 			c := zeusctx.GMClientToContext(ctx, ng.GetContainer().GetGoMicroClient())
 
-            defer func() {
-                if panicErr := recover(); panicErr != nil {
-                    l.Errorf("ProcePanic: (%+v), stack: (%s) \nfull stack:(%s)", panicErr, string("a"), string(debug.Stack()))
-                    err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: "Internal error panic", Status: "ng.hanlder"}
-                    return
-                }
-            }()
+			defer func() {
+				if panicErr := recover(); panicErr != nil {
+					l.Errorf("ProcePanic: (%+v), stack: (%s)", panicErr, string(utils.Stack(3))) //string(debug.Stack())
+					err = &gmerrors.Error{Id: ng.GetContainer().GetServiceID(), Code: int32(zeuserrors.ECodeSystem), Detail: "Internal error panic", Status: "ng.hanlder"}
+					return
+				}
+			}()
 
 			///////// tracer begin
 			name := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
@@ -288,7 +287,7 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 	}
 	defer func() {
 		if cfg.Get().Prometheus.Enable {
-            prom := ng.GetContainer().GetPrometheus().GetInnerCli()
+			prom := ng.GetContainer().GetPrometheus().GetInnerCli()
 			prom.RPCClient.Timing(tracer.GetTraceID(spnctx), int64(time.Since(now)/time.Millisecond), name, ng.GetContainer().GetServiceID())
 			if errcode != "" {
 				prom.RPCClient.Incr(tracer.GetTraceID(spnctx), name, ng.GetContainer().GetServiceID(), errcode)
