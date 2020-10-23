@@ -82,9 +82,6 @@ func (c *Container) Init(appcfg *config.AppConf) {
 
 func (c *Container) Reload(appcfg *config.AppConf) {
 	log.Println("[Container.Reload] start")
-	if c.appcfg.Redis != appcfg.Redis {
-		c.reloadRedis(&appcfg.Redis)
-	}
 	if c.appcfg.LogConf != appcfg.LogConf {
 		c.reloadLogger(&appcfg.LogConf)
 	}
@@ -100,6 +97,7 @@ func (c *Container) Reload(appcfg *config.AppConf) {
 	if c.appcfg.Mysql != appcfg.Mysql {
 		c.reloadMysql(&appcfg.Mysql)
 	}
+	c.reloadRedis(&appcfg.Redis)
 	c.initTifClient(appcfg)
 	c.initHttpClient(appcfg.HttpClient)
 	if c.appcfg.GoPS != appcfg.GoPS {
