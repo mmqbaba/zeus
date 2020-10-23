@@ -216,6 +216,7 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		}
 		if ng.GetContainer().GetPrometheus() != nil {
 			ctx = zeusctx.PrometheusToContext(ctx, ng.GetContainer().GetPrometheus().GetPubCli())
+            ctx = zeusctx.RedisWithPromToContext(ctx, ng.GetContainer().GetRedisCli())
 		}
 		c.Set(ZEUS_CTX, ctx)
 		c.Next()
