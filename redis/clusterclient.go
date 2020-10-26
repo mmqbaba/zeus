@@ -3,7 +3,6 @@ package redisclient
 import (
 	zeusprometheus "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/prometheus"
 	"log"
-	"strings"
 	"sync"
 	"time"
 
@@ -11,65 +10,41 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 )
 
-var prom *zeusprometheus.Prom
-
-const (
-	redisGet    = "redis:get"
-	redisSet    = "redis:set"
-	redisDel    = "redis:del"
-	redisTtl    = "redis:ttl"
-	redisIncr   = "redis:incr"
-	redisSetNx  = "redis:setnx"
-	redisExpire = "redis:expire"
-	redisExist  = "redis:exist"
-	OPTION_SUC  = "success"
-)
-
-type Client struct {
-	client *redis.Client
+type ClusterClientClient struct {
+	client *redis.ClusterClient
 	rw     sync.RWMutex
 }
 
-func InitClientWithProm(cfg *config.Redis, promClient *zeusprometheus.Prom) *Client {
+func InitClusterClientWithProm(cfg *config.Redis, promClient *zeusprometheus.Prom) *ClusterClientClient {
 	prom = promClient
-	rds := new(Client)
-	rds.client = newRedisClient(cfg)
+	rds := new(ClusterClientClient)
+	rds.client = newRedisClusterClient(cfg)
 	return rds
 }
 
-func InitClient(cfg *config.Redis) *Client {
-	rds := new(Client)
-	rds.client = newRedisClient(cfg)
+func InitClusterClient(cfg *config.Redis) *ClusterClientClient {
+	rds := new(ClusterClientClient)
+	rds.client = newRedisClusterClient(cfg)
 	return rds
 }
 
-func newRedisClient(cfg *config.Redis) *redis.Client {
-	var client *redis.Client
-	if cfg.SentinelHost != "" {
-		client = redis.NewFailoverClient(&redis.FailoverOptions{
-			MasterName:    cfg.SentinelMastername,
-			SentinelAddrs: strings.Split(cfg.SentinelHost, ","),
-			Password:      cfg.Pwd,
-			PoolSize:      cfg.PoolSize,
-			IdleTimeout:   time.Duration(cfg.ConnIdleTimeout) * time.Second,
-		})
-	} else {
-		client = redis.NewClient(&redis.Options{
-			Addr:        cfg.Host,
-			Password:    cfg.Pwd,
-			PoolSize:    cfg.PoolSize,
-			IdleTimeout: time.Duration(cfg.ConnIdleTimeout) * time.Second,
-		})
-	}
-	if err := client.Ping().Err(); err != nil {
+func newRedisClusterClient(cfg *config.Redis) *redis.ClusterClient {
+	var clusterClient *redis.ClusterClient
+	clusterClient = redis.NewClusterClient(&redis.ClusterOptions{
+		Addrs:       cfg.ClusterHost,
+		Password:    cfg.Pwd,
+		PoolSize:    cfg.PoolSize,
+		IdleTimeout: time.Duration(cfg.ConnIdleTimeout) * time.Second,
+	})
+	if err := clusterClient.Ping().Err(); err != nil {
 		log.Fatalf("[redis.newRedisClient] redis ping failed: %s\n", err.Error())
 		return nil
 	}
 	log.Printf("[redis.newRedisClient] success \n")
-	return client
+	return clusterClient
 }
 
-func (rds *Client) Reload(cfg *config.Redis) {
+func (rds *ClusterClientClient) Reload(cfg *config.Redis) {
 	rds.rw.Lock()
 	defer rds.rw.Unlock()
 	if err := rds.client.Close(); err != nil {
@@ -77,16 +52,16 @@ func (rds *Client) Reload(cfg *config.Redis) {
 		return
 	}
 	log.Printf("[redis.Reload] redisclient reload with new conf: %+v\n", cfg)
-	rds.client = newRedisClient(cfg)
+	rds.client = newRedisClusterClient(cfg)
 }
 
-func (rds *Client) GetCli() *redis.Client {
+func (rds *ClusterClientClient) GetCli() *redis.ClusterClient {
 	rds.rw.RLock()
 	defer rds.rw.RUnlock()
 	return rds.client
 }
 
-func (rds *Client) release() {
+func (rds *ClusterClientClient) release() {
 	rds.rw.Lock()
 	defer rds.rw.Unlock()
 	if err := rds.client.Close(); err != nil {
@@ -95,7 +70,7 @@ func (rds *Client) release() {
 	}
 }
 
-func (rds *Client) ZGet(key string) *redis.StringCmd {
+func (rds *ClusterClientClient) ZGet(key string) *redis.StringCmd {
 	getStartTime := time.Now()
 	result := rds.client.Get(key)
 	if result.Err() != nil {
@@ -108,11 +83,12 @@ func (rds *Client) ZGet(key string) *redis.StringCmd {
 	return result
 }
 
-func (rds *Client) ZSet(key string, value interface{}, expiration time.Duration) *redis.StatusCmd {
+func (rds *ClusterClientClient) ZSet(key string, value interface{}, expiration time.Duration) *redis.StatusCmd {
+	println("ClusterClientClient zsetting")
 	getStartTime := time.Now()
-
 	result := rds.client.Set(key, value, expiration)
 	if result.Err() != nil {
+		log.Printf("ClusterClientClient Set Error:", result.Err().Error())
 		prom.Incr(redisSet, key, result.Err().Error())
 	} else {
 		prom.Incr(redisSet, key, OPTION_SUC)
@@ -122,7 +98,7 @@ func (rds *Client) ZSet(key string, value interface{}, expiration time.Duration)
 	return result
 }
 
-func (rds *Client) ZDel(key string) *redis.IntCmd {
+func (rds *ClusterClientClient) ZDel(key string) *redis.IntCmd {
 	getStartTime := time.Now()
 	result := rds.client.Del(key)
 	if result.Err() != nil {
@@ -135,7 +111,7 @@ func (rds *Client) ZDel(key string) *redis.IntCmd {
 	return result
 }
 
-func (rds *Client) ZIncr(key string) *redis.IntCmd {
+func (rds *ClusterClientClient) ZIncr(key string) *redis.IntCmd {
 	getStartTime := time.Now()
 	result := rds.client.Incr(key)
 	if result.Err() != nil {
@@ -148,7 +124,7 @@ func (rds *Client) ZIncr(key string) *redis.IntCmd {
 	return result
 }
 
-func (rds *Client) ZTTL(key string) *redis.DurationCmd {
+func (rds *ClusterClientClient) ZTTL(key string) *redis.DurationCmd {
 	getStartTime := time.Now()
 	result := rds.client.TTL(key)
 	if result.Err() != nil {
@@ -161,7 +137,7 @@ func (rds *Client) ZTTL(key string) *redis.DurationCmd {
 	return result
 }
 
-func (rds *Client) ZSetRange(key string, offset int64, value string) *redis.IntCmd {
+func (rds *ClusterClientClient) ZSetRange(key string, offset int64, value string) *redis.IntCmd {
 	getStartTime := time.Now()
 	result := rds.client.SetRange(key, offset, value)
 	if result.Err() != nil {
@@ -174,7 +150,7 @@ func (rds *Client) ZSetRange(key string, offset int64, value string) *redis.IntC
 	return result
 }
 
-func (rds *Client) ZSetNX(key string, value interface{}, expiration time.Duration) *redis.BoolCmd {
+func (rds *ClusterClientClient) ZSetNX(key string, value interface{}, expiration time.Duration) *redis.BoolCmd {
 	getStartTime := time.Now()
 	result := rds.client.SetNX(key, value, expiration)
 	if result.Err() != nil {
@@ -187,7 +163,7 @@ func (rds *Client) ZSetNX(key string, value interface{}, expiration time.Duratio
 	return result
 }
 
-func (rds *Client) ZExpire(key string, expiration time.Duration) *redis.BoolCmd {
+func (rds *ClusterClientClient) ZExpire(key string, expiration time.Duration) *redis.BoolCmd {
 	getStartTime := time.Now()
 	result := rds.client.Expire(key, expiration)
 	if result.Err() != nil {
@@ -200,7 +176,7 @@ func (rds *Client) ZExpire(key string, expiration time.Duration) *redis.BoolCmd 
 	return result
 }
 
-func (rds *Client) ZExists(key string) *redis.IntCmd {
+func (rds *ClusterClientClient) ZExists(key string) *redis.IntCmd {
 	getStartTime := time.Now()
 	result := rds.client.Exists(key)
 	if result.Err() != nil {

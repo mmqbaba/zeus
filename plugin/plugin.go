@@ -110,17 +110,28 @@ func (c *Container) Reload(appcfg *config.AppConf) {
 // MysqlWithProm
 func (c *Container) initRedisWithProm(cfg *config.Redis, promClient *zeusprometheus.Prom) {
 	if cfg.Enable {
-		c.redis = zeusredis.InitClient(cfg)
-	}
-	if promClient != nil && cfg.Enable {
-		c.redis = zeusredis.InitClientWithProm(cfg, promClient)
+		if cfg.ClusterEnable {
+			c.redis = zeusredis.InitClusterClient(cfg)
+			if promClient != nil && cfg.Enable {
+				c.redis = zeusredis.InitClusterClientWithProm(cfg, promClient)
+			}
+		} else {
+			c.redis = zeusredis.InitClient(cfg)
+			if promClient != nil && cfg.Enable {
+				c.redis = zeusredis.InitClientWithProm(cfg, promClient)
+			}
+		}
 	}
 }
 
 // Redis
 func (c *Container) initRedis(cfg *config.Redis) {
 	if cfg.Enable {
-		c.redis = zeusredis.InitClient(cfg)
+		if cfg.ClusterEnable {
+			c.redis = zeusredis.InitClusterClient(cfg)
+		} else {
+			c.redis = zeusredis.InitClient(cfg)
+		}
 	}
 }
 

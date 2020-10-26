@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	zredis "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
 	"net"
 	"reflect"
 	"runtime"
@@ -110,9 +111,6 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 					return
 				}
 			}
-			if ng.GetContainer().GetRedisCli() != nil {
-				c = zeusctx.RedisToContext(c, ng.GetContainer().GetRedisCli().GetCli())
-			}
 			if ng.GetContainer().GetMongo() != nil {
 				c = zeusctx.MongoToContext(c, ng.GetContainer().GetMongo())
 			}
@@ -124,7 +122,11 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			}
 			if ng.GetContainer().GetPrometheus() != nil {
 				c = zeusctx.PrometheusToContext(c, ng.GetContainer().GetPrometheus().GetPubCli())
-				c = zeusctx.RedisWithPromToContext(c, ng.GetContainer().GetRedisCli())
+				if ng.GetContainer().GetRedisCli() != nil {
+					c = zeusctx.RedisWithPromToContext(c, ng.GetContainer().GetRedisCli())
+				}
+			} else if ng.GetContainer().GetRedisCli() != nil {
+				c = zeusctx.RedisToContext(c, (ng.GetContainer().GetRedisCli()).(*zredis.Client).GetCli())
 			}
 
 			defer func() {

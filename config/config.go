@@ -77,6 +77,7 @@ type Redis struct {
 	PoolSize           int      `json:"poolsize"`
 	ConnIdleTimeout    int      `json:"conn_idle_timeout"` // 单位秒
 	Enable             bool     `json:"enable"`            // 启用组件
+	ClusterEnable      bool     `json:"cluster_enable"`    // 启用集群
 }
 
 type Mysql struct {
