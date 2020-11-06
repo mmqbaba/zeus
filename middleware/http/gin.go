@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	zredis "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -191,8 +192,8 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			}
 			if cfg.Get().Prometheus.Enable {
 				prom := ng.GetContainer().GetPrometheus().GetInnerCli()
-				prom.HTTPServer.Incr(tracerid, c.Request.URL.Path, strconv.Itoa(int(baseRsp.Errcode)))
-				prom.HTTPServer.Timing(tracerid, int64(time.Since(accessstart)/time.Millisecond), c.Request.URL.Path)
+				prom.HTTPServer.Incr(c.Request.URL.Path, strconv.Itoa(int(baseRsp.Errcode)))
+				prom.HTTPServer.Timing(c.Request.URL.Path, int64(time.Since(accessstart)/time.Millisecond))
 			}
 		}()
 		tracerid = span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
@@ -202,9 +203,6 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		})
 		ctx = zeusctx.LoggerToContext(spnctx, l)
 		ctx = zeusctx.GMClientToContext(ctx, ng.GetContainer().GetGoMicroClient())
-		if ng.GetContainer().GetRedisCli() != nil {
-			ctx = zeusctx.RedisToContext(ctx, ng.GetContainer().GetRedisCli().GetCli())
-		}
 		if ng.GetContainer().GetMongo() != nil {
 			ctx = zeusctx.MongoToContext(ctx, ng.GetContainer().GetMongo())
 		}
@@ -216,7 +214,11 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 		}
 		if ng.GetContainer().GetPrometheus() != nil {
 			ctx = zeusctx.PrometheusToContext(ctx, ng.GetContainer().GetPrometheus().GetPubCli())
-            ctx = zeusctx.RedisWithPromToContext(ctx, ng.GetContainer().GetRedisCli())
+			if ng.GetContainer().GetRedisCli() != nil {
+				ctx = zeusctx.RedisWithPromToContext(ctx, ng.GetContainer().GetRedisCli())
+			}
+		} else if ng.GetContainer().GetRedisCli() != nil {
+			ctx = zeusctx.RedisToContext(ctx, (ng.GetContainer().GetRedisCli()).(*zredis.Client).GetCli())
 		}
 		c.Set(ZEUS_CTX, ctx)
 		c.Next()

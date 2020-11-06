@@ -31,9 +31,9 @@ type Prom struct {
 func InitClient(cfg *config.Prometheus) *PromClient {
 	prom = &PromClient{
 		innerClient: &InnerClient{
-			RPCClient:  NewInner().withTimer("zeus_rpc_client_duration", []string{"trace_id", "client_node", "server_name"}).withCounter("zeus_rpc_client_code", []string{"trace_id", "client_node", "server_name", "err_code"}).withState("zeus_rpc_client_state", []string{"trace_id", "server_name", "client_node"}),
-			HTTPServer: NewInner().withTimer("zeus_http_server_duration", []string{"trace_id", "url"}).withCounter("zeus_http_server_code", []string{"trace_id", "url", "err_code"}).withState("zeus_http_server_state", []string{"url"}),
-			RPCServer:  NewInner().withTimer("zeus_rpc_server_duration", []string{"trace_id", "server_node", "server_name"}).withCounter("zeus_rpc_server_code", []string{"trace_id", "server_name", "err_code"}).withState("zeus_rpc_server_state", []string{"server_name"}),
+			HTTPServer: NewInner().withTimer("zeus_http_server_duration", []string{"url"}).withCounter("zeus_http_server_code", []string{"url", "err_code"}).withState("zeus_http_server_state", []string{"url"}),
+			RPCClient:  NewInner().withTimer("zeus_rpc_client_duration", []string{"client_node", "server_name"}).withCounter("zeus_rpc_client_code", []string{"client_node", "server_name", "err_code"}).withState("zeus_rpc_client_state", []string{"server_name", "client_node"}),
+			RPCServer:  NewInner().withTimer("zeus_rpc_server_duration", []string{"server_node", "server_name"}).withCounter("zeus_rpc_server_code", []string{"server_name", "err_code"}).withState("zeus_rpc_server_state", []string{"server_name"}),
 		},
 		pHost: cfg.PullHost,
 	}

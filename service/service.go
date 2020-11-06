@@ -6,7 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"io/ioutil"
+    "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pprof"
+    "io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -304,6 +305,12 @@ func (s *Service) initServer() (err error) {
 		s.container.SetHTTPHandler(gw)
 
 		go func() {
+            // 启用go性能分析工具
+            pprofConfig := configer.Get().PProf
+            if pprofConfig.Enable  {
+                pprof.StartPerf(pprofConfig)
+            }
+
 			addr := fmt.Sprintf("%s:%d", s.options.ApiInterface, s.options.ApiPort)
 			// log.Printf("http apiserver listen on %s", addr)
 			// Start HTTP server (and proxy calls to gRPC server endpoint, serve http, serve swagger)

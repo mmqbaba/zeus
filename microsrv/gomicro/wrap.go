@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	zredis "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
 	"net"
 	"reflect"
 	"runtime"
@@ -110,9 +111,6 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 					return
 				}
 			}
-			if ng.GetContainer().GetRedisCli() != nil {
-				c = zeusctx.RedisToContext(c, ng.GetContainer().GetRedisCli().GetCli())
-			}
 			if ng.GetContainer().GetMongo() != nil {
 				c = zeusctx.MongoToContext(c, ng.GetContainer().GetMongo())
 			}
@@ -124,17 +122,21 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			}
 			if ng.GetContainer().GetPrometheus() != nil {
 				c = zeusctx.PrometheusToContext(c, ng.GetContainer().GetPrometheus().GetPubCli())
-				c = zeusctx.RedisWithPromToContext(c, ng.GetContainer().GetRedisCli())
+				if ng.GetContainer().GetRedisCli() != nil {
+					c = zeusctx.RedisWithPromToContext(c, ng.GetContainer().GetRedisCli())
+				}
+			} else if ng.GetContainer().GetRedisCli() != nil {
+				c = zeusctx.RedisToContext(c, (ng.GetContainer().GetRedisCli()).(*zredis.Client).GetCli())
 			}
 
 			defer func() {
 				if cfg.Get().Prometheus.Enable {
 					prom := ng.GetContainer().GetPrometheus().GetInnerCli()
-					prom.RPCServer.Timing(tracerID, int64(time.Since(now)/time.Millisecond), name, ng.GetContainer().GetServiceID())
+					prom.RPCServer.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
 					if errcode != "" {
-						prom.RPCServer.Incr(name, ng.GetContainer().GetServiceID(), errcode)
+						prom.RPCServer.Incr(name, errcode)
 					} else {
-						prom.RPCServer.Incr(name, ng.GetContainer().GetServiceID(), strconv.Itoa(0))
+						prom.RPCServer.Incr(name, strconv.Itoa(0))
 					}
 					prom.RPCServer.StateIncr(ng.GetContainer().GetServiceID())
 				}
@@ -288,14 +290,14 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 	defer func() {
 		if cfg.Get().Prometheus.Enable {
 			prom := ng.GetContainer().GetPrometheus().GetInnerCli()
-			prom.RPCClient.Timing(tracer.GetTraceID(spnctx), int64(time.Since(now)/time.Millisecond), name, ng.GetContainer().GetServiceID())
+			prom.RPCClient.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
 			if errcode != "" {
-				prom.RPCClient.Incr(tracer.GetTraceID(spnctx), name, ng.GetContainer().GetServiceID(), errcode)
+				prom.RPCClient.Incr(name, ng.GetContainer().GetServiceID(), errcode)
 			} else {
-				prom.RPCClient.Incr(tracer.GetTraceID(spnctx), name, ng.GetContainer().GetServiceID(), strconv.Itoa(0))
+				prom.RPCClient.Incr(name, ng.GetContainer().GetServiceID(), strconv.Itoa(0))
 			}
 			//mark rpc tracing
-			prom.RPCClient.StateIncr(tracer.GetTraceID(spnctx), name, ng.GetContainer().GetServiceID())
+			prom.RPCClient.StateIncr(name, ng.GetContainer().GetServiceID())
 		}
 	}()
 	rspRaw, _ := utils.Marshal(rsp)
