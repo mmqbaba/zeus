@@ -132,11 +132,11 @@ func GenerateServerLogWrap(ng engine.Engine) func(fn server.HandlerFunc) server.
 			defer func() {
 				if cfg.Get().Prometheus.Enable {
 					prom := ng.GetContainer().GetPrometheus().GetInnerCli()
-					prom.RPCServer.Timing(tracerID, int64(time.Since(now)/time.Millisecond), name, ng.GetContainer().GetServiceID())
+					prom.RPCServer.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
 					if errcode != "" {
-						prom.RPCServer.Incr(name, ng.GetContainer().GetServiceID(), errcode)
+						prom.RPCServer.Incr(name, errcode)
 					} else {
-						prom.RPCServer.Incr(name, ng.GetContainer().GetServiceID(), strconv.Itoa(0))
+						prom.RPCServer.Incr(name, strconv.Itoa(0))
 					}
 					prom.RPCServer.StateIncr(ng.GetContainer().GetServiceID())
 				}
@@ -290,14 +290,14 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 	defer func() {
 		if cfg.Get().Prometheus.Enable {
 			prom := ng.GetContainer().GetPrometheus().GetInnerCli()
-			prom.RPCClient.Timing(tracer.GetTraceID(spnctx), int64(time.Since(now)/time.Millisecond), name, ng.GetContainer().GetServiceID())
+			prom.RPCClient.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
 			if errcode != "" {
-				prom.RPCClient.Incr(tracer.GetTraceID(spnctx), name, ng.GetContainer().GetServiceID(), errcode)
+				prom.RPCClient.Incr(name, ng.GetContainer().GetServiceID(), errcode)
 			} else {
-				prom.RPCClient.Incr(tracer.GetTraceID(spnctx), name, ng.GetContainer().GetServiceID(), strconv.Itoa(0))
+				prom.RPCClient.Incr(name, ng.GetContainer().GetServiceID(), strconv.Itoa(0))
 			}
 			//mark rpc tracing
-			prom.RPCClient.StateIncr(tracer.GetTraceID(spnctx), name, ng.GetContainer().GetServiceID())
+			prom.RPCClient.StateIncr(name, ng.GetContainer().GetServiceID())
 		}
 	}()
 	rspRaw, _ := utils.Marshal(rsp)

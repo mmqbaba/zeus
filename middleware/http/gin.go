@@ -192,8 +192,8 @@ func Access(ng engine.Engine) gin.HandlerFunc {
 			}
 			if cfg.Get().Prometheus.Enable {
 				prom := ng.GetContainer().GetPrometheus().GetInnerCli()
-				prom.HTTPServer.Incr(tracerid, c.Request.URL.Path, strconv.Itoa(int(baseRsp.Errcode)))
-				prom.HTTPServer.Timing(tracerid, int64(time.Since(accessstart)/time.Millisecond), c.Request.URL.Path)
+				prom.HTTPServer.Incr(c.Request.URL.Path, strconv.Itoa(int(baseRsp.Errcode)))
+				prom.HTTPServer.Timing(c.Request.URL.Path, int64(time.Since(accessstart)/time.Millisecond))
 			}
 		}()
 		tracerid = span.Context().(zipkintracer.SpanContext).TraceID.ToHex()
