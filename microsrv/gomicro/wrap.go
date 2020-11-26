@@ -257,7 +257,20 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 	body, _ := utils.Marshal(req.Body())
 	span.SetTag("grpc client call", string(body))
 	///////// tracer finish
-
+	//prometheus data pusher
+	defer func() {
+		if cfg.Get().Prometheus.Enable {
+			prom := ng.GetContainer().GetPrometheus().GetInnerCli()
+			prom.RPCClient.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
+			if errcode != "" {
+				prom.RPCClient.Incr(name, ng.GetContainer().GetServiceID(), errcode)
+			} else {
+				prom.RPCClient.Incr(name, ng.GetContainer().GetServiceID(), strconv.Itoa(0))
+			}
+			//mark rpc tracing
+			prom.RPCClient.StateIncr(name, ng.GetContainer().GetServiceID())
+		}
+	}()
 	//zeus rpc 调用标识
 	ctx = zeusFlagToContext(ctx)
 	err = l.Client.Call(ctx, req, rsp, opts...)
@@ -287,19 +300,6 @@ func (l *clientLogWrap) Call(ctx context.Context, req client.Request, rsp interf
 			err = nil
 		}
 	}
-	defer func() {
-		if cfg.Get().Prometheus.Enable {
-			prom := ng.GetContainer().GetPrometheus().GetInnerCli()
-			prom.RPCClient.Timing(name, int64(time.Since(now)/time.Millisecond), ng.GetContainer().GetServiceID())
-			if errcode != "" {
-				prom.RPCClient.Incr(name, ng.GetContainer().GetServiceID(), errcode)
-			} else {
-				prom.RPCClient.Incr(name, ng.GetContainer().GetServiceID(), strconv.Itoa(0))
-			}
-			//mark rpc tracing
-			prom.RPCClient.StateIncr(name, ng.GetContainer().GetServiceID())
-		}
-	}()
 	rspRaw, _ := utils.Marshal(rsp)
 	span.SetTag("grpc client receive", string(rspRaw))
 	return
