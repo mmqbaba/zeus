@@ -12,6 +12,7 @@ type HttpClient interface {
 type Client interface {
 	Get(ctx context.Context, url string, headers map[string]string) ([]byte, error)
 	Post(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error)
+    PostWithStatusCode(ctx context.Context, url string, body io.Reader, headers map[string]string) (rsp []byte, s int, err error)
 	Put(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error)
 	Patch(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error)
 	Delete(ctx context.Context, url string, headers map[string]string) ([]byte, error)

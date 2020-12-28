@@ -166,7 +166,8 @@ func (c *Client) Get(ctx context.Context, url string, headers map[string]string)
 		return nil, errors.ECodeHttpClient.ParseErr("GET - request creation failed")
 	}
 
-	return c.do(ctx, request, headers)
+    rsp, _, err := c.do(ctx, request, headers)
+    return rsp, err
 }
 
 func (c *Client) Post(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error) {
@@ -175,7 +176,18 @@ func (c *Client) Post(ctx context.Context, url string, body io.Reader, headers m
 		return nil, errors.ECodeHttpClient.ParseErr("POST - request creation failed")
 	}
 
-	return c.do(ctx, request, headers)
+    rsp, _, err := c.do(ctx, request, headers)
+    return rsp, err
+}
+
+func (c *Client) PostWithStatusCode(ctx context.Context, url string, body io.Reader, headers map[string]string) (rsp []byte, s int, err error) {
+    request, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%v%v", c.getRandomHost(), url), body)
+    if err != nil {
+        return nil, 0, errors.ECodeHttpClient.ParseErr("POST - request creation failed")
+    }
+
+    rsp, s, err = c.do(ctx, request, headers)
+    return
 }
 
 func (c *Client) Put(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error) {
@@ -184,7 +196,8 @@ func (c *Client) Put(ctx context.Context, url string, body io.Reader, headers ma
 		return nil, errors.ECodeHttpClient.ParseErr("PUT - request creation failed")
 	}
 
-	return c.do(ctx, request, headers)
+    rsp, _, err := c.do(ctx, request, headers)
+    return rsp, err
 }
 
 func (c *Client) Patch(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error) {
@@ -193,7 +206,8 @@ func (c *Client) Patch(ctx context.Context, url string, body io.Reader, headers 
 		return nil, errors.ECodeHttpClient.ParseErr("PATCH - request creation failed")
 	}
 
-	return c.do(ctx, request, headers)
+    rsp, _, err := c.do(ctx, request, headers)
+    return rsp, err
 }
 
 func (c *Client) Delete(ctx context.Context, url string, headers map[string]string) ([]byte, error) {
@@ -202,14 +216,15 @@ func (c *Client) Delete(ctx context.Context, url string, headers map[string]stri
 		return nil, errors.ECodeHttpClient.ParseErr("DELETE - request creation failed")
 	}
 
-	return c.do(ctx, request, headers)
+	rsp, _, err := c.do(ctx, request, headers)
+	return rsp, err
 }
 
 func (c *Client) getRandomHost() string {
 	return c.settings.Hosts[rand.Intn(len(c.settings.Hosts))]
 }
 
-func (c *Client) do(ctx context.Context, request *http.Request, headers map[string]string) (rsp []byte, err error) {
+func (c *Client) do(ctx context.Context, request *http.Request, headers map[string]string) (rsp []byte, s int, err error) {
 
 	if len(headers) > 0 {
 		for k, v := range headers {
@@ -236,7 +251,7 @@ func (c *Client) do(ctx context.Context, request *http.Request, headers map[stri
 	if request.Body != nil {
 		reqData, err := ioutil.ReadAll(request.Body)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		span.SetTag("httpclient request.body", string(reqData))
 		bodyReader = bytes.NewReader(reqData)
@@ -271,7 +286,7 @@ func (c *Client) do(ctx context.Context, request *http.Request, headers map[stri
 	}
 
 	if response == nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	defer func() {
@@ -286,8 +301,8 @@ func (c *Client) do(ctx context.Context, request *http.Request, headers map[stri
 	span.SetTag("httpclient response.error", err)
 	if err != nil {
 		loger.Errorf("ReadAll error:%+v", err)
-		return nil, err
+		return nil, 0, err
 	}
 
-	return rspBody, err
+	return rspBody, response.StatusCode, err
 }
