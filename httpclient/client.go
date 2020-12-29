@@ -6,6 +6,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"math/rand"
+	"net/http"
+	"time"
+
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
@@ -14,12 +21,6 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
 	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
-	"io"
-	"io/ioutil"
-	"log"
-	"math/rand"
-	"net/http"
-	"time"
 )
 
 const (
@@ -163,57 +164,57 @@ func newClient(cfg *config.HttpClientConf) *Client {
 func (c *Client) Get(ctx context.Context, url string, headers map[string]string) ([]byte, error) {
 	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%v%v", c.getRandomHost(), url), nil)
 	if err != nil {
-		return nil, errors.ECodeHttpClient.ParseErr("GET - request creation failed")
+		return nil, errors.ECodeHttpClient.ParseErr("GET - request creation failed", "err: "+err.Error())
 	}
 
-    rsp, _, err := c.do(ctx, request, headers)
-    return rsp, err
+	rsp, _, err := c.do(ctx, request, headers)
+	return rsp, err
 }
 
 func (c *Client) Post(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error) {
 	request, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%v%v", c.getRandomHost(), url), body)
 	if err != nil {
-		return nil, errors.ECodeHttpClient.ParseErr("POST - request creation failed")
+		return nil, errors.ECodeHttpClient.ParseErr("POST - request creation failed", "err: "+err.Error())
 	}
 
-    rsp, _, err := c.do(ctx, request, headers)
-    return rsp, err
+	rsp, _, err := c.do(ctx, request, headers)
+	return rsp, err
 }
 
 func (c *Client) PostWithStatusCode(ctx context.Context, url string, body io.Reader, headers map[string]string) (rsp []byte, s int, err error) {
-    request, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%v%v", c.getRandomHost(), url), body)
-    if err != nil {
-        return nil, 0, errors.ECodeHttpClient.ParseErr("POST - request creation failed")
-    }
+	request, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%v%v", c.getRandomHost(), url), body)
+	if err != nil {
+		return nil, 0, errors.ECodeHttpClient.ParseErr("POST WithStatusCode - request creation failed", "err: "+err.Error())
+	}
 
-    rsp, s, err = c.do(ctx, request, headers)
-    return
+	rsp, s, err = c.do(ctx, request, headers)
+	return
 }
 
 func (c *Client) Put(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error) {
 	request, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%v%v", c.getRandomHost(), url), body)
 	if err != nil {
-		return nil, errors.ECodeHttpClient.ParseErr("PUT - request creation failed")
+		return nil, errors.ECodeHttpClient.ParseErr("PUT - request creation failed", "err: "+err.Error())
 	}
 
-    rsp, _, err := c.do(ctx, request, headers)
-    return rsp, err
+	rsp, _, err := c.do(ctx, request, headers)
+	return rsp, err
 }
 
 func (c *Client) Patch(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error) {
 	request, err := http.NewRequest(http.MethodPatch, fmt.Sprintf("%v%v", c.getRandomHost(), url), body)
 	if err != nil {
-		return nil, errors.ECodeHttpClient.ParseErr("PATCH - request creation failed")
+		return nil, errors.ECodeHttpClient.ParseErr("PATCH - request creation failed", "err: "+err.Error())
 	}
 
-    rsp, _, err := c.do(ctx, request, headers)
-    return rsp, err
+	rsp, _, err := c.do(ctx, request, headers)
+	return rsp, err
 }
 
 func (c *Client) Delete(ctx context.Context, url string, headers map[string]string) ([]byte, error) {
 	request, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("%v%v", c.getRandomHost(), url), nil)
 	if err != nil {
-		return nil, errors.ECodeHttpClient.ParseErr("DELETE - request creation failed")
+		return nil, errors.ECodeHttpClient.ParseErr("DELETE - request creation failed", "err: "+err.Error())
 	}
 
 	rsp, _, err := c.do(ctx, request, headers)
