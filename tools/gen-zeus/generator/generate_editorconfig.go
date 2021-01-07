@@ -15,6 +15,10 @@ insert_final_newline = true
 [*.md]
 trim_trailing_whitespace = false
 
+[Makefile]
+indent_style = tab
+indent_size = 4
+
 `
 
 	context := tmpContext
