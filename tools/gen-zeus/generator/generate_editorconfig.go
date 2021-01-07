@@ -5,7 +5,7 @@ func GenerateEditorconfig(PD *Generator, rootdir string) (err error) {
 	tmpContext := `root = true
 
 [*]
-indent_style = space
+indent_style = tab
 indent_size = 4
 end_of_line = lf
 charset = utf-8
