@@ -71,7 +71,7 @@ func (l *LogBuilder) setFormatter() (err error) {
 	switch format {
 	case "text":
 		f := &logrus.TextFormatter{
-			TimestampFormat: "2006-01-02 15:04:05",
+			TimestampFormat: "2006-01-02 15:04:05.000",
 			FieldMap:        logrus.FieldMap{logrus.FieldKeyMsg: "message"},
 			DisableColors:   true,
 		}
@@ -79,7 +79,7 @@ func (l *LogBuilder) setFormatter() (err error) {
 		l.formatter = f
 	case "json":
 		f := &logrus.JSONFormatter{
-			TimestampFormat: "2006-01-02 15:04:05",
+			TimestampFormat: "2006-01-02 15:04:05.000",
 			FieldMap:        logrus.FieldMap{logrus.FieldKeyMsg: "message"},
 		}
 		l.Logger.SetFormatter(f)
