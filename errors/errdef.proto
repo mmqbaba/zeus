@@ -101,8 +101,8 @@ enum ErrCode {
     ECodeInternal = 10047; // 服务器内部错误^http.StatusInternalServerError
     // 未能成功匹配路由
     ECodeNotFound = 10048; // 未能成功匹配路由^http.StatusNotFound
-    // 未认证的请求
-    ECodeUnauthorized = 10049; // 未认证的请求^http.StatusUnauthorized
+    // 未授权的请求
+    ECodeUnauthorized = 10049; // 未授权的请求^http.StatusUnauthorized
     // 代理服务错误
     ECodeProxyFailed = 10050; // 代理服务错误^http.StatusBadRequest
     // protobuf反序列化错误

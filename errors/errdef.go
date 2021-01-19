@@ -116,7 +116,7 @@ var ECodeMsg = map[ErrorCode]string{
 	ECodeAppCfg:                   "appcfg error",
 	ECodeInternal:                 "服务器内部错误",
 	ECodeNotFound:                 "未能成功匹配路由",
-	ECodeUnauthorized:             "未认证的请求",
+	ECodeUnauthorized:             "未授权的请求",
 	ECodeProxyFailed:              "代理服务错误",
 	ECodePbUnmarshal:              "unmarshal protobuf error",
 	ECodeJSONPBMarshal:            "marshal jsonpb error",
