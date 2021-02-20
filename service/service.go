@@ -17,7 +17,8 @@ import (
 	"sync"
 	"time"
 
-	assetfs "github.com/elazarl/go-bindata-assetfs"
+	// assetfs "github.com/elazarl/go-bindata-assetfs"
+
 	"github.com/gorilla/mux"
 	gruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/micro/go-micro"
@@ -35,7 +36,10 @@ import (
 	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
 	zgomicro "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/zcontainer"
-	swagger "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger/ui"
+
+	// swaggerthirdparty "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger/third_party"
+	swaggerhelper "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger"
+	// swagger "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger/ui"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
 
@@ -262,8 +266,9 @@ func (s *Service) processChange(ev interface{}) (err error) {
 }
 
 type gwOption struct {
-	grpcEndpoint    string
-	swaggerJSONFile string
+	grpcEndpoint        string
+	swaggerJSONFile     string
+	setSwaggerServiceFn func(name string)
 }
 
 func (s *Service) initServer() (err error) {
@@ -293,8 +298,9 @@ func (s *Service) initServer() (err error) {
 		addr := s.container.GetGoMicroService().Server().Options().Address
 		gw, err := s.newHTTPGateway(gwOption{
 			// grpcEndpoint:    fmt.Sprintf("localhost:%d", serverPort),
-			grpcEndpoint:    addr,
-			swaggerJSONFile: s.options.SwaggerJSONFileName,
+			grpcEndpoint:        addr,
+			swaggerJSONFile:     s.options.SwaggerJSONFileName,
+			setSwaggerServiceFn: s.options.SetSwaggerServiceFn,
 		})
 		if err != nil {
 			log.Fatal(err)
@@ -501,8 +507,29 @@ func (s *Service) newHTTPGateway(opt gwOption) (h http.Handler, err error) {
 	r := mux.NewRouter()
 
 	// swagger handler
-	r.PathPrefix("/swagger/").HandlerFunc(serveSwaggerFile)
-	serveSwaggerUI("/swagger-ui/", r, opt.swaggerJSONFile)
+	// r.PathPrefix("/swagger/").HandlerFunc(serveSwaggerFileHandle)
+	serveSwaggerFile("/swagger/", r, http.FS(swaggerhelper.Swaggerfile))
+
+	// if opt.setSwaggerServiceFn != nil {
+	// 	opt.setSwaggerServiceFn(opt.swaggerJSONFile)
+	// }
+
+	// serveSwaggerUI("/swagger-ui/", true, r, swaggerhelper.SwaggerAssetFS) // go-bindata
+
+	r.Path("/swagger-ui/").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		p := strings.TrimPrefix(r.URL.Path, "/") + "index.html"
+		data, err := swaggerhelper.SwaggerUI.ReadFile(p)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		s := strings.Replace(string(data), "{DEFAULT_SERVICE}", opt.swaggerJSONFile, 1)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(s))
+	})
+	serveSwaggerUI("/swagger-ui/", false, r, http.FS(swaggerhelper.SwaggerUI)) // embed
+
 	log.Println("[zeus] [s.newHTTPGateway] swaggerRegister success.")
 
 	// http handler
@@ -557,7 +584,7 @@ func (s *Service) newHTTPGateway(opt gwOption) (h http.Handler, err error) {
 	}
 
 	// r := http.NewServeMux()
-	// r.HandleFunc("/swagger/", serveSwaggerFile)
+	// r.HandleFunc("/swagger/", serveSwaggerFileHandle)
 	// serveGin(r)
 	// r.Handle("/", gwmux)
 
@@ -588,7 +615,7 @@ func (s *Service) newHTTPGateway(opt gwOption) (h http.Handler, err error) {
 	return
 }
 
-func serveSwaggerFile(w http.ResponseWriter, r *http.Request) {
+func serveSwaggerFileHandle(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasSuffix(r.URL.Path, "swagger.json") {
 		log.Printf("Not Found: %s", r.URL.Path)
 		http.NotFound(w, r)
@@ -604,12 +631,16 @@ func serveSwaggerFile(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, p)
 }
 
-func serveSwaggerUI(prefix string, mux *mux.Router, swaggerJSONFile string) {
-	swagger.SetService(swaggerJSONFile)
-	fileServer := http.FileServer(&assetfs.AssetFS{
-		Asset:    swagger.Asset,
-		AssetDir: swagger.AssetDir,
-		Prefix:   "third_party/swagger-ui",
-	})
+func serveSwaggerFile(prefix string, mux *mux.Router, f http.FileSystem) {
+	fileServer := http.FileServer(f)
 	mux.PathPrefix(prefix).Handler(http.StripPrefix(prefix, fileServer))
+}
+
+func serveSwaggerUI(prefix string, stripPrefix bool, mux *mux.Router, f http.FileSystem) {
+	fileServer := http.FileServer(f)
+	if stripPrefix {
+		mux.PathPrefix(prefix).Handler(http.StripPrefix(prefix, fileServer))
+		return
+	}
+	mux.PathPrefix(prefix).Handler(fileServer)
 }

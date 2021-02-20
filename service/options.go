@@ -13,6 +13,9 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
 )
 
+// CommonServiceOptions 可框架内全局共用
+var CommonServiceOptions = []Option{}
+
 type Options struct {
 	ServiceName  string
 	ApiPort      int
@@ -29,6 +32,7 @@ type Options struct {
 	LogLevel  string
 
 	SwaggerJSONFileName string
+	SetSwaggerServiceFn func(name string)
 
 	ConfEntryPath string
 
@@ -123,6 +127,12 @@ func WithServiceNameOption(s string) Option {
 func WithSwaggerJSONFileName(s string) Option {
 	return func(o *Options) {
 		o.SwaggerJSONFileName = s
+	}
+}
+
+func WithSetSwaggerServiceFn(f func(name string)) Option {
+	return func(o *Options) {
+		o.SetSwaggerServiceFn = f
 	}
 }
 

@@ -1,6 +1,6 @@
 module gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus
 
-go 1.13
+go 1.16
 
 replace (
 	github.com/golang/lint => golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3
