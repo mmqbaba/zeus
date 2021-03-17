@@ -61,7 +61,7 @@ type MongoDB struct {
 	Host            string `json:"host"`
 	User            string `json:"user"`
 	Pwd             string `json:"pwd"`
-	MaxPoolSize     uint16 `json:"max_pool_size"`
+	MaxPoolSize     uint64 `json:"max_pool_size"`
 	MaxConnIdleTime uint32 `json:"max_conn_idletime"` // 单位秒
 	Enable          bool   `json:"enable"`            // 启用组件
 }

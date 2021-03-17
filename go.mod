@@ -18,7 +18,7 @@ require (
 	github.com/gin-gonic/gin v1.5.0
 	github.com/go-playground/validator/v10 v10.2.0
 	github.com/go-redis/redis v6.15.6+incompatible
-	github.com/go-sql-driver/mysql v1.4.1
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
 	github.com/golang/protobuf v1.3.2
@@ -29,7 +29,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.12.0
 	github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869 // indirect
 	github.com/json-iterator/go v1.1.8
-	github.com/klauspost/cpuid v1.2.2 // indirect
 	github.com/lestrrat-go/file-rotatelogs v2.2.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.0 // indirect
 	github.com/micro/go-micro v1.18.0
@@ -44,7 +43,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
 	github.com/tebeka/strftime v0.1.3 // indirect
-	go.mongodb.org/mongo-driver v1.0.2
+	go.mongodb.org/mongo-driver v1.5.0
 	go.uber.org/ratelimit v0.1.0
 	go.uber.org/zap v1.12.0
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0

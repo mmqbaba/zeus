@@ -21,7 +21,7 @@ type lconfig struct {
 	Hosts           string
 	Username        string
 	Password        string
-	MaxPoolSize     uint16
+	MaxPoolSize     uint64
 	MaxConnIdleTime time.Duration
 }
 
