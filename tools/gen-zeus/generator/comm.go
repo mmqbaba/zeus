@@ -83,6 +83,10 @@ func GetTargetFileName(PD *Generator, objtype string, rootdir string, opts ...st
 		dirname := fmt.Sprintf("%s/%s/cmd/app", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
 		fn = fmt.Sprintf("%s/main.go", dirname)
+	case "cmd.swaggerui.plugin":
+		dirname := fmt.Sprintf("%s/%s/cmd/app", rootdir, PD.PackageName)
+		CheckPrepareDir(dirname)
+		fn = fmt.Sprintf("%s/swaggerui.plugin.go", dirname)
 	case "global.init":
 		dirname := fmt.Sprintf("%s/%s/global", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)

@@ -71,6 +71,9 @@ func GetConfig() (conf *config.AppConf) {
 	return
 }
 
+type BaseExtConfig struct{
+
+}
 `
 	fn := GetTargetFileName(PD, "global.init", rootdir)
 	return writeContext(fn, header, context, true)
@@ -82,11 +85,28 @@ func genGlobal(PD *Generator, rootdir string) error {
 import (
     "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
     "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
+    "encoding/json"
+	"log"
 )
+
+var CustomExtConfig = new(ExtConfig)
+
+type ExtConfig struct {
+    BaseExtConfig
+}
 
 func loadConfig(conf *config.AppConf) {
     // 加载配置
-    // TODO: do something here
+	tempExtBytes, err := json.Marshal(conf.Ext)
+	if err != nil {
+		log.Printf("[loadConfig] json.Marshal(conf.Ext) err: %s", err.Error())
+	} else {
+		err := json.Unmarshal(tempExtBytes, CustomExtConfig)
+		if err != nil {
+			log.Printf("[loadConfig] json.Unmarshal(tempExtBytes, CustomExtConfig) err: %s", err.Error())
+		}
+	}
+	log.Printf("CustomExtConfig:%+v", CustomExtConfig)
 }
 
 func loadEngineSuccess(ng engine.Engine) {

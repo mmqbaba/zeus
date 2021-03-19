@@ -6,11 +6,15 @@ import (
 )
 
 func GenerateCmd(PD *Generator, rootdir string) (err error) {
-	err = genCmdInit(PD, rootdir)
-	if err != nil {
+	if err := genCmdInit(PD, rootdir); err != nil {
 		return err
 	}
-	err = genCmdMain(PD, rootdir)
+	if err := genCmdMain(PD, rootdir); err != nil {
+		return err
+	}
+	if err := genCmdSwaggerUI(PD, rootdir); err != nil {
+		return err
+	}
 	return
 }
 
@@ -91,5 +95,19 @@ func main() {
 `
 	context := strings.Replace(tmpContext, "{PRJ}", projectBasePrefix+PD.PackageName, 1)
 	fn := GetTargetFileName(PD, "cmd.main", rootdir)
+	return writeContext(fn, header, context, false)
+}
+
+func genCmdSwaggerUI(PD *Generator, rootdir string) error {
+	header := _defaultHeader
+	tmpContext := `package main
+
+import (
+	_ "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger/third_party"
+)
+
+`
+	context := fmt.Sprintf(tmpContext)
+	fn := GetTargetFileName(PD, "cmd.swaggerui.plugin", rootdir)
 	return writeContext(fn, header, context, false)
 }
