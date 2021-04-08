@@ -16,9 +16,9 @@ func genDockerfile(PD *Generator, rootdir string) error {
 	header := ``
 	tmpContext := `FROM alpine
 
-COPY ./{PKG}_server /tmp/
+COPY ./{PKG}_server /
 
-WORKDIR /tmp
+WORKDIR /
 
 RUN chmod +x {PKG}_server
 
