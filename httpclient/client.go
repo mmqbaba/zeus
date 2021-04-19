@@ -125,6 +125,7 @@ func newClient(cfg *config.HttpClientConf) *Client {
 		transport.MaxIdleConnsPerHost = cfg.MaxIdleConnsPerHost
 	}
 
+	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: cfg.InsecureSkipVerify}
 	if !cfg.InsecureSkipVerify && !utils.IsEmptyString(cfg.CaCertPath) {
 		caCrt, err := ioutil.ReadFile(cfg.CaCertPath)
 		if err != nil {
@@ -132,9 +133,8 @@ func newClient(cfg *config.HttpClientConf) *Client {
 		}
 		pool := x509.NewCertPool()
 		pool.AppendCertsFromPEM(caCrt)
-		transport.TLSClientConfig = &tls.Config{RootCAs: pool}
+		transport.TLSClientConfig.RootCAs = pool
 	}
-	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: cfg.InsecureSkipVerify}
 
 	settings.Transport = http.Transport{
 		TLSClientConfig:     transport.TLSClientConfig,
