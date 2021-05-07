@@ -5,6 +5,7 @@ go 1.16
 replace (
 	github.com/golang/lint => golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3
 	github.com/hashicorp/consul => github.com/hashicorp/consul v1.5.1
+	github.com/micro/go-micro => github.com/maidol/go-micro v1.18.1
 	github.com/testcontainers/testcontainer-go => github.com/testcontainers/testcontainers-go v0.0.4
 )
 
@@ -21,7 +22,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
-	github.com/golang/protobuf v1.3.2
+	github.com/golang/protobuf v1.4.2
 	github.com/google/gops v0.3.7
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.3
