@@ -221,6 +221,20 @@ func (c *Client) Delete(ctx context.Context, url string, headers map[string]stri
 	return rsp, err
 }
 
+func (c *Client) PostForm(ctx context.Context, url string, body io.Reader, headers map[string]string) ([]byte, error) {
+	request, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%v%v", c.getRandomHost(), url), body)
+	if err != nil {
+		return nil, errors.ECodeHttpClient.ParseErr("PostForm - request creation failed", "err: "+err.Error())
+	}
+	if headers == nil {
+		headers = map[string]string{}
+	}
+	headers["Content-Type"] = "application/x-www-form-urlencoded"
+
+	rsp, _, err := c.do(ctx, request, headers)
+	return rsp, err
+}
+
 func (c *Client) getRandomHost() string {
 	return c.settings.Hosts[rand.Intn(len(c.settings.Hosts))]
 }
