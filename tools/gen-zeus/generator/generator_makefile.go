@@ -33,7 +33,7 @@ autoinit:
 
 
 start:
-	./$(service)_server --port 9090 --apiPort 8081 --apiInterface 127.0.0.1 --confEntryPath /zeus/$(service)
+	./$(service)_server --port 9090 --apiPort 8081 --confEntryPath /zeus/$(service)
 
 stop:
 	killall $(service)_server
