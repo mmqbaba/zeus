@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/errors"
 )
 
 /*

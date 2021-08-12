@@ -3,7 +3,7 @@ package zcontext
 import (
 	"context"
 	"errors"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/httpclient/zhttpclient"
 )
 
 type ctxHttpClientMarker struct{}

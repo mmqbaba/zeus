@@ -12,10 +12,10 @@ import (
 	"github.com/micro/go-micro/codec"
 	"github.com/micro/go-micro/server"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	zjson "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro/codec/json"
-	zbroker "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/broker"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	zjson "gitlab.dg.com/BackEnd/deliver/tif/zeus/microsrv/gomicro/codec/json"
+	zbroker "gitlab.dg.com/BackEnd/deliver/tif/zeus/pubsub/broker"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/utils"
 )
 
 type Manager struct {

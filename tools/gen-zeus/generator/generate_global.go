@@ -20,9 +20,9 @@ func genGlobalInit(PD *Generator, rootdir string) error {
 import (
 	"log"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/service"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/engine"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/service"
 )
 
 var ng engine.Engine
@@ -83,8 +83,8 @@ func genGlobal(PD *Generator, rootdir string) error {
 	header := ``
 	context := `package global
 import (
-    "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-    "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
+    "gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+    "gitlab.dg.com/BackEnd/deliver/tif/zeus/engine"
     "encoding/json"
 	"log"
 )

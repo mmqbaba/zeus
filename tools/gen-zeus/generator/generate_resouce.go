@@ -56,7 +56,7 @@ import (
 
 	"github.com/micro/go-micro/client"
 
-	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
+	zeusctx "gitlab.dg.com/BackEnd/deliver/tif/zeus/context"
 
 	gomicro "%s{PKG}/proto/{PKG}pb"
 )

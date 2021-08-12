@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/ratelimit/leaky"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/ratelimit/token"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/ratelimit/leaky"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/ratelimit/token"
 )
 
 func main() {

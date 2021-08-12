@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/zcontainer"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/plugin"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/plugin/zcontainer"
 )
 
 func init() {

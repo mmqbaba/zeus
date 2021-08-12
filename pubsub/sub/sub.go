@@ -15,9 +15,9 @@ import (
 	"github.com/micro/go-micro/server"
 
 	gmbroker "github.com/micro/go-micro/broker"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	zbroker "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/broker"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	zbroker "gitlab.dg.com/BackEnd/deliver/tif/zeus/pubsub/broker"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/utils"
 )
 
 type subServer struct {

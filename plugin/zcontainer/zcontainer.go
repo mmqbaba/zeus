@@ -3,16 +3,16 @@ package zcontainer
 import (
 	"net/http"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/httpclient/zhttpclient"
 
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/client"
 	"github.com/sirupsen/logrus"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo/zmongo"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis/zredis"
-	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/mongo/zmongo"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/redis/zredis"
+	tracing "gitlab.dg.com/BackEnd/deliver/tif/zeus/trace"
 )
 
 // Container 组件的容器访问接口

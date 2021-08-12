@@ -6,8 +6,8 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	mgoc "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	mgoc "gitlab.dg.com/BackEnd/deliver/tif/zeus/mongo"
 )
 
 type user struct {

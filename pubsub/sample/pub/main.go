@@ -8,9 +8,9 @@ import (
 
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/micro/go-micro/metadata"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	brokerpb "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/proto"
-	zpub "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/pub"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	brokerpb "gitlab.dg.com/BackEnd/deliver/tif/zeus/pubsub/proto"
+	zpub "gitlab.dg.com/BackEnd/deliver/tif/zeus/pubsub/pub"
 )
 
 func main() {

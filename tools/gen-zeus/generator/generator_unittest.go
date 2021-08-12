@@ -27,8 +27,8 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/container"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/service"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/plugin/container"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/service"
 
 	"{PPKG}/global"
 )
@@ -69,10 +69,10 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/container"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/service"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/errors"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/plugin/container"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/service"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/utils"
 
 	_ "{PPKG}/http"
 	_ "{PPKG}/rpc"

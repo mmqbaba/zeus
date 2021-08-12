@@ -12,7 +12,7 @@ import (
 	"github.com/micro/go-micro/codec/json"
 	"github.com/micro/go-micro/config/cmd"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
 )
 
 type kBroker struct {

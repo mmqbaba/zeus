@@ -17,11 +17,11 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
-	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	zeusctx "gitlab.dg.com/BackEnd/deliver/tif/zeus/context"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/errors"
+	tracing "gitlab.dg.com/BackEnd/deliver/tif/zeus/trace"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/utils"
 )
 
 var appconf *config.AppConf

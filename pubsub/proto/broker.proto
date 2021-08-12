@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package broker; // 别名
-option go_package="gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/proto"; // 实际的包路径
+option go_package="gitlab.dg.com/BackEnd/deliver/tif/zeus/pubsub/proto"; // 实际的包路径
 
 // 公共数据结构
 message Header {

@@ -11,11 +11,11 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 
-	conf "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
-	lock "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/lock/redis"
-	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
+	conf "gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	zeusctx "gitlab.dg.com/BackEnd/deliver/tif/zeus/context"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/errors"
+	lock "gitlab.dg.com/BackEnd/deliver/tif/zeus/lock/redis"
+	tracing "gitlab.dg.com/BackEnd/deliver/tif/zeus/trace"
 )
 
 const driverName = "mysql"

@@ -7,11 +7,11 @@ import (
 	"log"
 	"sync"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	zeuserr "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/obs/obs"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/sequence"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	zeuserr "gitlab.dg.com/BackEnd/deliver/tif/zeus/errors"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/obs/obs"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/sequence"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/utils"
 )
 
 type lconfig struct {

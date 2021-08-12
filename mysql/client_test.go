@@ -6,7 +6,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	conf "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	conf "gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
 )
 
 func TestDBSession_QuerySql(t *testing.T) {

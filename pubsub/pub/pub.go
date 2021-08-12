@@ -12,10 +12,10 @@ import (
 	gmbroker "github.com/micro/go-micro/broker"
 	"github.com/micro/go-micro/client"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro/codec/json"
-	zbroker "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/broker"
-	brokerpb "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/proto"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/microsrv/gomicro/codec/json"
+	zbroker "gitlab.dg.com/BackEnd/deliver/tif/zeus/pubsub/broker"
+	brokerpb "gitlab.dg.com/BackEnd/deliver/tif/zeus/pubsub/proto"
 )
 
 type pubClient struct {

@@ -3,7 +3,7 @@ package httpclient
 import (
 	"context"
 	"fmt"
-	conf "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	conf "gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
 	"net/http"
 	"net/url"
 	"strings"

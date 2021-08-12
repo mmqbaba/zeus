@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	zeusconfig "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	zeusconfig "gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/utils"
 )
 
 var zeusCfg *zeusconfig.AppConf

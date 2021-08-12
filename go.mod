@@ -1,4 +1,4 @@
-module gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus
+module gitlab.dg.com/BackEnd/deliver/tif/zeus
 
 go 1.16
 

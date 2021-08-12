@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/utils"
 )
 
 type Jsoner struct {

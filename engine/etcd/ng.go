@@ -9,10 +9,10 @@ import (
 
 	etcd "github.com/coreos/etcd/clientv3"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/zcontainer"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/engine"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/plugin/zcontainer"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/utils"
 )
 
 type ng struct {

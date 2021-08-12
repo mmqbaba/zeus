@@ -7,10 +7,10 @@ import (
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/micro/go-micro/metadata"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	brokerpb "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/proto"
-	zsub "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/sub"
-	zprotobuf "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils/protobuf"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	brokerpb "gitlab.dg.com/BackEnd/deliver/tif/zeus/pubsub/proto"
+	zsub "gitlab.dg.com/BackEnd/deliver/tif/zeus/pubsub/sub"
+	zprotobuf "gitlab.dg.com/BackEnd/deliver/tif/zeus/utils/protobuf"
 )
 
 func main() {

@@ -29,18 +29,18 @@ import (
 
 	// "github.com/urfave/negroni"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine/etcd"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine/file"
-	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
-	zgomicro "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/zcontainer"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/engine"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/engine/etcd"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/engine/file"
+	zeuserrors "gitlab.dg.com/BackEnd/deliver/tif/zeus/errors"
+	zgomicro "gitlab.dg.com/BackEnd/deliver/tif/zeus/microsrv/gomicro"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/plugin/zcontainer"
 
-	// swaggerthirdparty "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger/third_party"
-	swaggerhelper "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger"
-	// swagger "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger/ui"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	// swaggerthirdparty "gitlab.dg.com/BackEnd/deliver/tif/zeus/swagger/third_party"
+	swaggerhelper "gitlab.dg.com/BackEnd/deliver/tif/zeus/swagger"
+	// swagger "gitlab.dg.com/BackEnd/deliver/tif/zeus/swagger/ui"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/utils"
 )
 
 const (

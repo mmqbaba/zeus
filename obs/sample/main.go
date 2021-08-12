@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	client "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/obs"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/obs/obs"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	client "gitlab.dg.com/BackEnd/deliver/tif/zeus/obs"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/obs/obs"
 )
 
 var (

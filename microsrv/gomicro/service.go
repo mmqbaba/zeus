@@ -12,7 +12,7 @@ import (
 	"github.com/micro/go-micro/server/grpc"
 	"github.com/micro/go-plugins/registry/etcdv3"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
 )
 
 func NewService(ctx context.Context, conf config.GoMicro, opts ...micro.Option) micro.Service {

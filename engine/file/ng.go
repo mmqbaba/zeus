@@ -7,10 +7,10 @@ import (
 	"log"
 	"time"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/zcontainer"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/engine"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/plugin/zcontainer"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/utils"
 )
 
 // ng fileengine的实现，目前并不完善，不要应用到生产，可简单用在开发测试

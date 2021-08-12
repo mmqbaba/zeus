@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/httpclient"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/httpclient/zhttpclient"
 
 	"github.com/google/gops/agent"
 	"github.com/micro/go-micro"
@@ -13,17 +13,17 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	zeuslog "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/log"
-	zeusmongo "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo/zmongo"
-	zeusmysql "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mysql"
-	zeusredis "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis/zredis"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/sequence"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/tifclient"
-	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace/zipkin"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	zeuslog "gitlab.dg.com/BackEnd/deliver/tif/zeus/log"
+	zeusmongo "gitlab.dg.com/BackEnd/deliver/tif/zeus/mongo"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/mongo/zmongo"
+	zeusmysql "gitlab.dg.com/BackEnd/deliver/tif/zeus/mysql"
+	zeusredis "gitlab.dg.com/BackEnd/deliver/tif/zeus/redis"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/redis/zredis"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/sequence"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/tifclient"
+	tracing "gitlab.dg.com/BackEnd/deliver/tif/zeus/trace"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/trace/zipkin"
 )
 
 // Container contain comm obj, impl zcontainer

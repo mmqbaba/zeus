@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/zcontainer"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/plugin/zcontainer"
 )
 
 // Engine for configuration and plugin container

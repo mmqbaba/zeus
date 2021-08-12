@@ -5,7 +5,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	"gitlab.dg.com/BackEnd/deliver/tif/zeus/config"
 )
 
 func BenchmarkLogInfo(b *testing.B) {
