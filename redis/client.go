@@ -65,11 +65,11 @@ func (rds *Client) GetCli() *redis.Client {
 	return rds.client
 }
 
-func (rds *Client) release() {
+func (rds *Client) Release() (err error) {
 	rds.rw.Lock()
 	defer rds.rw.Unlock()
-	if err := rds.client.Close(); err != nil {
+	if err = rds.client.Close(); err != nil {
 		log.Printf("redis close failed: %s\n", err.Error())
-		return
 	}
+	return
 }

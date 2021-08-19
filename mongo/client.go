@@ -91,6 +91,13 @@ func (c *Client) DB(name string, opts ...*options.DatabaseOptions) *mongo.Databa
 	return c.C.Database(name, opts...)
 }
 
+func (c *Client) Release() (err error) {
+	if err = c.C.Disconnect(context.Background()); err != nil {
+		log.Println("mongo release err: ", err)
+	}
+	return
+}
+
 func newMgr() *ClientMgr {
 	cs := make(map[string]*Client)
 	return &ClientMgr{

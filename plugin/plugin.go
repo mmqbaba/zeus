@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -205,15 +206,24 @@ func (c *Container) GetAccessLogger() *logrus.Logger {
 // 	return c.mqProducer
 // }
 
-// func (c *Container) Release() {
-// if c.redisPool != nil {
-// 	c.redisPool.Close()
-// }
-
-// if c.dbPool != nil {
-// 	c.dbPool.Close()
-// }
-// }
+// Release 释放容器的所有对象资源
+// TODO: 目前未实现
+func (c *Container) Release() error {
+	// errMsg := []string{}
+	// if c.redis != nil {
+	// 	if r, ok := c.redis.(utils.Releaser); ok {
+	// 		if err := r.Release(); err != nil {
+	// 			log.Printf("[container.Release] redis release err: %s \n", err)
+	// 			errMsg = append(errMsg, err.Error())
+	// 		}
+	// 	}
+	// }
+	// if len(errMsg) > 0 {
+	// 	return fmt.Errorf(strings.Join(errMsg, ", "))
+	// }
+	// return nil
+	panic(fmt.Errorf("目前未实现release方法"))
+}
 
 // Tracer
 func (c *Container) initTracer(cfg *config.Trace) (err error) {

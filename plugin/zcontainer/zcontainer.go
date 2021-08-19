@@ -13,10 +13,12 @@ import (
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo/zmongo"
 	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis/zredis"
 	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
+	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
 
 // Container 组件的容器访问接口
 type Container interface {
+	utils.Releaser
 	Init(appcfg *config.AppConf)
 	Reload(appcfg *config.AppConf)
 	GetRedisCli() zredis.Redis
