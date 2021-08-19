@@ -1,14 +1,12 @@
 package forest
 
 import (
-	"fmt"
-	"github.com/go-xorm/xorm"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
-	"github.com/robfig/cron"
-	"log"
-	"net/http"
-	"time"
+    "fmt"
+    "github.com/labstack/echo"
+    "github.com/labstack/echo/middleware"
+    "github.com/robfig/cron"
+    "net/http"
+    "time"
 )
 
 type JobAPi struct {
@@ -445,8 +443,6 @@ func (api *JobAPi) executeSnapshotList(context echo.Context) (err error) {
 		count      int64
 		snapshots  []*JobExecuteSnapshot
 		totalPage  int64
-		where      *xorm.Session
-		queryWhere *xorm.Session
 	)
 	query = new(QueryExecuteSnapshotParam)
 	if err = context.Bind(query); err != nil {
@@ -462,53 +458,11 @@ func (api *JobAPi) executeSnapshotList(context echo.Context) (err error) {
 		query.PageNo = 1
 	}
 
-	snapshots = make([]*JobExecuteSnapshot, 0)
-	where = api.node.engine.Where("1=1")
-	queryWhere = api.node.engine.Where("1=1")
-	if query.Id != "" {
-		where.And("id=?", query.Id)
-		queryWhere.And("id=?", query.Id)
-	}
-	if query.Group != "" {
-
-		where.And("`group`=?", query.Group)
-		queryWhere.And("`group`=?", query.Group)
-	}
-
-	if query.Ip != "" {
-
-		where.And("ip=?", query.Ip)
-		queryWhere.And("ip=?", query.Ip)
-	}
-	if query.Name != "" {
-		where.And("name=?", query.Name)
-		queryWhere.And("name=?", query.Name)
-	}
-	if query.Status != 0 {
-		where.And("`status`=?", query.Status)
-		queryWhere.And("`status`=?", query.Status)
-	}
-	if count, err = where.Count(&JobExecuteSnapshot{}); err != nil {
-		log.Printf("err:%#v", err)
-		message = "查询失败"
-		goto ERROR
-	}
-
-	if count > 0 {
-		err = queryWhere.Desc("create_time").Limit(query.PageSize, (query.PageNo-1)*query.PageSize).Find(&snapshots)
-		if err != nil {
-			log.Printf("err:%#v", err)
-			message = "查询失败"
-			goto ERROR
-		}
-
-		if count%int64(query.PageSize) == 0 {
-			totalPage = count / int64(query.PageSize)
-		} else {
-			totalPage = count/int64(query.PageSize) + 1
-		}
-
-	}
+    snapshots, count, totalPage, err = api.node.engine.List(query)
+    if err != nil {
+        message = "List err"
+        goto ERROR
+    }
 
 	return context.JSON(http.StatusOK, Result{Code: 0, Data: &PageResult{TotalCount: int(count), TotalPage: int(totalPage), List: &snapshots}, Message: "查询成成功"})
 

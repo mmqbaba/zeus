@@ -1,172 +1,174 @@
 package forest
 
 import (
-	"fmt"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/go-xorm/xorm"
-	"log"
-	"time"
+    "fmt"
+    _ "github.com/go-sql-driver/mysql"
+    "log"
+    "time"
 )
 
 const (
-	JobNodePath      = "/forest/server/node/"
-	JobNodeElectPath = "/forest/server/elect/leader"
-	TTL              = 5
+    JobNodePath      = "/forest/server/node/"
+    JobNodeElectPath = "/forest/server/elect/leader"
+    TTL              = 5
 )
 
 // job node
 type JobNode struct {
-	id           string
-	registerPath string
-	electPath    string
-	etcd         *Etcd
-	state        int
-	apiAddress   string
-	api          *JobAPi
-	manager      *JobManager
-	scheduler    *JobScheduler
-	groupManager *JobGroupManager
-	exec         *JobExecutor
-	engine       *xorm.Engine
-	collection   *JobCollection
-	failOver     *JobSnapshotFailOver
-	listeners    []NodeStateChangeListener
-	close        chan bool
+    id           string
+    registerPath string
+    electPath    string
+    etcd         *Etcd
+    state        int
+    apiAddress   string
+    api          *JobAPi
+    manager      *JobManager
+    scheduler    *JobScheduler
+    groupManager *JobGroupManager
+    exec         *JobExecutor
+    engine       DB
+    collection   *JobCollection
+    failOver     *JobSnapshotFailOver
+    listeners    []NodeStateChangeListener
+    close        chan bool
+}
+
+type DB interface {
+    Init() error
+    Insert(snapshot *JobExecuteSnapshot) error
+    Update(snapshot *JobExecuteSnapshot) error
+    Get(snapshot *JobExecuteSnapshot) (bool, error)
+    List(query *QueryExecuteSnapshotParam) (snapshots []*JobExecuteSnapshot, count int64, totalPage int64, err error)
 }
 
 // node state change  listener
 type NodeStateChangeListener interface {
-	notify(int)
+    notify(int)
 }
 
-func NewJobNode(id string, etcd *Etcd, httpAddress, dbUrl string) (node *JobNode, err error) {
+func NewJobNode(id string, etcd *Etcd, httpAddress string, engine *DB) (node *JobNode, err error) {
 
-	engine, err := xorm.NewEngine("mysql", dbUrl)
-	if err != nil {
-		return
-	}
+    node = &JobNode{
+        id:           id,
+        registerPath: fmt.Sprintf("%s%s", JobNodePath, id),
+        electPath:    JobNodeElectPath,
+        etcd:         etcd,
+        state:        NodeFollowerState,
+        apiAddress:   httpAddress,
+        close:        make(chan bool),
+        engine:       *engine,
+        listeners:    make([]NodeStateChangeListener, 0),
+    }
 
-	node = &JobNode{
-		id:           id,
-		registerPath: fmt.Sprintf("%s%s", JobNodePath, id),
-		electPath:    JobNodeElectPath,
-		etcd:         etcd,
-		state:        NodeFollowerState,
-		apiAddress:   httpAddress,
-		close:        make(chan bool),
-		engine:       engine,
-		listeners:    make([]NodeStateChangeListener, 0),
-	}
+    node.failOver = NewJobSnapshotFailOver(node)
 
-	node.failOver = NewJobSnapshotFailOver(node)
+    node.collection = NewJobCollection(node)
 
-	node.collection = NewJobCollection(node)
+    node.initNode()
 
-	node.initNode()
+    // create job executor
+    node.exec = NewJobExecutor(node)
+    // create  group manager
+    node.groupManager = NewJobGroupManager(node)
 
-	// create job executor
-	node.exec = NewJobExecutor(node)
-	// create  group manager
-	node.groupManager = NewJobGroupManager(node)
+    node.scheduler = NewJobScheduler(node)
 
-	node.scheduler = NewJobScheduler(node)
+    // create job manager
+    node.manager = NewJobManager(node)
 
-	// create job manager
-	node.manager = NewJobManager(node)
+    // create a job http api
+    node.api = NewJobAPi(node)
 
-	// create a job http api
-	node.api = NewJobAPi(node)
-
-	return
+    return
 }
 
 func (node *JobNode) addListeners() {
 
-	node.listeners = append(node.listeners, node.scheduler)
+    node.listeners = append(node.listeners, node.scheduler)
 
 }
 
 func (node *JobNode) changeState(state int) {
 
-	node.state = state
+    node.state = state
 
-	if len(node.listeners) == 0 {
+    if len(node.listeners) == 0 {
 
-		return
-	}
+        return
+    }
 
-	// notify all listener
-	for _, listener := range node.listeners {
+    // notify all listener
+    for _, listener := range node.listeners {
 
-		listener.notify(state)
-	}
+        listener.notify(state)
+    }
 
 }
 
 // start register node
 func (node *JobNode) initNode() {
-	txResponse, err := node.registerJobNode()
-	if err != nil {
-		log.Fatalf("the job node:%s, fail register to :%s", node.id, node.registerPath)
+    txResponse, err := node.registerJobNode()
+    if err != nil {
+        log.Fatalf("the job node:%s, fail register to :%s", node.id, node.registerPath)
 
-	}
-	if !txResponse.Success {
-		log.Fatalf("the job node:%s, fail register to :%s,the job node id exist ", node.id, node.registerPath)
-	}
-	log.Printf("the job node:%s, success register to :%s", node.id, node.registerPath)
-	node.watchRegisterJobNode()
-	node.watchElectPath()
-	go node.loopStartElect()
+    }
+    if !txResponse.Success {
+        log.Fatalf("the job node:%s, fail register to :%s,the job node id exist ", node.id, node.registerPath)
+    }
+    log.Printf("the job node:%s, success register to :%s", node.id, node.registerPath)
+    node.watchRegisterJobNode()
+    node.watchElectPath()
+    go node.loopStartElect()
 
 }
 
 // bootstrap
 func (node *JobNode) Bootstrap() {
 
-	go node.groupManager.loopLoadGroups()
-	go node.manager.loopLoadJobConf()
+    go node.groupManager.loopLoadGroups()
+    go node.manager.loopLoadJobConf()
 
-	<-node.close
+    <-node.close
 }
 
 func (node *JobNode) Close() {
 
-	node.close <- true
+    node.close <- true
 }
 
 // watch the register job node
 func (node *JobNode) watchRegisterJobNode() {
 
-	keyChangeEventResponse := node.etcd.Watch(node.registerPath)
+    keyChangeEventResponse := node.etcd.Watch(node.registerPath)
 
-	go func() {
+    go func() {
 
-		for ch := range keyChangeEventResponse.Event {
-			node.handleRegisterJobNodeChangeEvent(ch)
-		}
-	}()
+        for ch := range keyChangeEventResponse.Event {
+            node.handleRegisterJobNodeChangeEvent(ch)
+        }
+    }()
 
 }
 
 // handle the register job node change event
 func (node *JobNode) handleRegisterJobNodeChangeEvent(changeEvent *KeyChangeEvent) {
 
-	switch changeEvent.Type {
+    switch changeEvent.Type {
 
-	case KeyCreateChangeEvent:
+    case KeyCreateChangeEvent:
 
-	case KeyUpdateChangeEvent:
+    case KeyUpdateChangeEvent:
 
-	case KeyDeleteChangeEvent:
-		log.Printf("found the job node:%s register to path:%s has lose", node.id, node.registerPath)
-		go node.loopRegisterJobNode()
+    case KeyDeleteChangeEvent:
+        log.Printf("found the job node:%s register to path:%s has lose", node.id, node.registerPath)
+        go node.loopRegisterJobNode()
 
-	}
+    }
 }
 
 func (node *JobNode) registerJobNode() (txResponse *TxResponse, err error) {
 
-	return node.etcd.TxKeepaliveWithTTL(node.registerPath, node.id, TTL)
+    return node.etcd.TxKeepaliveWithTTL(node.registerPath, node.id, TTL)
 }
 
 // loop register the job node
@@ -174,65 +176,65 @@ func (node *JobNode) loopRegisterJobNode() {
 
 RETRY:
 
-	var (
-		txResponse *TxResponse
-		err        error
-	)
-	if txResponse, err = node.registerJobNode(); err != nil {
-		log.Printf("the job node:%s, fail register to :%s", node.id, node.registerPath)
-		time.Sleep(time.Second)
-		goto RETRY
-	}
+    var (
+        txResponse *TxResponse
+        err        error
+    )
+    if txResponse, err = node.registerJobNode(); err != nil {
+        log.Printf("the job node:%s, fail register to :%s", node.id, node.registerPath)
+        time.Sleep(time.Second)
+        goto RETRY
+    }
 
-	if txResponse.Success {
-		log.Printf("the job node:%s, success register to :%s", node.id, node.registerPath)
-	} else {
+    if txResponse.Success {
+        log.Printf("the job node:%s, success register to :%s", node.id, node.registerPath)
+    } else {
 
-		v := txResponse.Value
-		if v != node.id {
-			time.Sleep(time.Second)
-			log.Fatalf("the job node:%s,the other job node :%s has already  register to :%s", node.id, v, node.registerPath)
-		}
-		log.Printf("the job node:%s,has already success register to :%s", node.id, node.registerPath)
-	}
+        v := txResponse.Value
+        if v != node.id {
+            time.Sleep(time.Second)
+            log.Fatalf("the job node:%s,the other job node :%s has already  register to :%s", node.id, v, node.registerPath)
+        }
+        log.Printf("the job node:%s,has already success register to :%s", node.id, node.registerPath)
+    }
 
 }
 
 // elect the leader
 func (node *JobNode) elect() (txResponse *TxResponse, err error) {
 
-	return node.etcd.TxKeepaliveWithTTL(node.electPath, node.id, TTL)
+    return node.etcd.TxKeepaliveWithTTL(node.electPath, node.id, TTL)
 
 }
 
 // watch the job node elect path
 func (node *JobNode) watchElectPath() {
 
-	keyChangeEventResponse := node.etcd.Watch(node.electPath)
+    keyChangeEventResponse := node.etcd.Watch(node.electPath)
 
-	go func() {
+    go func() {
 
-		for ch := range keyChangeEventResponse.Event {
+        for ch := range keyChangeEventResponse.Event {
 
-			node.handleElectLeaderChangeEvent(ch)
-		}
-	}()
+            node.handleElectLeaderChangeEvent(ch)
+        }
+    }()
 
 }
 
 // handle the job node leader change event
 func (node *JobNode) handleElectLeaderChangeEvent(changeEvent *KeyChangeEvent) {
 
-	switch changeEvent.Type {
+    switch changeEvent.Type {
 
-	case KeyDeleteChangeEvent:
-		node.changeState(NodeFollowerState)
-		node.loopStartElect()
-	case KeyCreateChangeEvent:
+    case KeyDeleteChangeEvent:
+        node.changeState(NodeFollowerState)
+        node.loopStartElect()
+    case KeyCreateChangeEvent:
 
-	case KeyUpdateChangeEvent:
+    case KeyUpdateChangeEvent:
 
-	}
+    }
 
 }
 
@@ -240,28 +242,28 @@ func (node *JobNode) handleElectLeaderChangeEvent(changeEvent *KeyChangeEvent) {
 func (node *JobNode) loopStartElect() {
 
 RETRY:
-	var (
-		txResponse *TxResponse
-		err        error
-	)
-	if txResponse, err = node.elect(); err != nil {
-		log.Printf("the job node:%s,elect  fail to :%s", node.id, node.electPath)
-		time.Sleep(time.Second)
-		goto RETRY
-	}
+    var (
+        txResponse *TxResponse
+        err        error
+    )
+    if txResponse, err = node.elect(); err != nil {
+        log.Printf("the job node:%s,elect  fail to :%s", node.id, node.electPath)
+        time.Sleep(time.Second)
+        goto RETRY
+    }
 
-	if txResponse.Success {
-		node.changeState(NodeLeaderState)
-		log.Printf("the job node:%s,elect  success to :%s", node.id, node.electPath)
-	} else {
-		v := txResponse.Value
-		if v != node.id {
-			log.Printf("the job node:%s,give up elect request because the other job node：%s elect to:%s", node.id, v, node.electPath)
-			node.changeState(NodeFollowerState)
-		} else {
-			log.Printf("the job node:%s, has already elect  success to :%s", node.id, node.electPath)
-			node.changeState(NodeLeaderState)
-		}
-	}
+    if txResponse.Success {
+        node.changeState(NodeLeaderState)
+        log.Printf("the job node:%s,elect  success to :%s", node.id, node.electPath)
+    } else {
+        v := txResponse.Value
+        if v != node.id {
+            log.Printf("the job node:%s,give up elect request because the other job node：%s elect to:%s", node.id, v, node.electPath)
+            node.changeState(NodeFollowerState)
+        } else {
+            log.Printf("the job node:%s, has already elect  success to :%s", node.id, node.electPath)
+            node.changeState(NodeLeaderState)
+        }
+    }
 
 }

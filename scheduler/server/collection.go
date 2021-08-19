@@ -121,14 +121,13 @@ func (c *JobCollection) handleCreateJobExecuteSnapshot(path string, snapshot *Jo
 	dateTime, err := ParseInLocation(snapshot.CreateTime)
 	days := 0
 	if err == nil {
-
 		days = TimeSubDays(time.Now(), dateTime)
 
 	}
 	if snapshot.Status == JobExecuteSnapshotDoingStatus && days >= 3 {
 		_ = c.node.etcd.Delete(path)
 	}
-	_, err = c.node.engine.Insert(snapshot)
+	err = c.node.engine.Insert(snapshot)
 	if err != nil {
 		log.Printf("err:%#v", err)
 	}
@@ -152,7 +151,7 @@ func (c *JobCollection) handleUpdateJobExecuteSnapshot(path string, snapshot *Jo
 		_ = c.node.etcd.Delete(path)
 	}
 
-	_, _ = c.node.engine.Where("id=?", snapshot.Id).Cols("status", "finish_time", "times", "result").Update(snapshot)
+	_ = c.node.engine.Update(snapshot)
 
 }
 
@@ -164,8 +163,8 @@ func (c *JobCollection) checkExist(id string) (exist bool, err error) {
 	)
 
 	snapshot = new(JobExecuteSnapshot)
-
-	if exist, err = c.node.engine.Where("id=?", id).Get(snapshot); err != nil {
+    snapshot.Id = id
+	if exist, err = c.node.engine.Get(snapshot); err != nil {
 		return
 	}
 
