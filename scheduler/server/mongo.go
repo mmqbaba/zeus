@@ -11,11 +11,13 @@ import (
 )
 
 type MongoDB struct {
-    Engine *mongo.Collection
+    Engine *mongo.Database
 }
 
+var JOB_EXECUTE_SNAPSHOT = "job_execute_snapshot"
+
 func (m *MongoDB) Insert(snapshot *JobExecuteSnapshot) (err error) {
-    coll := m.Engine
+    coll := m.Engine.Collection(JOB_EXECUTE_SNAPSHOT)
     _, err = coll.InsertOne(context.Background(), snapshot)
     if err != nil {
         return
@@ -24,16 +26,17 @@ func (m *MongoDB) Insert(snapshot *JobExecuteSnapshot) (err error) {
 }
 
 func (m *MongoDB) Update(snapshot *JobExecuteSnapshot) (err error) {
-    coll := m.Engine
+    coll := m.Engine.Collection(JOB_EXECUTE_SNAPSHOT)
     filter := bson.M{
         "id": snapshot.Id,
     }
     update := bson.M{
-        "status":      snapshot.Status,
-        "finish_time": snapshot.FinishTime,
-        "times":       snapshot.Times,
-        "result":      snapshot.Result,
-    }
+        "$set": bson.M{
+            "status":      snapshot.Status,
+            "finish_time": snapshot.FinishTime,
+            "times":       snapshot.Times,
+            "result":      snapshot.Result,
+        }}
     _, err = coll.UpdateOne(context.Background(), filter, update)
     if err != nil {
         return
@@ -42,7 +45,7 @@ func (m *MongoDB) Update(snapshot *JobExecuteSnapshot) (err error) {
 }
 
 func (m *MongoDB) Get(snapshot *JobExecuteSnapshot) (exist bool, err error) {
-    coll := m.Engine
+    coll := m.Engine.Collection(JOB_EXECUTE_SNAPSHOT)
     filter := bson.M{
         "id": snapshot.Id,
     }
@@ -56,7 +59,7 @@ func (m *MongoDB) Get(snapshot *JobExecuteSnapshot) (exist bool, err error) {
 
 func (m *MongoDB) List(query *QueryExecuteSnapshotParam) (snapshots []*JobExecuteSnapshot, count int64, totalPage int64, err error) {
     ctx := context.Background()
-    coll := m.Engine
+    coll := m.Engine.Collection(JOB_EXECUTE_SNAPSHOT)
     filter := bson.M{
 
     }
@@ -100,7 +103,7 @@ func (m *MongoDB) List(query *QueryExecuteSnapshotParam) (snapshots []*JobExecut
         result := &JobExecuteSnapshot{}
         err := cursor.Decode(result)
         if err != nil {
-            return nil,0,0,err
+            return nil, 0, 0, err
         }
         snapshots = append(snapshots, result)
     }
@@ -132,6 +135,6 @@ func (m *MongoDB) Init() error {
         return err
     }
 
-    m.Engine = cli.DB("forest").Collection("job_execute_snapshot")
+    m.Engine = cli.DB("forest")
     return nil
 }
