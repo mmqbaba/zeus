@@ -4,9 +4,6 @@ import (
 	"context"
 	"log"
 	"time"
-
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/ratelimit/leaky"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/ratelimit/token"
 )
 
 func main() {

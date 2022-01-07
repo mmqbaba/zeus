@@ -2,8 +2,8 @@ package zredis
 
 import (
 	"github.com/go-redis/redis"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	"github.com/mmqbaba/zeus/config"
+	"github.com/mmqbaba/zeus/utils"
 )
 
 type Redis interface {

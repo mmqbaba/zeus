@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
+	zeuserrors "github.com/mmqbaba/zeus/errors"
 )
 
 var (

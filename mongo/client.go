@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	"github.com/mmqbaba/zeus/config"
 )
 
 const defaultClient = "default"

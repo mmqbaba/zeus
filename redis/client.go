@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-redis/redis"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	"github.com/mmqbaba/zeus/config"
 )
 
 type Client struct {

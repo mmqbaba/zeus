@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo/zmongo"
+	"github.com/mmqbaba/zeus/mongo/zmongo"
 )
 
 type ctxMongoMarker struct{}

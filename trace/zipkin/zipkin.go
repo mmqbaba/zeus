@@ -4,12 +4,12 @@ import (
 	"log"
 	"os"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	"github.com/mmqbaba/zeus/config"
 
 	//"github.com/micro/go-micro/metadata"
+	"github.com/mmqbaba/zeus/utils"
 	"github.com/opentracing/opentracing-go"
 	zipkin "github.com/openzipkin/zipkin-go-opentracing"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
 
 func InitTracer(cfg *config.Trace) error {

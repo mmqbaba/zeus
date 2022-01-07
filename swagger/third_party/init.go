@@ -3,7 +3,7 @@ package third_party
 import (
 	"embed"
 
-	swaggerhelper "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger"
+	swaggerhelper "github.com/mmqbaba/zeus/swagger"
 )
 
 //go:embed swagger-ui

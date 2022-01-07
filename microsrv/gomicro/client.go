@@ -9,7 +9,7 @@ import (
 	"github.com/micro/go-micro/registry"
 	"github.com/micro/go-plugins/registry/etcdv3"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	"github.com/mmqbaba/zeus/config"
 )
 
 func NewClient(ctx context.Context, conf config.GoMicro, opts ...client.Option) (cli client.Client, err error) {

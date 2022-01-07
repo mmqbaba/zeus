@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	redisclient "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
+	"github.com/mmqbaba/zeus/config"
+	redisclient "github.com/mmqbaba/zeus/redis"
 )
 
 func TestObtain(t *testing.T) {

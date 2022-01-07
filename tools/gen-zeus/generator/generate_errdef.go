@@ -24,7 +24,7 @@ func genErrdef(PD *Generator, rootdir string) (err error) {
 	context := `package errdef
 
 import (
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
+	"github.com/mmqbaba/zeus/errors"
 )
 
 var (
@@ -41,7 +41,7 @@ func genErrdefEnum(PD *Generator, rootdir string) error {
 	tmpContext := `package errdef
 
 import (
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
+	"github.com/mmqbaba/zeus/errors"
 	%s
 )
 

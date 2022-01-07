@@ -1,4 +1,4 @@
-module gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus
+module github.com/mmqbaba/zeus
 
 go 1.16
 

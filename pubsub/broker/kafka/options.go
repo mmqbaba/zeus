@@ -7,7 +7,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/micro/go-micro/broker"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	"github.com/mmqbaba/zeus/config"
 )
 
 var (

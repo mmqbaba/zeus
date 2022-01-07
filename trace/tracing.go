@@ -7,7 +7,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	zipkintracer "github.com/openzipkin/zipkin-go-opentracing"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
+	"github.com/mmqbaba/zeus/errors"
 )
 
 type TracerWrap struct {

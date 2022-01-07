@@ -8,7 +8,7 @@ import (
 	"time"
 
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
+	"github.com/mmqbaba/zeus/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

@@ -13,14 +13,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/mmqbaba/zeus/config"
+	zeusctx "github.com/mmqbaba/zeus/context"
+	"github.com/mmqbaba/zeus/errors"
+	"github.com/mmqbaba/zeus/httpclient/zhttpclient"
+	tracing "github.com/mmqbaba/zeus/trace"
+	"github.com/mmqbaba/zeus/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
-	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
 )
 
 const (

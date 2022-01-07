@@ -10,7 +10,7 @@ import (
 	"github.com/micro/go-micro/server"
 	"google.golang.org/grpc"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
+	"github.com/mmqbaba/zeus/engine"
 )
 
 // CommonServiceOptions 可框架内全局共用

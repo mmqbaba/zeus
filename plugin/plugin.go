@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/httpclient/zhttpclient"
+	"github.com/mmqbaba/zeus/httpclient"
+	"github.com/mmqbaba/zeus/httpclient/zhttpclient"
 
 	"github.com/google/gops/agent"
 	"github.com/micro/go-micro"
@@ -14,17 +14,16 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	zeuslog "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/log"
-	zeusmongo "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mongo/zmongo"
-	zeusmysql "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/mysql"
-	zeusredis "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/redis/zredis"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/sequence"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/tifclient"
-	tracing "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/trace/zipkin"
+	"github.com/mmqbaba/zeus/config"
+	zeuslog "github.com/mmqbaba/zeus/log"
+	zeusmongo "github.com/mmqbaba/zeus/mongo"
+	"github.com/mmqbaba/zeus/mongo/zmongo"
+	zeusmysql "github.com/mmqbaba/zeus/mysql"
+	zeusredis "github.com/mmqbaba/zeus/redis"
+	"github.com/mmqbaba/zeus/redis/zredis"
+	"github.com/mmqbaba/zeus/sequence"
+	tracing "github.com/mmqbaba/zeus/trace"
+	"github.com/mmqbaba/zeus/trace/zipkin"
 )
 
 // Container contain comm obj, impl zcontainer
@@ -61,7 +60,6 @@ func (c *Container) Init(appcfg *config.AppConf) {
 	c.initAccessLogger(&appcfg.AccessLog)
 	c.initTracer(&appcfg.Trace)
 	c.initMongo(&appcfg.MongoDB)
-	c.initTifClient(appcfg)
 	c.initMysql(appcfg.MysqlSource)
 	c.initHttpClient(appcfg.HttpClient)
 	c.initGoPS(&appcfg.GoPS)
@@ -86,7 +84,6 @@ func (c *Container) Reload(appcfg *config.AppConf) {
 	if c.appcfg.MongoDB != appcfg.MongoDB {
 		c.reloadMongo(&appcfg.MongoDB)
 	}
-	c.initTifClient(appcfg)
 	c.initMysql(appcfg.MysqlSource)
 	c.initHttpClient(appcfg.HttpClient)
 	if c.appcfg.GoPS != appcfg.GoPS {
@@ -304,11 +301,6 @@ func (c *Container) reloadMongo(cfg *config.MongoDB) {
 
 func (c *Container) GetMongo() zmongo.Mongo {
 	return c.mongo
-}
-
-// tifclient
-func (c *Container) initTifClient(appconf *config.AppConf) {
-	tifclient.InitClient(appconf)
 }
 
 // mysql

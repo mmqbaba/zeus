@@ -8,9 +8,9 @@ import (
 	"github.com/micro/go-micro/broker"
 	"github.com/micro/go-plugins/broker/redis"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/broker/kafka"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/pubsub/broker/rabbitmq"
+	"github.com/mmqbaba/zeus/config"
+	"github.com/mmqbaba/zeus/pubsub/broker/kafka"
+	"github.com/mmqbaba/zeus/pubsub/broker/rabbitmq"
 )
 
 type brokerWrap struct {

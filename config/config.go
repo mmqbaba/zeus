@@ -29,11 +29,9 @@ type AppConf struct {
 	MysqlSource         map[string]MysqlDB        `json:"mysql_source"`
 	RedisSource         map[string]Redis          `json:"redis_source"`
 	BrokerSource        map[string]Broker         `json:"broker_source"`
-	EBus                EBus                      `json:"ebus"`
 	Ext                 map[string]interface{}    `json:"ext"`
 	Trace               Trace                     `json:"trace"`
 	Debug               DebugSwitch               `json:"debug"`
-	Obs                 Obs                       `json:"obs"`
 	Broker              Broker                    `json:"broker"`
 	CurrentBusIdSpIdMap map[string]string         `json:"current_busid_spid_map,omitempty"`
 	GoMicro             GoMicro                   `json:"go_micro"`
@@ -84,19 +82,6 @@ type MysqlDB struct {
 	Enable          bool   `json:"enable"` // 启用组件
 }
 
-type EBus struct {
-	MaxIdleConns        int                    `json:"max_idle_conns"`
-	MaxIdleConnsPerHost int                    `json:"max_idle_conns_per_host"`
-	MaxConnsPerHost     int                    `json:"max_conns_per_host"`
-	IdleConnTimeout     time.Duration          `json:"idle_conn_timeout"` // second
-	Hosts               []string               `json:"hosts"`
-	Services            map[string]interface{} `json:"services"`
-	PaasId              string                 `json:"paas_id"`
-	PaasToken           string                 `json:"paas_token"`
-	SpId                string                 `json:"sp_id"`
-	PathMap             map[string]string      `json:"path_map"`
-}
-
 type LogConf struct {
 	Log                 string `json:"log"` // 输出方式：console/file/kafka
 	Level               string `json:"level"`
@@ -127,14 +112,6 @@ type HttpClientConf struct {
 	MaxConnsPerHost       int           `json:"max_conns_per_host"`
 	IdleConnTimeout       time.Duration `json:"idle_conn_timeout"`
 	TraceOnlyLogErr       bool
-}
-
-type Obs struct {
-	Endpoint   string `json:"endpoint"`
-	AK         string `json:"ak"`
-	SK         string `json:"sk"`
-	BucketName string `json:"bucket_name"`
-	Location   string `json:"location"` // 路径
 }
 
 type Broker struct {

@@ -12,7 +12,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	zipkintracer "github.com/openzipkin/zipkin-go-opentracing"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
+	"github.com/mmqbaba/zeus/errors"
 )
 
 var luaRefresh = redis.NewScript(`if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("pexpire", KEYS[1], ARGV[2]) else return 0 end`)

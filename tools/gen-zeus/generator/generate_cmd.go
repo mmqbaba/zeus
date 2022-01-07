@@ -44,8 +44,8 @@ import (
 	"runtime"
 	"strconv"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/container"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/service"
+	"github.com/mmqbaba/zeus/plugin/container"
+	"github.com/mmqbaba/zeus/service"
 
 	"{PRJ}/global"
 )
@@ -103,7 +103,7 @@ func genCmdSwaggerUI(PD *Generator, rootdir string) error {
 	tmpContext := `package main
 
 import (
-	_ "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger/third_party"
+	_ "github.com/mmqbaba/zeus/swagger/third_party"
 )
 
 `

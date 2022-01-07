@@ -13,10 +13,10 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/sirupsen/logrus"
 
-	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
-	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	zeusctx "github.com/mmqbaba/zeus/context"
+	"github.com/mmqbaba/zeus/engine"
+	zeuserrors "github.com/mmqbaba/zeus/errors"
+	"github.com/mmqbaba/zeus/utils"
 )
 
 type validator interface {

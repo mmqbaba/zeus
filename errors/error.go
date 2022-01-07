@@ -13,7 +13,7 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	proto "github.com/golang/protobuf/proto"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	"github.com/mmqbaba/zeus/utils"
 )
 
 var bytesBuffPool = &sync.Pool{

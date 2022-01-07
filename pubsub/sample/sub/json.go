@@ -10,7 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/micro/go-micro/codec"
 
-	zjson "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro/codec/json"
+	zjson "github.com/mmqbaba/zeus/microsrv/gomicro/codec/json"
 )
 
 var jsonPBMarshaler = &jsonpb.Marshaler{

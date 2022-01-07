@@ -29,18 +29,18 @@ import (
 
 	// "github.com/urfave/negroni"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine/etcd"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/engine/file"
-	zeuserrors "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/errors"
-	zgomicro "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/microsrv/gomicro"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/plugin/zcontainer"
+	"github.com/mmqbaba/zeus/config"
+	"github.com/mmqbaba/zeus/engine"
+	"github.com/mmqbaba/zeus/engine/etcd"
+	"github.com/mmqbaba/zeus/engine/file"
+	zeuserrors "github.com/mmqbaba/zeus/errors"
+	zgomicro "github.com/mmqbaba/zeus/microsrv/gomicro"
+	"github.com/mmqbaba/zeus/plugin/zcontainer"
 
-	// swaggerthirdparty "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger/third_party"
-	swaggerhelper "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger"
-	// swagger "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger/ui"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	// swaggerthirdparty "github.com/mmqbaba/zeus/swagger/third_party"
+	swaggerhelper "github.com/mmqbaba/zeus/swagger"
+	// swagger "github.com/mmqbaba/zeus/swagger/ui"
+	"github.com/mmqbaba/zeus/utils"
 )
 
 const (

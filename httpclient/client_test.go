@@ -3,11 +3,12 @@ package httpclient
 import (
 	"context"
 	"fmt"
-	conf "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/config"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
+
+	conf "github.com/mmqbaba/zeus/config"
 )
 
 func TestClient_Get(t *testing.T) {

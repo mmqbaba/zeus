@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/tools/gen-zeus/generator"
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/mmqbaba/zeus/tools/gen-zeus/generator"
 )
 
 var (

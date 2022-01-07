@@ -5,8 +5,8 @@ import (
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 
-	zservice "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/service"
-	swaggerhelper "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/swagger"
+	zservice "github.com/mmqbaba/zeus/service"
+	swaggerhelper "github.com/mmqbaba/zeus/swagger"
 )
 
 func init() {

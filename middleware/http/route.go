@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/utils"
+	"github.com/mmqbaba/zeus/utils"
 )
 
 type Route struct {
@@ -48,7 +48,7 @@ func Method(groups map[string]*gin.RouterGroup, r *Route) {
 	g, ok := groups[group]
 	if !ok || g == nil {
 		panic(fmt.Errorf("the grouprouter was nil or not in groups, groupname: %s", group))
-	} 
+	}
 	switch r.Method {
 	case http.MethodPost:
 		g.POST(r.Path, r.Mix()...)

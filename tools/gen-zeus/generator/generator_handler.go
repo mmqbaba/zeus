@@ -39,7 +39,7 @@ func genHandleFun(PD *Generator, rootdir string) (err error) {
 import (
 	"context"
 
-	zeusctx "gitlab.dg.com/BackEnd/jichuchanpin/tif/zeus/context"
+	zeusctx "github.com/mmqbaba/zeus/context"
 
 	gomicro "%s/proto/%spb"
 )

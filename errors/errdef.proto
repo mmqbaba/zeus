@@ -9,8 +9,6 @@ enum ErrCode {
     ECodeSystem = 10001; // system error^http.StatusOK
     // 系统api层错误
     ECodeSystemAPI = 10002; // system api error^http.StatusOK
-    // 网关验签是错误
-    ECodeSignature = 10003; // signature invalid^http.StatusOK
     // 请求错误
     ECodeBadRequest = 10004; // bad request^http.StatusOK
     // uid错误
@@ -19,26 +17,16 @@ enum ErrCode {
     ECodeBadToken = 10006; // invalid access_token^http.StatusOK
     // 认证方式错误
     ECodeBadAuthWay = 10007; // invalid auth_way^http.StatusOK
-    // 用户没有实名
-    ECodeNotRealname = 10008; // user not realname^http.StatusOK
-    // 个人用户需要认证
-    ECodeNeedPerAuth = 10009; // person need auth^http.StatusOK
-    // 企业用户需要认证
-    ECodeNeedOrgAuth = 10010; // org need auth^http.StatusOK
     // 无效的请求参数
     ECodeInvalidParams = 10011; // invalid params^http.StatusOK
     // 无此权限
     ECodeNoPermission = 10012; // no permission^http.StatusOK
-    // 请求网关ebus接口错误
-    ECodeEBusAPI = 10013; // request ebus api failed^http.StatusOK
     // redis错误
     ECodeRedisErr = 10014; // redis error^http.StatusOK
     // mongo错误
     ECodeMongoErr = 10015; // mongo error^http.StatusOK
     // mysql错误
     ECodeMysqlErr = 10016; // mysql error^http.StatusOK
-    // obs错误
-    ECodeObsErr = 10017; // obs error^http.StatusOK
     // 查询无记录
     ECodeNoRecord = 10018; // no record^http.StatusOK
     // 文件不存在
@@ -55,24 +43,12 @@ enum ErrCode {
     ECodeTypeCovert = 10024; // type convert error^http.StatusOK
     // protobuf序列化错误
     ECodePbMarshal = 10025; // marshal protobuf error^http.StatusOK
-    // 业务id/服务供应商id错误
-    ECodeBusOrSp = 10026; // busid or spid error^http.StatusOK
     // 认证错误
     ECodeAuthErr = 10027; // authentication error^http.StatusOK
-    // 无效的用户类型(个人/企业)
-    ECodeInvalidUserType = 10028; // invalid usertype^http.StatusOK
-    // 获取第三方服务供应商token失败
-    ECodeGetSpTokenFailed = 10029; // get sp token failed^http.StatusOK
     // json序列化错误
     ECodeJsonMarshal = 10030; // json marshal error^http.StatusOK
     // json反序列化错误
     ECodeJsonUnmarshal = 10031; // json unmarshal error^http.StatusOK
-    // tifclient请求错误
-    ECodeTifClientRequest = 10032; // tifclient request error^http.StatusOK
-    // 获取第三方服务供应商账号失败
-    ECodeCreateSpAccountFailed = 10033; // create sp account failed^http.StatusOK
-    // tifclient请求查询法人信息失败
-    ECodeTifClientGetCorpsFailed = 10034; // tifclient request get corps failed^http.StatusOK
     // xml序列化错误
     ECodeXmlMarshal = 10035; // xml marshal error^http.StatusOK
     // xml反序列化错误
