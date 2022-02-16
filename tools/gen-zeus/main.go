@@ -203,6 +203,12 @@ func main() {
 		errcount++
 	}
 
+	err = generator.GenerateProto(g, *sourceRoot)
+	if err != nil {
+		fmt.Printf("Generate proto/init.go files failed, error is %v\n", err)
+		errcount++
+	}
+
 	if errcount == 0 {
 		fmt.Printf("\n\nGenerate zeus engin success!\n")
 	} else {
