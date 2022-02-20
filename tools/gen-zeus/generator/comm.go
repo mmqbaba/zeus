@@ -207,6 +207,10 @@ func GetTargetFileName(PD *Generator, objtype string, rootdir string, opts ...st
 		dirname := fmt.Sprintf("%s/%s", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
 		fn = fmt.Sprintf("%s/%s_test.go", dirname, PD.PackageName)
+	case "proto.init":
+		dirname := fmt.Sprintf("%s/%s/proto", rootdir, PD.PackageName)
+		CheckPrepareDir(dirname)
+		fn = fmt.Sprintf("%s/init.go", dirname)
 	default:
 		fmt.Print("Can not support object type")
 		return ""

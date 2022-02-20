@@ -25,10 +25,11 @@ func genCmdInit(PD *Generator, rootdir string) error {
 import (
 	_ "%s/http"
 	_ "%s/rpc"
+	_ "%s/proto"
 )
 
 `
-	context := fmt.Sprintf(tmpContext, projectBasePrefix+PD.PackageName, projectBasePrefix+PD.PackageName)
+	context := fmt.Sprintf(tmpContext, projectBasePrefix+PD.PackageName, projectBasePrefix+PD.PackageName, projectBasePrefix+PD.PackageName)
 	fn := GetTargetFileName(PD, "cmd.init", rootdir)
 	return writeContext(fn, header, context, false)
 }
