@@ -48,16 +48,16 @@ protoc-go-inject-tag -input=./${service}pb/$service.pb.go # inject tag
 
 if [ "$(uname)" == "Darwin" ]; then
     # Mac OS X
-    sed -i '' -e 's/RegisterSampleHandler(/RegisterSampleHandlerGW(/g' ./${service}pb/$service.pb.gw.go
-    sed -i '' -e 's/ RegisterSampleHandler / RegisterSampleHandlerGW /g' ./${service}pb/$service.pb.gw.go
+    sed -i '' -e 's/Register%sHandler(/Register%sHandlerGW(/g' ./${service}pb/$service.pb.gw.go
+    sed -i '' -e 's/ Register%sHandler / Register%sHandlerGW /g' ./${service}pb/$service.pb.gw.go
 elif [ "$(uname -s)" == "Linux" ]; then
     # GNU/Linux
-    sed -i 's/RegisterSampleHandler(/RegisterSampleHandlerGW(/g' ./${service}pb/$service.pb.gw.go
-    sed -i 's/ RegisterSampleHandler / RegisterSampleHandlerGW /g' ./${service}pb/$service.pb.gw.go
+    sed -i 's/Register%sHandler(/Register%sHandlerGW(/g' ./${service}pb/$service.pb.gw.go
+    sed -i 's/ Register%sHandler / Register%sHandlerGW /g' ./${service}pb/$service.pb.gw.go
 elif [ "$(uname -o)" == "Msys" ]; then
     # Windows
-    sed -i 's/RegisterSampleHandler(/RegisterSampleHandlerGW(/g' ./${service}pb/$service.pb.gw.go
-    sed -i 's/ RegisterSampleHandler / RegisterSampleHandlerGW /g' ./${service}pb/$service.pb.gw.go
+    sed -i 's/Register%sHandler(/Register%sHandlerGW(/g' ./${service}pb/$service.pb.gw.go
+    sed -i 's/ Register%sHandler / Register%sHandlerGW /g' ./${service}pb/$service.pb.gw.go
 fi
 
 # gen-gomicro gen-grpc-gateway gen-validator swagger
@@ -77,7 +77,7 @@ fi
 
 cd -
 `
-	context := fmt.Sprintf(tmpContext, PD.PackageName, PD.SvrName, PD.SvrName, PD.SvrName, PD.SvrName)
+	context := fmt.Sprintf(tmpContext, PD.PackageName, PD.SvrName, PD.SvrName, PD.SvrName, PD.SvrName, PD.SvrName, PD.SvrName, PD.SvrName, PD.SvrName, PD.SvrName, PD.SvrName, PD.SvrName, PD.SvrName)
 	fn := GetTargetFileName(PD, "build.proto", rootdir)
 	return writeContext(fn, header, context, false)
 }
