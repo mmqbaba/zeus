@@ -31,7 +31,7 @@ import (
 `
 	context := fmt.Sprintf(tmpContext, projectBasePrefix+PD.PackageName, projectBasePrefix+PD.PackageName, projectBasePrefix+PD.PackageName)
 	fn := GetTargetFileName(PD, "cmd.init", rootdir)
-	return writeContext(fn, header, context, false)
+	return writeContext(fn, header, context, true)
 }
 
 func genCmdMain(PD *Generator, rootdir string) error {
