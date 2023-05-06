@@ -8,6 +8,50 @@ import (
 	structpb "github.com/golang/protobuf/ptypes/struct"
 )
 
+// ObjToStruct objtype: map/struct
+func ObjToStruct(i interface{}) (*structpb.Struct, error) {
+	v := reflect.ValueOf(i)
+
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	if v.Kind() == reflect.Struct {
+		fields := make(map[string]*structpb.Value)
+		typ := v.Type()
+
+		for i := 0; i < v.NumField(); i++ {
+			field := typ.Field(i)
+			if field.PkgPath != "" { // Skip unexported fields
+				continue
+			}
+			val := ToValue(v.Field(i).Interface())
+			if val == nil {
+				val = &structpb.Value{Kind: &structpb.Value_NullValue{NullValue: 0}}
+			}
+			fields[field.Name] = val
+		}
+		return &structpb.Struct{Fields: fields}, nil
+	}
+
+	if v.Kind() == reflect.Map {
+		fields := make(map[string]*structpb.Value)
+		iter := v.MapRange()
+
+		for iter.Next() {
+			key := iter.Key().String()
+			val := ToValue(iter.Value().Interface())
+			if val == nil {
+				val = &structpb.Value{Kind: &structpb.Value_NullValue{NullValue: 0}}
+			}
+			fields[key] = val
+		}
+		return &structpb.Struct{Fields: fields}, nil
+	}
+
+	return nil, fmt.Errorf("unsupported type: %T, it was not map or struct", i)
+}
+
 // ToStruct converts a map[string]interface{} to a ptypes.Struct
 func ToStruct(v map[string]interface{}) *structpb.Struct {
 	size := len(v)
