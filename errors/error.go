@@ -63,7 +63,13 @@ func (e Error) toJSONString() string {
 		bf := bytesBuffPool.Get().(*bytes.Buffer)
 		defer bytesBuffPool.Put(bf)
 		bf.Reset()
-		jsonPBMarshaler.Marshal(bf, p)
+		err := jsonPBMarshaler.Marshal(bf, p)
+		if err != nil {
+			fmt.Printf("jsonPBMarshaler.Marshal err: %s, e.data: %s\n", err, bf.String())
+			tmpl := `{"errcode":%d,"errmsg":"%s","cause":"%s","serviceid":"%s","tracerid":"%s"}`
+			ret := fmt.Sprintf(tmpl, e.ErrCode, e.ErrMsg, e.Cause+":jsonPBMarshaler.Marshal err:"+err.Error(), e.ServiceID, e.TracerID)
+			return ret
+		}
 		tmpl := `{"errcode":%d,"errmsg":"%s","cause":"%s","serviceid":"%s","tracerid":"%s","data":%s}`
 		ret := fmt.Sprintf(tmpl, e.ErrCode, e.ErrMsg, e.Cause, e.ServiceID, e.TracerID, bf.Bytes())
 		return ret
