@@ -1,14 +1,76 @@
 package zprotobuf
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
+	jsonpb "github.com/golang/protobuf/jsonpb"
 	structpb "github.com/golang/protobuf/ptypes/struct"
 )
 
-// ObjToStruct objtype: map/struct
+func checkEmbeddedStruct(embedded, target reflect.Type) bool {
+	for i := 0; i < embedded.NumField(); i++ {
+		field := embedded.Field(i)
+		if field.Anonymous && field.Type == target {
+			return true
+		}
+	}
+	return false
+}
+
+func callStringMethod(value reflect.Value) (string, error) {
+	stringMethod := value.MethodByName("String")
+	if stringMethod.IsValid() {
+		results := stringMethod.Call(nil)
+		if len(results) > 0 {
+			return fmt.Sprint(results[0]), nil
+		}
+		return "", fmt.Errorf("未找到结果")
+	}
+	return "", fmt.Errorf("未找到 String() 方法")
+}
+
+func callTimeMarshalText(val reflect.Value) ([]byte, error) {
+	method := val.MethodByName("MarshalText")
+	if method.IsValid() {
+		results := method.Call(nil)
+
+		if !results[1].IsNil() {
+			return nil, results[1].Interface().(error)
+		}
+		return results[0].Bytes(), nil
+	}
+	return nil, fmt.Errorf("未找到Time MarshalText() 方法")
+}
+
+// ObjMarshalToStruct objtype: map/struct; i => json string => *structpb.Struct
+func ObjMarshalToStruct(i interface{}) (*structpb.Struct, error) {
+	v := reflect.ValueOf(i)
+
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	if v.Kind() == reflect.Struct || v.Kind() == reflect.Map {
+		d, err := json.Marshal(i)
+		if err != nil {
+			return nil, err
+		}
+		st := &structpb.Struct{}
+		err = jsonpb.UnmarshalString(string(d), st)
+		if err != nil {
+			return nil, err
+		}
+		return st, nil
+	}
+
+	return nil, fmt.Errorf("unsupported type: %T, it was not map or struct", i)
+}
+
+// ObjToStruct objtype: map/struct; use reflect
 func ObjToStruct(i interface{}) (*structpb.Struct, error) {
 	v := reflect.ValueOf(i)
 
@@ -25,11 +87,30 @@ func ObjToStruct(i interface{}) (*structpb.Struct, error) {
 			if field.PkgPath != "" { // Skip unexported fields
 				continue
 			}
-			val := ToValue(v.Field(i).Interface())
-			if val == nil {
-				val = &structpb.Value{Kind: &structpb.Value_NullValue{NullValue: 0}}
+
+			t, ok := field.Tag.Lookup("json")
+			if ok && len(t) > 0 {
+				name := strings.Split(t, ",")[0]
+				if len(name) > 0 && 'A' <= name[0] && name[0] <= 'z' {
+					if (v.Field(i).Kind() == reflect.Struct && checkEmbeddedStruct(field.Type, reflect.TypeOf(time.Time{}))) || field.Type == reflect.TypeOf(time.Time{}) {
+						ret, err := callTimeMarshalText(v.Field(i))
+						if err != nil {
+							fmt.Printf("callTimeMarshalText(v.Field(i)) err: %s\n", err)
+						}
+						val := &structpb.Value{Kind: &structpb.Value_StringValue{StringValue: string(ret)}}
+						fields[name] = val
+					} else {
+						val := ToValue(v.Field(i).Interface())
+						if val == nil {
+							val = &structpb.Value{Kind: &structpb.Value_NullValue{NullValue: 0}}
+						}
+						fields[name] = val
+					}
+				} else {
+					continue
+				}
 			}
-			fields[field.Name] = val
+
 		}
 		return &structpb.Struct{Fields: fields}, nil
 	}
@@ -217,9 +298,22 @@ func toValue(v reflect.Value) *structpb.Value {
 			// return nil
 			return &structpb.Value{Kind: &structpb.Value_NullValue{NullValue: 0}}
 		}
+
+		if checkEmbeddedStruct(t, reflect.TypeOf(time.Time{})) || t == reflect.TypeOf(time.Time{}) {
+			// if checkEmbeddedStruct(t, reflect.TypeOf(time.Time{})) {
+			ret, err := callTimeMarshalText(v)
+			if err != nil {
+				fmt.Printf("callTimeMarshalText(v) err: %s\n", err)
+				return &structpb.Value{Kind: &structpb.Value_NullValue{NullValue: 0}}
+			}
+			return &structpb.Value{Kind: &structpb.Value_StringValue{StringValue: string(ret)}}
+		}
+
 		fields := make(map[string]*structpb.Value, size)
 		for i := 0; i < size; i++ {
-			// name := t.Field(i).Name
+			n := t.Field(i).Name
+			tag := t.Field(i).Tag
+			fmt.Println(n, tag)
 			val, ok := t.Field(i).Tag.Lookup("json")
 			if ok && len(val) > 0 {
 				name := strings.Split(val, ",")[0]
