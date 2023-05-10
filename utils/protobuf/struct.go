@@ -90,7 +90,25 @@ func ObjToStruct(i interface{}) (*structpb.Struct, error) {
 
 			t, ok := field.Tag.Lookup("json")
 			if ok && len(t) > 0 {
-				name := strings.Split(t, ",")[0]
+				arr := strings.Split(t, ",")
+				if field.Anonymous && field.Type.Kind() == reflect.Struct {
+					isInline := false
+					for _, v := range arr {
+						if v == "inline" {
+							isInline = true
+							break
+						}
+					}
+					if isInline {
+						val := ToValue(v.Field(i).Interface())
+						for k, v := range val.GetStructValue().Fields {
+							fields[k] = v
+						}
+						continue
+					}
+				}
+
+				name := arr[0]
 				if len(name) > 0 && 'A' <= name[0] && name[0] <= 'z' {
 					if (v.Field(i).Kind() == reflect.Struct && checkEmbeddedStruct(field.Type, reflect.TypeOf(time.Time{}))) || field.Type == reflect.TypeOf(time.Time{}) {
 						ret, err := callTimeMarshalText(v.Field(i))
@@ -311,12 +329,30 @@ func toValue(v reflect.Value) *structpb.Value {
 
 		fields := make(map[string]*structpb.Value, size)
 		for i := 0; i < size; i++ {
-			n := t.Field(i).Name
-			tag := t.Field(i).Tag
-			fmt.Println(n, tag)
-			val, ok := t.Field(i).Tag.Lookup("json")
-			if ok && len(val) > 0 {
-				name := strings.Split(val, ",")[0]
+			// n := t.Field(i).Name
+			// tag := t.Field(i).Tag
+			// fmt.Println(n, tag)
+			tj, ok := t.Field(i).Tag.Lookup("json")
+			if ok && len(tj) > 0 {
+				arr := strings.Split(tj, ",")
+				if t.Field(i).Anonymous && t.Field(i).Type.Kind() == reflect.Struct {
+					isInline := false
+					for _, v := range arr {
+						if v == "inline" {
+							isInline = true
+							break
+						}
+					}
+					if isInline {
+						val := ToValue(v.Field(i).Interface())
+						for k, v := range val.GetStructValue().Fields {
+							fields[k] = v
+						}
+						continue
+					}
+				}
+				name := arr[0]
+				// name := strings.Split(val, ",")[0]
 				// Better way?
 				if len(name) > 0 && 'A' <= name[0] && name[0] <= 'z' {
 					fields[name] = toValue(v.Field(i))
