@@ -74,7 +74,10 @@ func (e Error) toJSONString() string {
 		ret := fmt.Sprintf(tmpl, e.ErrCode, e.ErrMsg, e.Cause, e.ServiceID, e.TracerID, bf.Bytes())
 		return ret
 	}
-	b, _ := utils.Marshal(e)
+	b, err := utils.Marshal(e)
+	if err != nil {
+		fmt.Printf("Error.toJSONString, utils.Marshal(e) err: %s\n", err)
+	}
 	return string(b)
 }
 

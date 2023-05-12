@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -57,8 +58,21 @@ var jsonPBUmarshaler = &jsonpb.Unmarshaler{
 var SuccessResponse SuccessResponseHandler = defaultSuccessResponse
 var ErrorResponse ErrorResponseHandler = defaultErrorResponse
 
+var useCustResponse bool
+var responsePluginName string
+var successResponsePlugin SuccessResponseHandler
+var errorResponsePlugin ErrorResponseHandler
+
 type SuccessResponseHandler func(c *gin.Context, rsp interface{})
 type ErrorResponseHandler func(c *gin.Context, err error)
+
+// SetResponsePlugin 设置自定义ResponsePlugin
+func SetResponsePlugin(name string, s SuccessResponseHandler, e ErrorResponseHandler) {
+	useCustResponse = true
+	responsePluginName = name
+	successResponsePlugin = s
+	errorResponsePlugin = e
+}
 
 // SetCustomValidator 设置gin默认的数据校验器
 //
@@ -256,7 +270,13 @@ func defaultSuccessResponse(c *gin.Context, rsp interface{}) {
 			return
 		}
 	}
-	res.Write(c.Writer)
+	if useCustResponse && successResponsePlugin != nil {
+		successResponsePlugin(c, rsp)
+		return
+	}
+	if err := res.Write(c.Writer); err != nil {
+		fmt.Printf("defaultSuccessResponse res.Write err: %s\n", err)
+	}
 }
 
 func defaultErrorResponse(c *gin.Context, err error) {
@@ -285,7 +305,14 @@ func defaultErrorResponse(c *gin.Context, err error) {
 	if len(strings.TrimSpace(zeusErr.TracerID)) > 0 {
 		zeusErr.ErrMsg = "[" + strings.TrimSpace(zeusErr.TracerID) + "] " + zeusErr.ErrMsg
 	}
-	zeusErr.Write(c.Writer)
+	if useCustResponse && errorResponsePlugin != nil {
+		errorResponsePlugin(c, err)
+		return
+	}
+
+	if err := zeusErr.Write(c.Writer); err != nil {
+		fmt.Printf("defaultErrorResponse zeusErr.Write err: %s\n", err)
+	}
 }
 
 func assertError(e error) (err *zeuserrors.Error) {
