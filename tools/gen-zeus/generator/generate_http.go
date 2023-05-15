@@ -10,6 +10,9 @@ func GenerateHttp(PD *Generator, rootdir string) (err error) {
 	if err != nil {
 		return
 	}
+	if err = genHttpCSFPlugin(PD, rootdir); err != nil {
+		return
+	}
 	return genHttp(PD, rootdir)
 }
 
@@ -180,4 +183,22 @@ func serveHTTPHandler(ctx context.Context, pathPrefix string, ng engine.Engine) 
 	context = strings.ReplaceAll(context, "{SRV}", CamelCase(PD.SvrName))
 	fn := GetTargetFileName(PD, "http", rootdir)
 	return writeContext(fn, header, context, false)
+}
+
+func genHttpCSFPlugin(PD *Generator, rootdir string) error {
+	header := _defaultHeader
+	tmpContext := `
+	//go:build csf
+	// +build csf
+
+	package http
+
+	import (
+		_ "github.com/mmqbaba/zeus/middleware/csf/resp"
+	)
+`
+	context := fmt.Sprintf(tmpContext)
+
+	fn := GetTargetFileName(PD, "http.csf.plugin", rootdir)
+	return writeContext(fn, header, context, true)
 }

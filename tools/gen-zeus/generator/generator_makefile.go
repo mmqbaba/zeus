@@ -16,13 +16,14 @@ build_date = $(shell date '+%Y-%m-%d %H:%M:%S')
 version = $(shell git describe --tags --always | sed 's/-/+/' | sed 's/^v//')
 goversion = $(shell go version)
 ldflags = -ldflags "-X 'main.Version=$(version)' -X 'main.BuildDate=$(build_date)' -X 'main.GoVersion=$(goversion)'"
+_build_tags = -tags "$(build_tags)"
 
 ALL: build
 
 
 
 build: autoinit
-	go build $(ldflags) -o $(service)_server ./cmd/app
+	go build $(_build_tags) $(ldflags) -o $(service)_server ./cmd/app
 
 
 init:

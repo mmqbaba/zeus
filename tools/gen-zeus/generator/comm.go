@@ -119,6 +119,10 @@ func GetTargetFileName(PD *Generator, objtype string, rootdir string, opts ...st
 		dirname := fmt.Sprintf("%s/%s/http", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)
 		fn = fmt.Sprintf("%s/http.go", dirname)
+	case "http.csf.plugin":
+		dirname := fmt.Sprintf("%s/%s/http", rootdir, PD.PackageName)
+		CheckPrepareDir(dirname)
+		fn = fmt.Sprintf("%s/csf_plugin.go", dirname)
 	case "resource":
 		dirname := fmt.Sprintf("%s/%s/resource/rpc", rootdir, PD.PackageName)
 		CheckPrepareDir(dirname)

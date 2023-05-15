@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -275,7 +274,7 @@ func defaultSuccessResponse(c *gin.Context, rsp interface{}) {
 		return
 	}
 	if err := res.Write(c.Writer); err != nil {
-		fmt.Printf("defaultSuccessResponse res.Write err: %s\n", err)
+		logger.Errorf("defaultSuccessResponse res.Write err: %s\n", err)
 	}
 }
 
@@ -311,7 +310,7 @@ func defaultErrorResponse(c *gin.Context, err error) {
 	}
 
 	if err := zeusErr.Write(c.Writer); err != nil {
-		fmt.Printf("defaultErrorResponse zeusErr.Write err: %s\n", err)
+		logger.Errorf("defaultErrorResponse zeusErr.Write err: %s\n", err)
 	}
 }
 
