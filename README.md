@@ -12,4 +12,6 @@ go build -o tools/bin/ ./tools/gen-zeus
 * linux : export PATH=$PATH:$GOPATH/src/zeus/tools/bin
 * windows : PATH=%PATH%;%GOPATH%/src/zeus/tools/bin
 
-## 使用文档（[sample](https://github.com/mmqbaba/zeus-examples)）
+## 使用文档
+### [开发文档](https://github.com/mmqbaba/docs/blob/main/zeus/framework/%E4%BD%BF%E7%94%A8%E8%A7%84%E8%8C%83.md)
+### [参考示例](https://github.com/mmqbaba/zeus-examples)
